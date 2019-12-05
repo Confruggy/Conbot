@@ -16,22 +16,24 @@ namespace Conbot
             if (!ReadConfig())
                 return;
 
-            await Task.Delay(0);
+            await new ConbotClient(_config).RunAsync();
+            await Task.Delay(-1);
         }
 
         private bool ReadConfig()
         {
-            if (!File.Exists("config.toml"))
+            string configFilePath = Path.Combine(AppContext.BaseDirectory, "config.toml");
+
+            if (!File.Exists(configFilePath))
             {
-                Console.WriteLine("Config file is missing. Please provide a config file!");
                 _config = new Config();
-                Toml.WriteFile(_config, "config.toml");
+                Toml.WriteFile(_config, configFilePath);
             }
             else
             {
                 try
                 {
-                    _config = Toml.ReadFile<Config>("config.toml");
+                    _config = Toml.ReadFile<Config>(configFilePath);
                 }
                 catch
                 {
@@ -46,7 +48,7 @@ namespace Conbot
                 Console.Write("Enter your bot token: ");
                 string token = Console.ReadLine();
                 _config.Token = token;
-                Toml.WriteFile(_config, "config.toml");
+                Toml.WriteFile(_config, configFilePath);
             }
             
             return true;
