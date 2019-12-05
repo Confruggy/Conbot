@@ -5,6 +5,7 @@ using Conbot.Logging;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conbot.Commands
 {
@@ -12,7 +13,7 @@ namespace Conbot.Commands
     {
         private readonly DiscordShardedClient _discordClient;
         private readonly CommandService _service;
-        IServiceProvider _provider;
+        private IServiceProvider _provider = new ServiceCollection().BuildServiceProvider();
 
         public CommandHandler(DiscordShardedClient client)
         {
@@ -25,7 +26,7 @@ namespace Conbot.Commands
             });
         }
 
-        public async Task InstallAsync(IServiceProvider provider)
+        public async Task InstallAsync()
         {
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 

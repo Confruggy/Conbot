@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using Conbot.Commands;
 using Conbot.Logging;
 using Discord;
 using Discord.WebSocket;
@@ -11,6 +12,7 @@ namespace Conbot
     {
         private readonly Config _config;
         private readonly DiscordShardedClient _discordClient;
+        private readonly CommandHandler _commandHandler;
 
         public ConbotClient(Config config)
         {
@@ -27,12 +29,15 @@ namespace Conbot
             });
 
             SubcribeEvents();
+
+            _commandHandler = new CommandHandler(_discordClient);
         }
 
         public async Task RunAsync()
         {
             await _discordClient.LoginAsync(TokenType.Bot, _config.Token);
             await _discordClient.StartAsync();
+            await _commandHandler.InstallAsync();
         }
 
         private void SubcribeEvents()
