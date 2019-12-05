@@ -6,8 +6,9 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Discord.Net.Websocket" Version="2.1.1"/>
-    <PackageReference Include="Discord.Net.Commands" Version="2.1.1"/>
+    <PackageReference Include="Discord.Net.Websocket" Version="2.1.1" />
+    <PackageReference Include="Discord.Net.Commands" Version="2.1.1" />
+    <PackageReference Include="Humanizer.Core" Version="2.7.9" />
     <PackageReference Include="Nett" Version="0.13.0" />
   </ItemGroup>
 </Project>
