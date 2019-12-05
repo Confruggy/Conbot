@@ -7,7 +7,7 @@ namespace Conbot.Logging
 {
     public static class ConsoleLog
     {
-        private static SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
+        private static readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
 
         public static LogSeverity Severity = LogSeverity.Verbose;
 

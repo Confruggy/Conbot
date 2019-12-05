@@ -13,7 +13,7 @@ namespace Conbot.Commands
     {
         private readonly DiscordShardedClient _discordClient;
         private readonly CommandService _service;
-        private IServiceProvider _provider = new ServiceCollection().BuildServiceProvider();
+        private readonly IServiceProvider _provider = new ServiceCollection().BuildServiceProvider();
 
         public CommandHandler(DiscordShardedClient client)
         {
