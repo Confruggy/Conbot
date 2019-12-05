@@ -13,7 +13,7 @@ namespace Conbot.Modules.Info
         {
             var msg = await ReplyAsync("**Pong:** ...");
             long difference = (msg.CreatedAt - Context.Message.CreatedAt).Milliseconds;
-            await ReplyAsync($"**Pong:** {difference} ms");
+            await msg.ModifyAsync(x => x.Content = $"**Pong:** {difference} ms");
         } 
     }
 }
