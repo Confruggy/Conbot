@@ -1,1 +1,1 @@
-Another Discord bot.
+Yet another Discord bot.
