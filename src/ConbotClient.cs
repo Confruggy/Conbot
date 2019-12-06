@@ -28,7 +28,7 @@ namespace Conbot
                 DefaultRetryMode = RetryMode.AlwaysRetry
             });
 
-            SubcribeEvents();
+            SubscribeEvents();
 
             _commandHandler = new CommandHandler(_discordClient);
         }
@@ -40,7 +40,7 @@ namespace Conbot
             await _commandHandler.InstallAsync();
         }
 
-        private void SubcribeEvents()
+        private void SubscribeEvents()
         {
             _discordClient.LeftGuild += OnJoinedGuild;
             _discordClient.LeftGuild += OnLeftGuild;
