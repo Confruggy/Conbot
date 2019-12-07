@@ -13,20 +13,16 @@ namespace Conbot.Commands
     {
         private readonly DiscordShardedClient _discordClient;
         private readonly CommandService _service;
-        private readonly IServiceProvider _provider = new ServiceCollection().BuildServiceProvider();
+        private readonly IServiceProvider _provider;
 
-        public CommandHandler(DiscordShardedClient client)
+        public CommandHandler(DiscordShardedClient client, CommandService service, IServiceProvider provider)
         {
             _discordClient = client;
-            _service = new CommandService(new CommandServiceConfig
-            {
-                CaseSensitiveCommands = false,
-                DefaultRunMode = RunMode.Sync,
-                LogLevel = LogSeverity.Debug,
-            });
+            _service = service;
+            _provider = provider;
         }
 
-        public async Task InstallAsync()
+        public async Task StartAsync()
         {
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 
