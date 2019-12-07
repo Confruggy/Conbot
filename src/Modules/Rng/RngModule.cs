@@ -20,12 +20,12 @@ namespace Conbot.Modules.Rng
 
             public RollCommands(Random random) => _random = random;
 
-            [Command("roll")]
+            [Command]
             [Summary("Rolls a random number between 1 and a maximal value.")]
             public Task RollAsync([Summary("The maximal value.")] double max = 100)
                 => RollAsync(1, max);
 
-            [Command("roll")]
+            [Command]
             [Summary("Rolls a random number between a minimal value.")]
             public async Task RollAsync(
                 [Summary("The minimal value.")] double min,
