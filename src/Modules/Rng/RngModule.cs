@@ -22,16 +22,16 @@ namespace Conbot.Modules.Rng
 
             [Command]
             [Summary("Rolls a random number between 1 and a maximal value.")]
-            public Task RollAsync([Summary("The maximal value.")] double max = 100)
+            public Task RollAsync([Summary("The maximal value.")] int max = 100)
                 => RollAsync(1, max);
 
             [Command]
-            [Summary("Rolls a random number between a minimal value.")]
+            [Summary("Rolls a random number between a minimal and a maximal value.")]
             public async Task RollAsync(
-                [Summary("The minimal value.")] double min,
-                [Summary("The maximal value.")] double max)
+                [Summary("The minimal value.")] int min,
+                [Summary("The maximal value.")] int max)
             {
-                double number = Math.Round(_random.NextDouble() * (max - min)) + min;
+                int number = _random.Next(min, max);
                 await ReplyAsync($"{Context.User.Mention} rolled **{number}**.");
             }
         }
