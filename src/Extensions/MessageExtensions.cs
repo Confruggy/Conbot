@@ -4,7 +4,7 @@ using Discord.Net;
 
 namespace Conbot.Extensions
 {
-    internal static class MessageExtensions
+    public static class MessageExtensions
     {
         public static async Task<bool> TryAddReactionAsync(this IUserMessage message, IEmote emote, RequestOptions options = null)
         {
