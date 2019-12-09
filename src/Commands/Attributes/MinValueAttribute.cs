@@ -7,9 +7,9 @@ namespace Conbot.Commands.Attributes
 {
     public class MinValueAttribute : ParameterPreconditionAttribute
     {
-        public IComparable MinValue { get; set; }
+        public object MinValue { get; set; }
 
-        public MinValueAttribute(IComparable minValue) => MinValue = minValue;
+        public MinValueAttribute(object minValue) => MinValue = minValue;
 
         public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, ParameterInfo parameter,
             object value, IServiceProvider services)

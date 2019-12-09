@@ -7,9 +7,9 @@ namespace Conbot.Commands.Attributes
 {
     public class MaxValueAttribute : ParameterPreconditionAttribute
     {
-        public IComparable MaxValue { get; set; }
+        public object MaxValue { get; set; }
 
-        public MaxValueAttribute(IComparable maxValue) => MaxValue = maxValue;
+        public MaxValueAttribute(object maxValue) => MaxValue = maxValue;
 
         public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, ParameterInfo parameter,
             object value, IServiceProvider services)
