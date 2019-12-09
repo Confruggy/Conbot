@@ -18,7 +18,7 @@ namespace Conbot.Commands.Attributes
                 return Task.FromResult(PreconditionResult.FromSuccess());
 
             string message =
-                $"Parameter {Format.Bold(parameter.Name)} must be greater than {Format.Bold(MinValue?.ToString())}.";
+                $"Parameter {Format.Bold(parameter.Name)} must be greater than or equal to {Format.Bold(MinValue?.ToString())}.";
 
             return Task.FromResult(PreconditionResult.FromError(message));
         }
