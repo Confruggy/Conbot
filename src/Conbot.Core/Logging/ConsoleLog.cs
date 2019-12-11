@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 
-namespace Conbot.Logging
+namespace Conbot.Core.Logging
 {
     public static class ConsoleLog
     {

@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Discord.WebSocket;
-using System.Threading;
 using Discord;
-using Conbot.Extensions;
 using System.Linq;
 
-namespace Conbot.InteractiveMessages
+namespace Conbot.Core.InteractiveMessages
 {
     public class InteractiveMessageBuilder
     {

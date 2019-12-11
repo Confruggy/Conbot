@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.WebSocket;
 
-namespace Conbot.Commands.Attributes
+namespace Conbot.Core.Commands
 {
     public class LowerHierarchyAttribute : ParameterPreconditionAttribute
     {

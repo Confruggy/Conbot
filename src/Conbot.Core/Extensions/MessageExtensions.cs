@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Net;
 
-namespace Conbot.Extensions
+namespace Conbot.Core.Extensions
 {
     public static class MessageExtensions
     {

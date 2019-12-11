@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Conbot.Extensions;
-using Conbot.InteractiveMessages;
+using Conbot.Core.Extensions;
+using Conbot.Core.InteractiveMessages;
 using Discord;
 using Discord.Commands;
 

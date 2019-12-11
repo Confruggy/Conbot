@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using Conbot.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Nett;
 
 namespace Conbot
@@ -16,8 +18,16 @@ namespace Conbot
             if (!ReadConfig())
                 return;
 
-            await new ConbotClient(_config).RunAsync();
+            var services = new ServiceCollection();
+            ConfigureServices(services);
+
+            await new ConbotClient(_config).StartAsync(services);
             await Task.Delay(-1);
+        }
+
+        private void ConfigureServices(IServiceCollection services)
+        {
+            services.AddSingleton<Random>();
         }
 
         private bool ReadConfig()
@@ -50,7 +60,7 @@ namespace Conbot
                 _config.Token = token;
                 Toml.WriteFile(_config, configFilePath);
             }
-            
+
             return true;
         }
     }

@@ -1,15 +1,15 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Conbot.Commands;
-using Conbot.Logging;
+using Conbot.Core.Commands;
+using Conbot.Core.Logging;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Humanizer;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Conbot
+namespace Conbot.Core
 {
     public class ConbotClient
     {
@@ -33,14 +33,14 @@ namespace Conbot
             SubscribeEvents();
         }
 
-        public async Task RunAsync()
+        public async Task StartAsync(IServiceCollection services = null)
         {
             await _discordClient.LoginAsync(TokenType.Bot, _config.Token);
             await _discordClient.StartAsync();
 
-            var services = new ServiceCollection();
+            services ??= new ServiceCollection();
             ConfigureServices(services);
-            
+
             var provider = services.BuildServiceProvider();
             await InstallServicesAsync(provider);
         }
@@ -63,8 +63,7 @@ namespace Conbot
                     DefaultRunMode = RunMode.Sync,
                     LogLevel = LogSeverity.Debug,
                 }))
-                .AddSingleton<CommandHandler>()
-                .AddSingleton<Random>();
+                .AddSingleton<CommandHandler>();
         }
 
         private async Task InstallServicesAsync(IServiceProvider provider)

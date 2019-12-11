@@ -1,11 +1,11 @@
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
-using Conbot.Logging;
+using Conbot.Core.Logging;
 using Discord.Commands;
 using Discord.WebSocket;
 
-namespace Conbot.Commands
+namespace Conbot.Core.Commands
 {
     public class CommandHandler
     {

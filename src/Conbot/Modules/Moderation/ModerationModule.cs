@@ -3,13 +3,12 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using System.Collections.Generic;
-using Conbot.Commands;
+using Conbot.Core.Commands;
 using Discord.WebSocket;
 using System;
 using Discord.Net;
 using System.Net;
-using Conbot.Extensions;
-using Conbot.Commands.Attributes;
+using Conbot.Core.Extensions;
 
 namespace Conbot.Modules.Moderation
 {
@@ -157,7 +156,7 @@ namespace Conbot.Modules.Moderation
             "A soft ban is like a kick but instead kicking the member, " +
             "the member will be banned and directly unbanned. " +
             "This is useful for pruning the messages of the member.")]
-        [RequireUserPermission(GuildPermission.BanMembers|GuildPermission.KickMembers)]
+        [RequireUserPermission(GuildPermission.BanMembers | GuildPermission.KickMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
         public async Task SoftBanAsync(
             [Summary("The member to soft ban."), LowerHierarchy] SocketGuildUser member,
@@ -177,7 +176,7 @@ namespace Conbot.Modules.Moderation
 
         [Command("kick")]
         [Summary("Kicks a member.")]
-        [RequireUserPermission(GuildPermission.BanMembers|GuildPermission.KickMembers)]
+        [RequireUserPermission(GuildPermission.BanMembers | GuildPermission.KickMembers)]
         [RequireBotPermission(GuildPermission.KickMembers)]
         public async Task KickAsync(
             [Summary("The member to kick."), LowerHierarchy] SocketGuildUser user)
