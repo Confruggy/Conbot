@@ -1,68 +1,36 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Discord.WebSocket;
 using System.Threading;
-using Discord;
+using System.Threading.Tasks;
 using Conbot.Extensions;
+using Discord;
+using Discord.WebSocket;
 
-namespace Conbot.ReactionCallbacks
+namespace Conbot.InteractiveMessages
 {
-    public class ReactionCallbackBuilder
+    public class InteractiveMessage
     {
-        public static SemaphoreSlim _reactionLock = new SemaphoreSlim(1, 1);
+        private static readonly SemaphoreSlim _reactionLock = new SemaphoreSlim(1, 1);
+        public Func<IUser, Task<bool>> Precondition { get; }
+        public int Timeout { get; } = 60000;
 
-        public Func<IUser, Task<bool>> Precondition { get; set; }
+        public Dictionary<string, ReactionCallback> ReactionCallbacks { get; }
+            = new Dictionary<string, ReactionCallback>();
 
-        public int Timeout { get; set; } = 60000;
+        public List<MessageCallback> MessageCallbacks { get; }
+            = new List<MessageCallback>();
 
-        public Dictionary<string, ReactionCallback> Callbacks { get; set; } = new Dictionary<string, ReactionCallback>();
+        public bool AutoReactEmotes { get; }
 
-        public bool AutoReactEmotes { get; set; }
-
-        public ReactionCallbackBuilder WithAutoReactEmotes(bool @value = true)
+        public InteractiveMessage(Func<IUser, Task<bool>> precondition, int timeout,
+            Dictionary<string, ReactionCallback> reactionCallbacks,
+            List<MessageCallback> messageCallbacks, bool autoReactEmotes)
         {
-            AutoReactEmotes = @value;
-            return this;
-        }
-
-        public ReactionCallbackBuilder WithPrecondition(Func<IUser, Task<bool>> func)
-        {
-            Precondition = func;
-            return this;
-        }
-
-        public ReactionCallbackBuilder WithTimeout(int ms)
-        {
-            Timeout = ms;
-            return this;
-        }
-
-        public ReactionCallbackBuilder WithPrecondition(Func<IUser, bool> func)
-        {
-            Precondition = x => Task.FromResult(func(x));
-            return this;
-        }
-
-        public ReactionCallbackBuilder AddCallback(string emoji, Func<IUser, Task> callback, bool resumeAfterExecution = false)
-        {
-            Callbacks.Add(emoji, new ReactionCallback { Function = callback, ResumeAfterExecution = resumeAfterExecution });
-            return this;
-        }
-
-        public ReactionCallbackBuilder AddCallback(string emoji, Action<IUser> callback, bool resumeAfterExecution = false)
-        {
-            Callbacks.Add(emoji, new ReactionCallback { Function = x => { callback(x); return Task.CompletedTask; }, ResumeAfterExecution = resumeAfterExecution });
-            return this;
-        }
-
-        public Task ExecuteAsync(IDiscordClient client, IUserMessage message)
-        {
-            if (client is DiscordShardedClient shardedClient)
-                return ExecuteAsync(shardedClient, message);
-            else if (client is DiscordSocketClient socketClient)
-                return ExecuteAsync(socketClient, message);
-            throw new InvalidOperationException("Not supported client");
+            Precondition = precondition;
+            Timeout = timeout;
+            ReactionCallbacks = reactionCallbacks;
+            MessageCallbacks = messageCallbacks;
+            AutoReactEmotes = autoReactEmotes;
         }
 
         public Task ExecuteAsync(DiscordShardedClient client, IUserMessage message)
@@ -80,27 +48,29 @@ namespace Conbot.ReactionCallbacks
             var timeoutDate = DateTime.UtcNow.AddMilliseconds(Timeout);
             bool isFinished = false;
 
-            Func<Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> onReactionAdded = (msg, channel, reaction) =>
+            Task onReactionAdded(Cacheable<IUserMessage, ulong> msg, ISocketMessageChannel channel, SocketReaction reaction)
             {
                 Task.Run(async () =>
                 {
                     if (msg.Id != message.Id || !reaction.User.IsSpecified)
                         return;
-                    if (client.CurrentUser.IsBot && reaction.UserId == client.CurrentUser.Id)
+                    if (reaction.UserId == client.CurrentUser.Id)
                         return;
 
                     var emote = reaction.Emote;
                     string emojiString = emote is Emote e ? $"{e.Name}:{e.Id}" : emote.Name;
 
                     var user = reaction.User.Value;
-                    if (!Callbacks.TryGetValue(emojiString, out var callback))
-                        return;
                     if (Precondition != null && !await Precondition(user).ConfigureAwait(false))
                         return;
+                    if (!ReactionCallbacks.TryGetValue(emojiString, out var callback))
+                        return;
+
                     timeoutDate = DateTime.UtcNow.AddMilliseconds(Timeout);
+
                     try
                     {
-                        await callback.Function(reaction.User.Value).ConfigureAwait(false);
+                        await callback.Callback(reaction).ConfigureAwait(false);
                     }
                     finally
                     {
@@ -125,21 +95,66 @@ namespace Conbot.ReactionCallbacks
                     }
                 });
                 return Task.CompletedTask;
-            };
+            }
 
-            Func<Cacheable<IMessage, ulong>, ISocketMessageChannel, Task> onMessageDeleted = (msg, channel) =>
+            Task onMessageReceived(IMessage msg)
+            {
+                Task.Run(async () =>
+                {
+                    if (!(msg is IUserMessage userMessage))
+                        return;
+                    if (msg.Channel.Id != message.Channel.Id)
+                        return;
+                    if (Precondition != null && !await Precondition(userMessage.Author).ConfigureAwait(false))
+                        return;
+
+                    MessageCallback callback = null;
+
+                    foreach (var messageCallback in MessageCallbacks)
+                    {
+                        if (messageCallback.Precondition == null)
+                        {
+                            callback = messageCallback;
+                            break;
+                        }
+
+                        if (await messageCallback.Precondition.Invoke(userMessage).ConfigureAwait(false))
+                        {
+                            callback = messageCallback;
+                            break;
+                        }
+                    }
+
+                    if (callback == null)
+                        return;
+
+                    timeoutDate = DateTime.UtcNow.AddMilliseconds(Timeout);
+
+                    try
+                    {
+                        await callback.Callback(userMessage).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        if (!callback.ResumeAfterExecution)
+                            tokenSource.Cancel(true);
+                    }
+                });
+                return Task.CompletedTask;
+            }
+
+            Task onMessageDeleted(Cacheable<IMessage, ulong> msg, ISocketMessageChannel channel)
             {
                 if (msg.Id == message.Id)
                     tokenSource.Cancel(true);
                 return Task.CompletedTask;
-            };
+            }
 
-            if (client.CurrentUser.IsBot)
-                client.ReactionAdded += onReactionAdded;
-            else client.ReactionRemoved += onReactionAdded;
+            client.ReactionAdded += onReactionAdded;
+            client.MessageReceived += onMessageReceived;
             client.MessageDeleted += onMessageDeleted;
 
-            foreach (string emote in Callbacks.Keys)
+            foreach (string emote in ReactionCallbacks.Keys)
             {
                 await _reactionLock.WaitAsync().ConfigureAwait(false);
                 try
@@ -168,10 +183,10 @@ namespace Conbot.ReactionCallbacks
                 }
             } while (!isFinished);
 
-            if (client.CurrentUser.IsBot)
-                client.ReactionAdded -= onReactionAdded;
-            else client.ReactionRemoved -= onReactionAdded;
+            client.ReactionAdded -= onReactionAdded;
+            client.MessageReceived -= onMessageReceived;
             client.MessageDeleted -= onMessageDeleted;
+
             try
             {
                 await message.RemoveAllReactionsAsync();
