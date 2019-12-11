@@ -8,9 +8,9 @@ namespace Conbot.Extensions
     public static class CommandContextExtensions
     {
         public static async Task<SocketUserMessage> WaitForMessageAsync(this SocketCommandContext context,
-            int timeout = 60000)
+            int timeout = 60000, CancellationTokenSource tokenSource = null)
         {
-            var tokenSource = new CancellationTokenSource();
+            tokenSource ??= new CancellationTokenSource();
 
             var client = context.Client;
 
