@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using Conbot.Commands.TypeReaders;
 using Conbot.Logging;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -22,6 +23,7 @@ namespace Conbot.Commands
 
         public async Task StartAsync()
         {
+            AddTypeReaders();
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 
             _discordClient.MessageReceived += (msg) =>
@@ -31,6 +33,12 @@ namespace Conbot.Commands
             };
 
             _service.Log += ConsoleLog.LogAsync;
+        }
+
+        private void AddTypeReaders()
+        {
+            _service.AddTypeReader<CommandInfo>(new CommandTypeReader());
+            _service.AddTypeReader<ModuleInfo>(new ModuleTypeReader());
         }
 
         public async Task OnMessageReceivedAsync(SocketMessage message)
