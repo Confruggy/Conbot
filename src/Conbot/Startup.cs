@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Conbot.Commands;
 using Conbot.Logging;
+using Conbot.Services.Urban;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -64,7 +65,9 @@ namespace Conbot
                     LogLevel = LogSeverity.Debug,
                 }))
                 .AddSingleton<CommandHandler>()
-                .AddSingleton<Random>();
+                .AddSingleton<Random>()
+
+                .AddSingleton<UrbanService>();
         }
 
         private async Task InstallServicesAsync(IServiceProvider provider)
