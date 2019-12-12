@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.WebSocket;
 
-namespace Conbot.Core.Extensions
+namespace Conbot.Extensions
 {
     public static class CommandContextExtensions
     {

@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Conbot.Core.Commands;
-using Conbot.Core.Logging;
+using Conbot.Commands;
+using Conbot.Logging;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;

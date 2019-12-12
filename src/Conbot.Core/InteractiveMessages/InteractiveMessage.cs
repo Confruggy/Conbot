@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Conbot.Core.Extensions;
+using Conbot.Extensions;
 using Discord;
 using Discord.WebSocket;
 
-namespace Conbot.Core.InteractiveMessages
+namespace Conbot.InteractiveMessages
 {
     public class InteractiveMessage
     {

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using System.Linq;
 
-namespace Conbot.Core.InteractiveMessages
+namespace Conbot.InteractiveMessages
 {
     public class InteractiveMessageBuilder
     {

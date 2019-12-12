@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Discord;
 
-namespace Conbot.Core.InteractiveMessages
+namespace Conbot.InteractiveMessages
 {
     public class MessageCallbackBuilder
     {

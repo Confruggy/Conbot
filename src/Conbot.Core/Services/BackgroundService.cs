@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 
-namespace Conbot.Core.Services
+namespace Conbot.Services
 {
     public abstract class BackgroundService : IHostedService, IDisposable
     {

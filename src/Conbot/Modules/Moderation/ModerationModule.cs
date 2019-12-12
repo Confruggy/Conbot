@@ -3,12 +3,12 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using System.Collections.Generic;
-using Conbot.Core.Commands;
+using Conbot.Commands.Attributes;
 using Discord.WebSocket;
 using System;
 using Discord.Net;
 using System.Net;
-using Conbot.Core.Extensions;
+using Conbot.Extensions;
 
 namespace Conbot.Modules.Moderation
 {

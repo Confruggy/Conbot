@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Net;
 
-namespace Conbot.Core.Extensions
+namespace Conbot.Extensions
 {
     public static class DeletableExtensions
     {

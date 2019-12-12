@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using Conbot.Core;
-using Microsoft.Extensions.DependencyInjection;
 using Nett;
 
 namespace Conbot
