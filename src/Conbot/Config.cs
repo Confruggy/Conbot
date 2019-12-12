@@ -1,6 +1,6 @@
 using Discord;
 
-namespace Conbot.Core
+namespace Conbot
 {
     public class Config
     {
