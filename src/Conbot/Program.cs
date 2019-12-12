@@ -9,59 +9,29 @@ namespace Conbot
 {
     class Program
     {
-        private Config _config;
-
-        static Task Main() => new Program().StartAsync();
-
-        private async Task StartAsync()
+        static async Task Main()
         {
-            if (!ReadConfig())
-                return;
+            var config = ReadConfig();
 
-            var services = new ServiceCollection();
-            ConfigureServices(services);
-
-            await new ConbotClient(_config).StartAsync(services);
+            await new Startup(config).RunAsync();
             await Task.Delay(-1);
         }
 
-        private void ConfigureServices(IServiceCollection services)
-        {
-            services.AddSingleton<Random>();
-        }
-
-        private bool ReadConfig()
+        private static Config ReadConfig()
         {
             string configFilePath = Path.Combine(AppContext.BaseDirectory, "config.toml");
 
-            if (!File.Exists(configFilePath))
-            {
-                _config = new Config();
-                Toml.WriteFile(_config, configFilePath);
-            }
-            else
-            {
-                try
-                {
-                    _config = Toml.ReadFile<Config>(configFilePath);
-                }
-                catch
-                {
-                    Console.WriteLine("Config file is invalid. Please provide a valid config file!");
-                    Console.ReadKey();
-                    return false;
-                }
-            }
+            var config = Config.GetOrCreate(configFilePath);
 
-            if (string.IsNullOrWhiteSpace(_config.Token))
+            if (string.IsNullOrWhiteSpace(config.Token))
             {
                 Console.Write("Enter your bot token: ");
                 string token = Console.ReadLine();
-                _config.Token = token;
-                Toml.WriteFile(_config, configFilePath);
+                config.Token = token;
+                Toml.WriteFile(config, configFilePath);
             }
 
-            return true;
+            return config;
         }
     }
 }

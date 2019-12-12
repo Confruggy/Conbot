@@ -9,14 +9,14 @@ using Discord.WebSocket;
 using Humanizer;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Conbot.Core
+namespace Conbot
 {
-    public class ConbotClient
+    public class Startup
     {
         private readonly Config _config;
         private readonly DiscordShardedClient _discordClient;
 
-        public ConbotClient(Config config)
+        public Startup(Config config)
         {
             _config = config;
 
@@ -33,12 +33,12 @@ namespace Conbot.Core
             SubscribeEvents();
         }
 
-        public async Task StartAsync(IServiceCollection services = null)
+        public async Task RunAsync()
         {
             await _discordClient.LoginAsync(TokenType.Bot, _config.Token);
             await _discordClient.StartAsync();
 
-            services ??= new ServiceCollection();
+            var services = new ServiceCollection();
             ConfigureServices(services);
 
             var provider = services.BuildServiceProvider();
@@ -63,7 +63,8 @@ namespace Conbot.Core
                     DefaultRunMode = RunMode.Sync,
                     LogLevel = LogSeverity.Debug,
                 }))
-                .AddSingleton<CommandHandler>();
+                .AddSingleton<CommandHandler>()
+                .AddSingleton<Random>();
         }
 
         private async Task InstallServicesAsync(IServiceProvider provider)
