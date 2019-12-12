@@ -12,6 +12,8 @@ namespace Conbot.Modules.Help
     [Name("Help")]
     [Group("help")]
     [Summary("Gives information about commands.")]
+    [RequireBotPermission(ChannelPermission.EmbedLinks)]
+    [RequireBotPermission(ChannelPermission.AddReactions)]
     public class HelpModule : ModuleBase<ShardedCommandContext>
     {
         private readonly CommandService _service;
@@ -19,36 +21,25 @@ namespace Conbot.Modules.Help
         public HelpModule(CommandService service) => _service = service;
 
         [Command]
-        [Summary("Shows all available commands or gives more information about a specific command.")]
-        public async Task HelpAsync(
-            [Remainder, Summary(
-                "The command to give more information about. " +
-                "If no command is set it shows all available commands instead.")] string command = null)
+        [Summary("Shows all available commands.")]
+        public Task HelpAsync() => HelpAsync(null, null);
+
+        [Command]
+        [Summary("Gives more information about a specific module.")]
+        [Priority(2)]
+        public Task HelpAsync(
+            [Remainder, Summary("The module to give more information about.")] ModuleInfo module)
+         => HelpAsync(module, null);
+
+        [Command]
+        [Summary("Gives more information about a specific command.")]
+        [Priority(1)]
+        public Task HelpAsync(
+            [Remainder, Summary("The command to give more information about.")] CommandInfo command)
+            => HelpAsync(null, command);
+
+        public async Task HelpAsync(ModuleInfo startModule, CommandInfo startCommand)
         {
-            ModuleInfo firstModule;
-            CommandInfo firstCommand;
-
-            if (command != null)
-            {
-                firstModule = _service.Modules
-                    .FirstOrDefault(x => x.Group?.ToLower() == command.ToLower()
-                        || x.Name?.ToLower() == command.ToLower());
-
-                firstCommand = _service.Commands
-                        .FirstOrDefault(c => c.Aliases.Any(a => a.ToLower() == command.ToLower()));
-
-                if (firstModule == null && firstCommand == null)
-                {
-                    await ReplyAsync("Command or category hasn't been found.");
-                    return;
-                }
-            }
-            else
-            {
-                firstModule = null;
-                firstCommand = null;
-            }
-
             var moduleDictionary = new Dictionary<string, ModuleInfo>();
             var commandDictionary = new Dictionary<string, CommandInfo>();
 
@@ -57,16 +48,16 @@ namespace Conbot.Modules.Help
 
             IUserMessage message;
 
-            if (firstModule != null)
+            if (startModule != null)
             {
-                message = await ReplyAsync(embed: CreateModuleEmbed(firstModule, out moduleDictionary,
+                message = await ReplyAsync(embed: CreateModuleEmbed(startModule, out moduleDictionary,
                         out commandDictionary));
-                currentModule = firstModule;
+                currentModule = startModule;
             }
-            else if (firstCommand != null)
+            else if (startCommand != null)
             {
-                message = await ReplyAsync(embed: CreateCommandEmbed(firstCommand, out commandDictionary));
-                currentCommand = firstCommand;
+                message = await ReplyAsync(embed: CreateCommandEmbed(startCommand, out commandDictionary));
+                currentCommand = startCommand;
             }
             else
             {
@@ -79,15 +70,15 @@ namespace Conbot.Modules.Help
             var interactiveMessage = new InteractiveMessageBuilder()
                 .WithPrecondition(x => x.Id == Context.User.Id)
                 .AddReactionCallback(x => x
-                    .WithEmote("first:314070282643963914")
+                    .WithEmote("first:654781462490644501")
                     .WithCallback(async x =>
                     {
-                        if (currentModule != null)
+                        if (currentModule != null || currentCommand != null)
                             await message.ModifyAsync(x => x.Embed = CreateStartEmbed(out moduleDictionary));
                     })
                     .ShouldResumeAfterExecution(true))
                 .AddReactionCallback(x => x
-                    .WithEmote("backward:314070282656677898")
+                    .WithEmote("backward:654781463027515402")
                     .WithCallback(async x =>
                     {
                         if (currentCommand != null)
@@ -111,6 +102,9 @@ namespace Conbot.Modules.Help
                         }
                     })
                     .ShouldResumeAfterExecution(true))
+                .AddReactionCallback(x => x
+                    .WithEmote("stop:654781462385655849")
+                    .ShouldResumeAfterExecution(false))
                 .AddMessageCallback(x => x
                     .WithPrecondition(msg => int.TryParse(msg.Content, out int number))
                     .WithCallback(async msg =>
@@ -138,9 +132,6 @@ namespace Conbot.Modules.Help
                         tasks.Add(msg.TryDeleteAsync());
 
                         await Task.WhenAll(tasks);
-
-                        if (!moduleDictionary.Any() && !commandDictionary.Any())
-                            return;
                     })
                     .ShouldResumeAfterExecution(true))
                 .Build();
@@ -234,6 +225,8 @@ namespace Conbot.Modules.Help
 
             var subcommandText = new StringBuilder();
 
+            bool containsGroupedCommands = false;
+
             foreach (var keyValuePair in subcommandsAndSubmodules.OrderBy(x => x.Key))
             {
                 if (keyValuePair.Value is CommandInfo commandInfo)
@@ -245,6 +238,7 @@ namespace Conbot.Modules.Help
                 {
                     subcommandText.AppendLine(GetShortModule(moduleInfo, i));
                     moduleDictionary.Add(i.ToString(), moduleInfo);
+                    containsGroupedCommands = true;
                 }
                 i++;
             }
@@ -252,8 +246,15 @@ namespace Conbot.Modules.Help
             if (subcommandText.Length != 0)
                 embed.AddField(string.IsNullOrEmpty(module.Group) ? "Commands" : "Subcommands", subcommandText);
 
+            var footerText = new StringBuilder();
+
             if (commandsText.Length != 0 || subcommandText.Length != 0)
-                embed.WithFooter("Enter a number for more information about a command.");
+                footerText.Append("Enter a number for more information about a command.");
+
+            if (containsGroupedCommands)
+                footerText.Append(" *Contains subcommands or overloads.");
+
+            embed.WithFooter(footerText.ToString());
 
             return embed.Build();
         }
@@ -328,25 +329,25 @@ namespace Conbot.Modules.Help
 
         private string GetPath(ModuleInfo module)
         {
-            if (!module.IsSubmodule)
+            if (!module.IsSubmodule && string.IsNullOrEmpty(module.Group))
                 return module.Name;
 
             var parent = module.Parent;
 
-            while (parent.Parent != null)
+            while (parent?.Parent != null)
                 parent = module.Parent;
 
-            return $"{parent.Name}/{string.Join('/', module.Aliases.First().Split(' ').SkipLast(1))}";
+            return $"{parent?.Name ?? module.Name} › {string.Join(" › ", module.Aliases.First().Split(' '))}";
         }
 
         private string GetPath(CommandInfo command)
         {
             var module = command.Module;
 
-            while (module.Parent != null)
+            while (module.IsSubmodule)
                 module = module.Parent;
 
-            return $"{module.Name}/{command.Aliases.First().Replace(' ', '/')}";
+            return $"{module.Name} › {command.Aliases.First().Replace(" ", " › ")}";
         }
 
         private string ParameterToString(ParameterInfo parameter, bool literal = false)
