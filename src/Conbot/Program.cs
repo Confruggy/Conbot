@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using Nett;
+using Serilog;
 
 namespace Conbot
 {
@@ -9,10 +10,17 @@ namespace Conbot
     {
         static async Task Main()
         {
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console(outputTemplate: "{Timestamp:HH:mm:ss} [{Level}] {Message:lj}{NewLine}{Exception}")
+                .WriteTo.File(Path.Combine(AppContext.BaseDirectory, "log.log"))
+                .MinimumLevel.Information()
+                .CreateLogger();
+
             var config = ReadConfig();
 
             await new Startup(config).RunAsync();
-            await Task.Delay(-1);
+
+            Log.CloseAndFlush();
         }
 
         private static Config ReadConfig()

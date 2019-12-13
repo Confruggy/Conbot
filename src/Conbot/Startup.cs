@@ -1,5 +1,8 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Conbot.Logging;
 using Conbot.Services.Commands;
 using Conbot.Services.Discord;
@@ -7,8 +10,8 @@ using Conbot.Services.Urban;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Serilog;
+using System.Threading;
 
 namespace Conbot
 {
@@ -25,6 +28,11 @@ namespace Conbot
         public async Task RunAsync()
         {
             var builder = new HostBuilder()
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.AddSerilog();
+                })
                 .ConfigureServices(services => ConfigureServices(services));
 
             await builder.RunConsoleAsync();
