@@ -10,7 +10,6 @@ namespace Conbot.InteractiveMessages
 {
     public class InteractiveMessage
     {
-        private static readonly SemaphoreSlim _reactionLock = new SemaphoreSlim(1, 1);
         public Func<IUser, Task<bool>> Precondition { get; }
         public int Timeout { get; } = 60000;
 
@@ -76,18 +75,11 @@ namespace Conbot.InteractiveMessages
                     {
                         if (callback.ResumeAfterExecution)
                         {
-                            await _reactionLock.WaitAsync().ConfigureAwait(false);
                             try
                             {
-                                if (client.CurrentUser.IsBot)
-                                    await message.RemoveReactionAsync(emote, user).ConfigureAwait(false);
-                                else await message.AddReactionAsync(emote).ConfigureAwait(false);
+                                await message.RemoveReactionAsync(emote, user).ConfigureAwait(false);
                             }
                             catch { }
-                            finally
-                            {
-                                _reactionLock.Release();
-                            }
                         }
 
                         else
@@ -155,17 +147,7 @@ namespace Conbot.InteractiveMessages
             client.MessageDeleted += onMessageDeleted;
 
             foreach (string emote in ReactionCallbacks.Keys)
-            {
-                await _reactionLock.WaitAsync().ConfigureAwait(false);
-                try
-                {
-                    await message.TryAddReactionAsync(new Emoji(emote)).ConfigureAwait(false);
-                }
-                finally
-                {
-                    _reactionLock.Release();
-                }
-            }
+                await message.TryAddReactionAsync(new Emoji(emote)).ConfigureAwait(false);
 
             do
             {
