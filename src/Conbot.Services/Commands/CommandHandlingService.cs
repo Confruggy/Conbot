@@ -1,38 +1,43 @@
 using System;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Conbot.Commands.TypeReaders;
 using Conbot.Logging;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.Extensions.Hosting;
 
-namespace Conbot.Commands
+namespace Conbot.Services.Commands
 {
-    public class CommandHandler
+    public class CommandHandlingService : IHostedService
     {
         private readonly DiscordShardedClient _discordClient;
         private readonly CommandService _service;
         private readonly IServiceProvider _provider;
 
-        public CommandHandler(DiscordShardedClient client, CommandService service, IServiceProvider provider)
+        public CommandHandlingService(DiscordShardedClient client, CommandService service, IServiceProvider provider)
         {
             _discordClient = client;
             _service = service;
             _provider = provider;
         }
 
-        public async Task StartAsync()
+        public async Task StartAsync(CancellationToken stoppingToken)
         {
             AddTypeReaders();
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 
-            _discordClient.MessageReceived += (msg) =>
-            {
-                _ = OnMessageReceivedAsync(msg);
-                return Task.CompletedTask;
-            };
-
+            _discordClient.MessageReceived += OnMessageReceivedAsync;
             _service.Log += ConsoleLog.LogAsync;
+        }
+
+        public Task StopAsync(CancellationToken stoppingToken)
+        {
+            _discordClient.MessageReceived -= OnMessageReceivedAsync;
+            _service.Log -= ConsoleLog.LogAsync;
+
+            return Task.CompletedTask;
         }
 
         private void AddTypeReaders()
@@ -41,9 +46,10 @@ namespace Conbot.Commands
             _service.AddTypeReader<ModuleInfo>(new ModuleTypeReader());
         }
 
-        public async Task OnMessageReceivedAsync(SocketMessage message)
+        private Task OnMessageReceivedAsync(SocketMessage message)
         {
-            await HandleCommandAsync(message as SocketUserMessage);
+            _ = HandleCommandAsync(message as SocketUserMessage);
+            return Task.CompletedTask;
         }
 
         public async Task HandleCommandAsync(SocketUserMessage msg)
