@@ -82,22 +82,22 @@ namespace Conbot.Services.Commands
             switch (message.Severity)
             {
                 case LogSeverity.Debug:
-                    _logger.LogDebug($"{{Source}}: {message.Message}", message.Source);
+                    _logger.LogDebug($"{message.Source}: {{Message}}", message.Message);
                     break;
                 case LogSeverity.Verbose:
-                    _logger.LogTrace($"{{Source}}: {message.Message}", message.Source);
+                    _logger.LogTrace($"{message.Source}: {{Message}}", message.Message);
                     break;
                 case LogSeverity.Info:
-                    _logger.LogInformation($"{{Source}}: {message.Message}", message.Source);
+                    _logger.LogInformation($"{message.Source}: {{Message}}", message.Message);
                     break;
                 case LogSeverity.Warning:
-                    _logger.LogWarning($"{{Source}}: {message.Message}", message.Source);
+                    _logger.LogWarning($"{message.Source}: {{Message}}", message.Message);
                     break;
                 case LogSeverity.Error:
-                    _logger.LogError($"{{Source}}: {message.Message}", message.Source);
+                    _logger.LogError($"{message.Source}: {{Message}}", message.Message);
                     break;
                 case LogSeverity.Critical:
-                    _logger.LogCritical($"{{Source}}: {message.Message}", message.Source);
+                    _logger.LogCritical($"{message.Source}: {{Message}}", message.Message);
                     break;
             }
 
