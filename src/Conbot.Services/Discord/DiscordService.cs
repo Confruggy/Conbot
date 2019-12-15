@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,29 +62,12 @@ namespace Conbot.Services.Discord
 
         private Task OnLogAsync(LogMessage message)
         {
-            switch (message.Severity)
-            {
-                case LogSeverity.Debug:
-                    _logger.LogDebug($"{message.Source}: {{Message}}", message.Message);
-                    break;
-                case LogSeverity.Verbose:
-                    _logger.LogTrace($"{message.Source}: {{Message}}", message.Message);
-                    break;
-                case LogSeverity.Info:
-                    _logger.LogInformation($"{message.Source}: {{Message}}", message.Message);
-                    break;
-                case LogSeverity.Warning:
-                    _logger.LogWarning($"{message.Source}: {{Message}}", message.Message);
-                    break;
-                case LogSeverity.Error:
-                    _logger.LogError($"{message.Source}: {{Message}}", message.Message);
-                    break;
-                case LogSeverity.Critical:
-                    _logger.LogCritical($"{message.Source}: {{Message}}", message.Message);
-                    break;
-            }
-
+            _logger.Log(LogLevelFromSeverity(message.Severity),
+                $"{message.Source}: {{Message}}", message.Message, message.Exception);
             return Task.CompletedTask;
         }
+
+        private static LogLevel LogLevelFromSeverity(LogSeverity severity)
+            => (LogLevel)Math.Abs((int)severity - 5);
     }
 }
