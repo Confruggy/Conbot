@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace Conbot.Services.Urban
 {
-    public class UrbanService
+    public class UrbanService : IDisposable
     {
         private static readonly string _apiUrl = "http://api.urbandictionary.com/v0/define?term=";
 
@@ -23,9 +23,10 @@ namespace Conbot.Services.Urban
         public async Task<UrbanSearchResult> GetRandomAsync()
         {
             var response = await _client.GetAsync("https://www.urbandictionary.com/random.php?page=1");
-            Console.WriteLine(response.RequestMessage.RequestUri.AbsoluteUri);
             return await SearchAsync(response.RequestMessage.RequestUri.AbsoluteUri
                 .Replace("https://www.urbandictionary.com/define.php?term=", ""));
         }
+
+        public void Dispose() => _client.Dispose();
     }
 }
