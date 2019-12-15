@@ -43,7 +43,7 @@ namespace Conbot.Modules.Rng
         {
             if (options.Length < 2)
             {
-                await ReplyAsync("You must enter atleast 2 options.");
+                await ReplyAsync("You must enter at least 2 options.");
                 return;
             }
 
