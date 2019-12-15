@@ -25,13 +25,13 @@ namespace Conbot.Modules.Help
         [Priority(2)]
         public Task HelpAsync(
             [Remainder, Summary("The module to give more information about.")] ModuleInfo module)
-         => _service.ExecuteHelpMessageAsync(Context, module);
+         => _service.ExecuteHelpMessageAsync(Context, startModule: module);
 
         [Command]
         [Summary("Gives more information about a specific command.")]
         [Priority(1)]
         public Task HelpAsync(
             [Remainder, Summary("The command to give more information about.")] CommandInfo command)
-            => _service.ExecuteHelpMessageAsync(Context, command);
+            => _service.ExecuteHelpMessageAsync(Context, startCommand: command);
     }
 }

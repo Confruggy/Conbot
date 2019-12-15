@@ -15,17 +15,8 @@ namespace Conbot.Services.Help
 
         public HelpService(CommandService commandService) => _commandService = commandService;
 
-        public Task ExecuteHelpMessageAsync(SocketCommandContext context)
-            => ExecuteHelpMessageAsync(context, null, null);
-
-        public Task ExecuteHelpMessageAsync(SocketCommandContext context, ModuleInfo startModule)
-            => ExecuteHelpMessageAsync(context, startModule, null);
-
-        public Task ExecuteHelpMessageAsync(SocketCommandContext context, CommandInfo startCommand)
-            => ExecuteHelpMessageAsync(context, null, startCommand);
-
-        private async Task ExecuteHelpMessageAsync(SocketCommandContext context, ModuleInfo startModule,
-            CommandInfo startCommand)
+        public async Task ExecuteHelpMessageAsync(SocketCommandContext context, ModuleInfo startModule = null,
+            CommandInfo startCommand = null, IUserMessage message = null)
         {
             var moduleDictionary = new Dictionary<string, ModuleInfo>();
             var commandDictionary = new Dictionary<string, CommandInfo>();
@@ -33,28 +24,26 @@ namespace Conbot.Services.Help
             ModuleInfo currentModule = null;
             CommandInfo currentCommand = null;
 
-            IUserMessage message;
+            Embed embed;
 
             if (startModule != null)
             {
-                message = await context.Channel.SendMessageAsync(embed: CreateModuleEmbed(startModule,
-                    out moduleDictionary, out commandDictionary));
+                embed = CreateModuleEmbed(startModule, out moduleDictionary, out commandDictionary);
                 currentModule = startModule;
             }
             else if (startCommand != null)
             {
-                message = await context.Channel.SendMessageAsync(embed: CreateCommandEmbed(startCommand,
-                    out commandDictionary));
+                embed = CreateCommandEmbed(startCommand, out commandDictionary);
                 currentCommand = startCommand;
             }
             else
             {
-                message = await context.Channel.SendMessageAsync(embed: CreateStartEmbed(context,
-                    out moduleDictionary));
+                embed = CreateStartEmbed(context, out moduleDictionary);
             }
 
-            if (!moduleDictionary.Any() && !commandDictionary.Any())
-                return;
+            if (message == null)
+                message = await context.Channel.SendMessageAsync(embed: embed);
+            await message.ModifyAsync(x => x.Embed = embed);
 
             var interactiveMessage = new InteractiveMessageBuilder()
                 .WithPrecondition(x => x.Id == context.User.Id)
