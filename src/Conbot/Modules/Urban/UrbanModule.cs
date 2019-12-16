@@ -1,7 +1,6 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Conbot.Pagination;
 using Conbot.Services;
 using Conbot.Services.Urban;
 using Discord;
@@ -9,6 +8,7 @@ using Discord.Commands;
 using Humanizer;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Web;
+using Conbot.Services.Interactive;
 
 namespace Conbot.Modules.Urban
 {
@@ -20,8 +20,13 @@ namespace Conbot.Modules.Urban
     public class UrbanModule : ModuleBase<SocketCommandContext>
     {
         private readonly UrbanService _service;
+        private readonly InteractiveService _interactiveService;
 
-        public UrbanModule(UrbanService service) => _service = service;
+        public UrbanModule(UrbanService service, InteractiveService interactiveService)
+        {
+            _service = service;
+            _interactiveService = interactiveService;
+        }
 
         [Command]
         [Summary("Searches a definition for a word.")]
@@ -57,7 +62,7 @@ namespace Conbot.Modules.Urban
             for (int i = 0; i < count; i++)
                 paginator.AddPage(CreateUrbanEmbed(searchResult.Results.ElementAt(i), i + 1, count));
 
-            await paginator.RunAsync(Context);
+            await paginator.RunAsync(_interactiveService, Context);
         }
 
         private Embed CreateUrbanEmbed(UrbanResult result, int currentPage, int totalPages)

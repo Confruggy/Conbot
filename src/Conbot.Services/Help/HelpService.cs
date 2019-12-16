@@ -1,19 +1,27 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Conbot.Extensions;
 using Conbot.InteractiveMessages;
+using Conbot.Services.Interactive;
 using Discord;
 using Discord.Commands;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conbot.Services.Help
 {
     public class HelpService
     {
         private readonly CommandService _commandService;
+        private readonly InteractiveService _interactiveService;
 
-        public HelpService(CommandService commandService) => _commandService = commandService;
+        public HelpService(CommandService commandService, InteractiveService interactiveService)
+        {
+            _commandService = commandService;
+            _interactiveService = interactiveService;
+        }
 
         public async Task ExecuteHelpMessageAsync(SocketCommandContext context, ModuleInfo startModule = null,
             CommandInfo startCommand = null, IUserMessage message = null)
@@ -43,7 +51,7 @@ namespace Conbot.Services.Help
 
             if (message == null)
                 message = await context.Channel.SendMessageAsync(embed: embed);
-            await message.ModifyAsync(x => x.Embed = embed);
+            else await message.ModifyAsync(x => x.Embed = embed);
 
             var interactiveMessage = new InteractiveMessageBuilder()
                 .WithPrecondition(x => x.Id == context.User.Id)
@@ -114,7 +122,7 @@ namespace Conbot.Services.Help
                     .ShouldResumeAfterExecution(true))
                 .Build();
 
-            await interactiveMessage.ExecuteAsync(context.Client, message);
+            await _interactiveService.ExecuteInteractiveMessageAsync(interactiveMessage, message, context.User);
         }
 
         public Embed CreateStartEmbed(SocketCommandContext context, out Dictionary<string, ModuleInfo> moduleDictionary)

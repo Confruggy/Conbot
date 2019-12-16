@@ -6,7 +6,7 @@ using Conbot.InteractiveMessages;
 using Discord;
 using Discord.Commands;
 
-namespace Conbot.Pagination
+namespace Conbot.Services.Interactive
 {
     public class Paginator
     {
@@ -18,7 +18,8 @@ namespace Conbot.Pagination
 
         public void AddPage(string text) => AddPage(text, null);
 
-        public async Task<IUserMessage> RunAsync(SocketCommandContext context, int startIndex = 0)
+        public async Task<IUserMessage> RunAsync(InteractiveService service, SocketCommandContext context,
+            int startIndex = 0)
         {
             if (startIndex >= _pages.Count || startIndex < 0)
                 throw new ArgumentOutOfRangeException(nameof(startIndex));
@@ -159,8 +160,7 @@ namespace Conbot.Pagination
 
             builder.AddReactionCallback(x => x.WithEmote("stop:654781462385655849").ShouldResumeAfterExecution(false));
 
-            await builder.Build().ExecuteAsync(context.Client, message).ConfigureAwait(false);
-
+            await service.ExecuteInteractiveMessageAsync(builder.Build(), message, context.User).ConfigureAwait(false);
             return message;
         }
     }
