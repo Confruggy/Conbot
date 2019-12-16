@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Conbot.Logging;
 using Conbot.Services.Commands;
 using Conbot.Services.Discord;
 using Conbot.Services.Urban;
@@ -11,7 +10,9 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Serilog;
-using System.Threading;
+using Conbot.Services.Help;
+using Conbot.Services.Interactive;
+using Conbot.Services;
 
 namespace Conbot
 {
@@ -22,7 +23,6 @@ namespace Conbot
         public Startup(Config config)
         {
             _config = config;
-            ConsoleLog.Severity = _config.LogSeverity;
         }
 
         public async Task RunAsync()
@@ -54,7 +54,7 @@ namespace Conbot
                 {
                     CaseSensitiveCommands = false,
                     DefaultRunMode = RunMode.Sync,
-                    LogLevel = LogSeverity.Debug,
+                    LogLevel = LogSeverity.Debug
                 })
 
                 //Discord
@@ -64,7 +64,10 @@ namespace Conbot
                 .AddHostedService<DiscordService>()
                 .AddSingleton<CommandService>()
                 .AddHostedService<CommandHandlingService>()
+                .AddSingleton<InteractiveService>()
+                .AddHostedService<BackgroundServiceStarter<InteractiveService>>()
                 .AddSingleton<UrbanService>()
+                .AddSingleton<HelpService>()
 
                 //Utils
                 .AddSingleton<Random>();
