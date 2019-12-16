@@ -62,8 +62,8 @@ namespace Conbot.Services.Discord
 
         private Task OnLogAsync(LogMessage message)
         {
-            _logger.Log(LogLevelFromSeverity(message.Severity),
-                $"{message.Source}: {{Message}}", message.Message, message.Exception);
+            _logger.Log(LogLevelFromSeverity(message.Severity), message.Exception,
+                $"{message.Source}: {{Message}}", message.Message);
             return Task.CompletedTask;
         }
 
