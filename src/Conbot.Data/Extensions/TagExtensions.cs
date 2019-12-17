@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Conbot.Data.Entities;
 using Discord;
@@ -8,6 +10,22 @@ namespace Conbot.Data.Extensions
 {
     public static class TagExtensions
     {
+        public static Task<List<Tag>> GetTagsAsync(this ConbotContext context,
+            ulong? guildId = null, ulong? ownerId = null)
+        {
+            if (guildId == null && ownerId == null)
+                return context.Tags.ToListAsync();
+            if (guildId == null)
+                return context.Tags.Where(x => x.OwnerId == ownerId).ToListAsync();
+            if (ownerId == null)
+                return context.Tags.Where(x => x.GuildId == guildId).ToListAsync();
+            return context.Tags.Where(x => x.GuildId == guildId && x.OwnerId == ownerId).ToListAsync();
+        }
+
+        public static Task<List<Tag>> GetTagsAsync(this ConbotContext context,
+            IGuild guild = null, IUser owner = null)
+            => GetTagsAsync(context, guild?.Id, owner?.Id);
+
         public static Task<Tag> GetTagAsync(this ConbotContext context, int id)
             => context.Tags.FirstOrDefaultAsync(x => x.Id == id);
 
@@ -47,6 +65,9 @@ namespace Conbot.Data.Extensions
             return CreateTagAsync(context, guild.Id, message.Channel.Id, message.Id, message.Author.Id, name, content);
         }
 
+        public static void RemoveTag(this ConbotContext context, Tag tag)
+            => context.Tags.Remove(tag);
+
         public static async Task<TagUse> AddTagUseAsync(this ConbotContext context, Tag tag, ulong guildId,
             ulong channelId, ulong messageId, ulong userId, TagAlias usedAlias = null)
         {
@@ -71,6 +92,9 @@ namespace Conbot.Data.Extensions
             var guild = (message.Channel as ITextChannel)?.Guild;
             return AddTagUseAsync(context, tag, guild.Id, message.Channel.Id, message.Id, message.Author.Id, usedAlias);
         }
+
+        public static Task<List<TagAlias>> GetTagAliasesAsync(this ConbotContext context, Tag tag)
+            => context.TagAliases.Where(x => x.TagId == tag.Id).ToListAsync();
 
         public static Task<TagAlias> GetTagAliasAsync(this ConbotContext context, IGuild guild, string name)
             => context.TagAliases.FirstOrDefaultAsync(x => x.GuildId == guild.Id && x.Name.ToLower() == name.ToLower());
@@ -107,5 +131,8 @@ namespace Conbot.Data.Extensions
 
             return tagAlias;
         }
+
+        public static void RemoveTagAlias(this ConbotContext context, TagAlias alias)
+            => context.TagAliases.Remove(alias);
     }
 }
