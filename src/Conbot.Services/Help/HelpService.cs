@@ -60,7 +60,11 @@ namespace Conbot.Services.Help
                     .WithCallback(async x =>
                     {
                         if (currentModule != null || currentCommand != null)
+                        {
                             await message.ModifyAsync(x => x.Embed = CreateStartEmbed(context, out moduleDictionary));
+                            currentModule = null;
+                            currentCommand = null;
+                        }
                     })
                     .ShouldResumeAfterExecution(true))
                 .AddReactionCallback(x => x
