@@ -72,6 +72,16 @@ namespace Conbot.Data.Extensions
             return AddTagUseAsync(context, tag, guild.Id, message.Channel.Id, message.Id, message.Author.Id, usedAlias);
         }
 
+        public static Task<TagAlias> GetTagAliasAsync(this ConbotContext context, IGuild guild, string name)
+            => context.TagAliases.FirstOrDefaultAsync(x => x.GuildId == guild.Id && x.Name.ToLower() == name.ToLower());
+
+        public static Task<TagAlias> CreateTagAliasAsync(this ConbotContext context, Tag tag, IMessage message,
+            string name)
+        {
+            var guild = (message.Channel as ITextChannel)?.Guild;
+            return CreateTagAliasAsync(context, tag, guild.Id, message.Channel.Id, message.Id, message.Author.Id, name);
+        }
+
         public static async Task<TagAlias> CreateTagAliasAsync(this ConbotContext context, Tag tag, ulong guildId,
             ulong channelId, ulong messageId, ulong userId, string name)
         {
@@ -96,16 +106,6 @@ namespace Conbot.Data.Extensions
             await context.TagAliases.AddAsync(tagAlias);
 
             return tagAlias;
-        }
-
-        public static Task<TagAlias> GetTagAliasAsync(this ConbotContext context, IGuild guild, string name)
-            => context.TagAliases.FirstOrDefaultAsync(x => x.GuildId == guild.Id && x.Name == name);
-
-        public static Task<TagAlias> CreateTagAliasAsync(this ConbotContext context, Tag tag, IMessage message,
-            string name)
-        {
-            var guild = (message.Channel as ITextChannel)?.Guild;
-            return CreateTagAliasAsync(context, tag, guild.Id, message.Channel.Id, message.Id, message.Author.Id, name);
         }
     }
 }
