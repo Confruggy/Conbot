@@ -13,6 +13,9 @@ using Serilog;
 using Conbot.Services.Help;
 using Conbot.Services.Interactive;
 using Conbot.Services;
+using Conbot.Data;
+using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 
 namespace Conbot
 {
@@ -27,15 +30,19 @@ namespace Conbot
 
         public async Task RunAsync()
         {
-            var builder = new HostBuilder()
+            var host = new HostBuilder()
                 .ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();
                     logging.AddSerilog();
                 })
-                .ConfigureServices(services => ConfigureServices(services));
+                .ConfigureServices(services => ConfigureServices(services))
+                .UseConsoleLifetime()
+                .Build();
 
-            await builder.RunConsoleAsync();
+            UpdateDatabase(host.Services);
+
+            await host.RunAsync();
         }
 
         private void ConfigureServices(IServiceCollection services)
@@ -69,8 +76,20 @@ namespace Conbot
                 .AddSingleton<UrbanService>()
                 .AddSingleton<HelpService>()
 
+                //DbContext
+                .AddDbContext<ConbotContext>()
+
                 //Utils
                 .AddSingleton<Random>();
+        }
+
+        private static void UpdateDatabase(IServiceProvider services)
+        {
+            using var serviceScope = services
+                .GetRequiredService<IServiceScopeFactory>()
+                .CreateScope();
+            using var context = serviceScope.ServiceProvider.GetService<ConbotContext>();
+            context.Database.Migrate();
         }
     }
 }
