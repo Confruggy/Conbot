@@ -39,7 +39,7 @@ namespace Conbot.Data.Extensions
             var tagCreation = new TagCreation
             {
                 GuildId = guildId,
-                CreatedAt = DateTimeOffset.Now,
+                CreatedAt = DateTime.UtcNow,
                 ChannelId = channelId,
                 MessageId = messageId,
                 UserId = userId
@@ -79,7 +79,7 @@ namespace Conbot.Data.Extensions
                 MessageId = messageId,
                 UsedAlias = usedAlias,
                 UserId = userId,
-                UsedAt = DateTimeOffset.UtcNow
+                UsedAt = DateTime.UtcNow
             };
 
             await context.TagUses.AddAsync(use);
@@ -140,7 +140,7 @@ namespace Conbot.Data.Extensions
         {
             var tagAliasCreation = new TagAliasCreation
             {
-                CreatedAt = DateTimeOffset.Now,
+                CreatedAt = DateTime.UtcNow,
                 GuildId = guildId,
                 ChannelId = channelId,
                 MessageId = messageId,
