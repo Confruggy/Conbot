@@ -1,9 +1,10 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Conbot.Data.Entities
 {
-    public class TagUse : Use
+    public class TagUse
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
@@ -14,5 +15,15 @@ namespace Conbot.Data.Entities
 
         public int? UsedAliasId { get; set; }
         public TagAlias UsedAlias { get; set; }
+
+
+        public DateTime UsedAt { get; set; }
+        public ulong? GuildId { get; set; }
+        public ulong ChannelId { get; set; }
+        public ulong MessageId { get; set; }
+        public ulong UserId { get; set; }
+
+        [NotMapped]
+        public string Url => $"https://discordapp.com/channels/{GuildId?.ToString() ?? "@me"}/{ChannelId}/{MessageId}";
     }
 }

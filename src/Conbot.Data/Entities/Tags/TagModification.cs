@@ -1,13 +1,13 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Conbot.Data.Entities
 {
-    public class TagModification : Modification
+    public class TagModification
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public new ulong GuildId { get; set; }
 
         [Required]
         public int TagId { get; set; }
@@ -17,5 +17,14 @@ namespace Conbot.Data.Entities
         public string NewContent { get; set; }
         [Required]
         public string OldContent { get; set; }
+
+        public DateTime ModifiedAt { get; set; }
+        public ulong? GuildId { get; set; }
+        public ulong ChannelId { get; set; }
+        public ulong MessageId { get; set; }
+        public ulong UserId { get; set; }
+
+        [NotMapped]
+        public string Url => $"https://discordapp.com/channels/{GuildId?.ToString() ?? "@me"}/{ChannelId}/{MessageId}";
     }
 }
