@@ -17,10 +17,10 @@ namespace Conbot.Data.Entities
 
         [Required]
         public int TagId { get; set; }
-        public Tag Tag { get; set; }
+        public virtual Tag Tag { get; set; }
 
-        public TagAliasCreation Creation { get; set; }
+        public virtual TagAliasCreation Creation { get; set; }
 
-        public List<TagUse> TagUses { get; set; }
+        public virtual List<TagUse> TagUses { get; set; }
     }
 }

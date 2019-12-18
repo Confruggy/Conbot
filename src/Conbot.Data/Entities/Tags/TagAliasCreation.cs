@@ -8,7 +8,7 @@ namespace Conbot.Data.Entities
     {
         [Key]
         public int TagAliasId { get; set; }
-        public TagAlias TagAlias { get; set; }
+        public virtual TagAlias TagAlias { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public ulong? GuildId { get; set; }

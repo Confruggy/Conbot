@@ -17,11 +17,11 @@ namespace Conbot.Data.Entities
         [Required]
         public ulong OwnerId { get; set; }
 
-        public List<TagAlias> Aliases { get; set; }
+        public virtual List<TagAlias> Aliases { get; set; }
 
-        public TagCreation Creation { get; set; }
+        public virtual TagCreation Creation { get; set; }
 
-        public List<TagModification> Modifications { get; set; }
-        public List<TagUse> Uses { get; set; }
+        public virtual List<TagModification> Modifications { get; set; }
+        public virtual List<TagUse> Uses { get; set; }
     }
 }

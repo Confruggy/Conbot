@@ -47,7 +47,9 @@ namespace Conbot.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Data Source=database.db");
+            optionsBuilder
+                .UseSqlite("Data Source=database.db")
+                .UseLazyLoadingProxies();
         }
     }
 }
