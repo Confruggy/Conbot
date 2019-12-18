@@ -93,6 +93,35 @@ namespace Conbot.Data.Extensions
             return AddTagUseAsync(context, tag, guild.Id, message.Channel.Id, message.Id, message.Author.Id, usedAlias);
         }
 
+        public static async Task<TagModification> ModifyTagAsync(this ConbotContext context, Tag tag, ulong guildId,
+            ulong channelId, ulong messageId, ulong userId, string newContent)
+        {
+            var modifcation = new TagModification
+            {
+                Tag = tag,
+                GuildId = guildId,
+                ChannelId = channelId,
+                MessageId = messageId,
+                UserId = userId,
+                OldContent = tag.Content,
+                NewContent = newContent,
+                ModifiedAt = DateTime.UtcNow
+            };
+
+            tag.Content = newContent;
+
+            await context.TagModifications.AddAsync(modifcation);
+            return modifcation;
+        }
+
+        public static Task<TagModification> ModifyTagAsync(this ConbotContext context, Tag tag, IMessage message,
+            string newContent)
+        {
+            var guild = (message.Channel as ITextChannel)?.Guild;
+            return ModifyTagAsync(context, tag, guild.Id, message.Channel.Id, message.Id, message.Author.Id,
+                newContent);
+        }
+
         public static Task<List<TagAlias>> GetTagAliasesAsync(this ConbotContext context, Tag tag)
             => context.TagAliases.Where(x => x.TagId == tag.Id).ToListAsync();
 
