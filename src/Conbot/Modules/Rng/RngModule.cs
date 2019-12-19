@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Conbot.Commands.Attributes;
 using Discord.Commands;
 
 namespace Conbot.Modules.Rng
@@ -37,18 +38,10 @@ namespace Conbot.Modules.Rng
         }
 
         [Command("choose")]
-        [Summary("Lets the bot choose from several options.")]
+        [Summary("Chooses from several choices.")]
         public async Task ChooseAsync(
-            [Summary("The options to choose from.")] params string[] options)
-        {
-            if (options.Length < 2)
-            {
-                await ReplyAsync("You must enter at least 2 options.");
-                return;
-            }
-
-            await ReplyAsync(options[_random.Next(options.Length)]);
-        }
+            [Summary("The choices to choose from."), MinLength(2)] params string[] choices)
+            => await ReplyAsync(choices[_random.Next(choices.Length)]);
 
         [Command("8ball")]
         [Summary("Asks the Magic 8 Ball a question.")]
