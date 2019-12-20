@@ -89,7 +89,9 @@ namespace Conbot.Modules.Moderation
         [RequireBotPermission(GuildPermission.BanMembers)]
         public async Task BanAsync(
             [Summary("The member to ban."), LowerHierarchy] SocketGuildUser member,
-            [Summary("The amount of days to prune messages from the member."), MinValue(0), MaxValue(7)] int prunedays = 0)
+            [Name("prune days")]
+            [Summary("The amount of days to prune messages from the member.")]
+            [MinValue(0), MaxValue(7)] int prunedays = 0)
         {
             if (member.Id == Context.User.Id)
             {
@@ -108,7 +110,9 @@ namespace Conbot.Modules.Moderation
         [RequireBotPermission(GuildPermission.BanMembers)]
         public async Task HackbanAsync(
             [Summary("The ID of the user to ban.")] ulong id,
-            [Summary("The amount of days to prune messages from the user."), MinValue(0), MaxValue(7)] int prunedays = 0)
+            [Name("prune days")]
+            [Summary("The amount of days to prune messages from the user.")]
+            [MinValue(0), MaxValue(7)] int prunedays = 0)
         {
             if (id == Context.User.Id)
             {
@@ -160,7 +164,9 @@ namespace Conbot.Modules.Moderation
         [RequireBotPermission(GuildPermission.BanMembers)]
         public async Task SoftBanAsync(
             [Summary("The member to soft ban."), LowerHierarchy] SocketGuildUser member,
-            [Summary("The amount of days to prune messages from the user."), MinValue(0), MaxValue(7)] int prunedays = 1)
+            [Name("prune days")]
+            [Summary("The amount of days to prune messages from the member.")]
+            [MinValue(0), MaxValue(7)] int prunedays = 1)
         {
             if (member.Id == Context.User.Id)
             {
