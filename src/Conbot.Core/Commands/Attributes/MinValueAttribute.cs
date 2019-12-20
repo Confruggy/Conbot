@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using Discord;
 using Discord.Commands;
+using Humanizer;
 
 namespace Conbot.Commands.Attributes
 {
@@ -17,9 +17,7 @@ namespace Conbot.Commands.Attributes
             if ((value as IComparable)?.CompareTo(MinValue) >= 0)
                 return Task.FromResult(PreconditionResult.FromSuccess());
 
-            string message =
-                $"Parameter {Format.Bold(parameter.Name)} must be greater than or equal to {Format.Bold(MinValue?.ToString())}.";
-
+            string message = $"{parameter.Name.Humanize()} must be greater than or equal to {MinValue}.";
             return Task.FromResult(PreconditionResult.FromError(message));
         }
     }
