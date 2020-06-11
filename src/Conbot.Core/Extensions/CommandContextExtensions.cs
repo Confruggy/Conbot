@@ -1,13 +1,13 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Discord.Commands;
+using Conbot.Commands;
 using Discord.WebSocket;
 
 namespace Conbot.Extensions
 {
     public static class CommandContextExtensions
     {
-        public static async Task<SocketUserMessage> WaitForMessageAsync(this SocketCommandContext context,
+        public static async Task<SocketUserMessage> WaitForMessageAsync(this DiscordCommandContext context,
             int timeout = 60000, CancellationTokenSource tokenSource = null)
         {
             tokenSource ??= new CancellationTokenSource();

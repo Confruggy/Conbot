@@ -1,36 +1,36 @@
 using System;
 using System.Threading.Tasks;
-using Conbot.Commands.Attributes;
-using Discord.Commands;
+using Conbot.Commands;
+using Qmmands;
 
 namespace Conbot.Modules.Rng
 {
     [Name("RNG")]
-    [Summary("Random number generation.")]
-    public class RngModule : ModuleBase
+    [Description("Random number generation.")]
+    public class RngModule : DiscordModuleBase
     {
         private readonly Random _random;
 
         public RngModule(Random random) => _random = random;
 
         [Group("roll")]
-        [Summary("Rolls a random number.")]
-        public class RollCommands : ModuleBase
+        [Description("Rolls a random number.")]
+        public class RollCommands : DiscordModuleBase
         {
             private readonly Random _random;
 
             public RollCommands(Random random) => _random = random;
 
             [Command]
-            [Summary("Rolls a random number between 1 and a maximal value.")]
-            public Task RollAsync([Summary("The maximal value.")] int max = 100)
+            [Description("Rolls a random number between 1 and a maximal value.")]
+            public Task RollAsync([Description("The maximal value.")] int max = 100)
                 => RollAsync(1, max);
 
             [Command]
-            [Summary("Rolls a random number between a minimal and a maximal value.")]
+            [Description("Rolls a random number between a minimal and a maximal value.")]
             public async Task RollAsync(
-                [Summary("The minimal value.")] int min,
-                [Summary("The maximal value.")] int max)
+                [Description("The minimal value.")] int min,
+                [Description("The maximal value.")] int max)
             {
                 int number = _random.Next(min, max);
                 await ReplyAsync($"{Context.User.Mention} rolled **{number}**.");
@@ -38,15 +38,15 @@ namespace Conbot.Modules.Rng
         }
 
         [Command("choose")]
-        [Summary("Chooses from several choices.")]
+        [Description("Chooses an option from several options.")]
         public async Task ChooseAsync(
-            [Summary("The choices to choose from."), MinLength(2)] params string[] choices)
-            => await ReplyAsync(choices[_random.Next(choices.Length)]);
+            [Description("The options to choose from."), MinLength(2)] params string[] options)
+            => await ReplyAsync(options[_random.Next(options.Length)]);
 
         [Command("8ball")]
-        [Summary("Asks the Magic 8 Ball a question.")]
+        [Description("Asks the Magic 8 Ball a question.")]
         public Task EightBallAsync(
-            [Summary("The question to ask."), Remainder] string question)
+            [Description("The question to ask."), Remainder] string question)
         {
             string[] answers =
             {

@@ -1,36 +1,27 @@
 using System;
 using System.Threading.Tasks;
-using Discord.Commands;
+using Qmmands;
 using Humanizer;
 
-namespace Conbot.Commands.Attributes
+namespace Conbot.Commands
 {
-    public class MaxLengthAttribute : ParameterPreconditionAttribute
+    public class MaxLengthAttribute : ParameterCheckAttribute
     {
         public int Length { get; set; }
 
         public MaxLengthAttribute(int length) => Length = length;
 
-        public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, ParameterInfo parameter,
-            object value, IServiceProvider services)
+        public override ValueTask<CheckResult> CheckAsync(object argument, CommandContext context)
         {
-            if (value is string text)
-            {
-                if (text.Length <= Length)
-                    return Task.FromResult(PreconditionResult.FromSuccess());
-
-                string message = $"{parameter.Name.Humanize()} can't be longer than {"character".ToQuantity(Length)}.";
-                return Task.FromResult(PreconditionResult.FromError(message));
-            }
-            else if (value is Array array && array.Length <= Length)
-            {
-                return Task.FromResult(PreconditionResult.FromSuccess());
-            }
-            else
-            {
-                string message = $"You can't enter more than {parameter.Name.ToQuantity(Length)}.";
-                return Task.FromResult(PreconditionResult.FromError(message));
-            }
+            return argument is string text
+                ? text.Length <= Length
+                    ? CheckResult.Successful
+                    : CheckResult.Unsuccessful(
+                        $"{Parameter.Name.Humanize()} can't be longer than {"character".ToQuantity(Length)}.")
+                : argument is Array array && array.Length <= Length
+                    ? CheckResult.Successful
+                    : CheckResult.Unsuccessful(
+                        $"You can't enter more than {Parameter.Name.ToQuantity(Length)}.");
         }
     }
 }

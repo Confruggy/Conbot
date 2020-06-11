@@ -1,20 +1,16 @@
-using System;
 using System.Threading.Tasks;
-using Discord.Commands;
+using Qmmands;
 using Humanizer;
 
-namespace Conbot.Commands.Attributes
+namespace Conbot.Commands
 {
-    public class NotEmptyAttribute : ParameterPreconditionAttribute
+    public class NotEmptyAttribute : ParameterCheckAttribute
     {
-        public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, ParameterInfo parameter,
-            object value, IServiceProvider services)
+        public override ValueTask<CheckResult> CheckAsync(object argument, CommandContext context)
         {
-            if (!string.IsNullOrWhiteSpace(value?.ToString()))
-                return Task.FromResult(PreconditionResult.FromSuccess());
-
-            string message = $"{parameter.Name.Humanize()} can't be empty.";
-            return Task.FromResult(PreconditionResult.FromError(message));
+            return !string.IsNullOrWhiteSpace(argument?.ToString())
+                ? CheckResult.Successful
+                : CheckResult.Unsuccessful($"{Parameter.Name.Humanize()} can't be empty.");
         }
     }
 }

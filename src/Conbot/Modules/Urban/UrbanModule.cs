@@ -1,23 +1,23 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 using Conbot.Services;
 using Conbot.Services.Urban;
 using Discord;
-using Discord.Commands;
 using Humanizer;
 using Microsoft.AspNetCore.WebUtilities;
-using System.Web;
 using Conbot.Services.Interactive;
+using Qmmands;
+using Conbot.Commands;
 
 namespace Conbot.Modules.Urban
 {
     [Name("Urban Dictionary")]
-    [Summary("Explore slang words and phrases from Urban Dictionary.")]
-    [Group("urban"), Alias("u")]
-    [RequireBotPermission(ChannelPermission.EmbedLinks)]
-    [RequireBotPermission(ChannelPermission.AddReactions)]
-    public class UrbanModule : ModuleBase<SocketCommandContext>
+    [Description("Explore slang words and phrases from Urban Dictionary.")]
+    [Group("urban", "u")]
+    [RequireBotPermission(ChannelPermission.EmbedLinks | ChannelPermission.AddReactions)]
+    public class UrbanModule : DiscordModuleBase
     {
         private readonly UrbanService _service;
         private readonly InteractiveService _interactiveService;
@@ -29,16 +29,16 @@ namespace Conbot.Modules.Urban
         }
 
         [Command]
-        [Summary("Searches a definition for a word.")]
+        [Description("Searches a definition for a word.")]
         [Priority(-1)]
-        public async Task UrbanAsync([Remainder, Summary("The word to search for.")] string word)
+        public async Task UrbanAsync([Remainder, Description("The word to search for.")] string word)
         {
             var searchResult = await _service.SearchAsync(word);
             await UrbanAsync(searchResult);
         }
 
         [Command("random")]
-        [Summary("Searches a definition for a random word.")]
+        [Description("Searches a definition for a random word.")]
         public async Task RandomAsync()
         {
             var searchResult = await _service.GetRandomAsync();

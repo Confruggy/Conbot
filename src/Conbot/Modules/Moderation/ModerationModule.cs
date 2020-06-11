@@ -1,32 +1,33 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
 using System.Collections.Generic;
-using Conbot.Commands.Attributes;
+using Conbot.Commands;
 using Discord.WebSocket;
 using System;
 using Discord.Net;
 using System.Net;
 using Conbot.Extensions;
+using Qmmands;
 
 namespace Conbot.Modules.Moderation
 {
 
     [Name("Moderation")]
-    [Summary("Moderation related commands.")]
-    public class ModerationModule : ModuleBase
+    [Description("Moderation related commands.")]
+    public class ModerationModule : DiscordModuleBase
     {
-        [Group("prune"), Alias("purge", "clean", "clear")]
-        [Summary("Deletes an amount of messages.")]
+        [Group("prune", "purge", "clean", "clear")]
+        [Description("Deletes an amount of messages.")]
         [RequireUserPermission(ChannelPermission.ManageMessages)]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
-        public class PruneCommands : ModuleBase
+        public class PruneCommands : DiscordModuleBase
         {
             [Command]
-            [Summary("Deletes a specific amount of messages.")]
+            [Description("Deletes a specific amount of messages.")]
             [Remarks("Only up to 100 of the latest 1.000 messages in the executing channel will be deleted.")]
-            public async Task PruneAsync([Summary("The maximal amount of messages to delete.")] uint limit)
+            [Priority(1)]
+            public async Task PruneAsync([Description("The maximal amount of messages to delete.")] uint limit)
             {
                 int count = await DeleteMessagesAsync(msg => true, limit < 100 ? limit : 100);
 
@@ -36,11 +37,12 @@ namespace Conbot.Modules.Moderation
             }
 
             [Command]
-            [Summary("Deletes an amount of messages of a specific member.")]
+            [Description("Deletes a specifc amount of messages of a specific member.")]
             [Remarks("Only up to 100 of the latest 1.000 messages in the executing channel will be deleted.")]
+            [Priority(0)]
             public async Task PruneAsync(
-                [Summary("The member to delete messages from.")] IGuildUser member,
-                [Summary("The maximal amount of messages to delete.")] uint limit = 100)
+                [Description("The member to delete messages from.")] IGuildUser member,
+                [Description("The maximal amount of messages to delete.")] uint limit = 100)
             {
                 int count = await DeleteMessagesAsync(msg => msg.Author.Id == member.Id, limit < 100 ? limit : 100);
                 var message = member != null
@@ -84,13 +86,13 @@ namespace Conbot.Modules.Moderation
 
 
         [Command("ban")]
-        [Summary("Bans a member.")]
+        [Description("Bans a member.")]
         [RequireUserPermission(GuildPermission.BanMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
         public async Task BanAsync(
-            [Summary("The member to ban."), LowerHierarchy] SocketGuildUser member,
+            [Description("The member to ban."), LowerHierarchy] SocketGuildUser member,
             [Name("prune days")]
-            [Summary("The amount of days to prune messages from the member.")]
+            [Description("The amount of days to prune messages from the member.")]
             [MinValue(0), MaxValue(7)] int prunedays = 0)
         {
             if (member.Id == Context.User.Id)
@@ -104,14 +106,14 @@ namespace Conbot.Modules.Moderation
         }
 
         [Command("hackban")]
-        [Summary("Bans a user by ID.")]
+        [Description("Bans a user by ID.")]
         [Remarks("This is useful to ban a user that isn't in the server.")]
         [RequireUserPermission(GuildPermission.BanMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
         public async Task HackbanAsync(
-            [Summary("The ID of the user to ban.")] ulong id,
+            [Description("The ID of the user to ban.")] ulong id,
             [Name("prune days")]
-            [Summary("The amount of days to prune messages from the user.")]
+            [Description("The amount of days to prune messages from the user.")]
             [MinValue(0), MaxValue(7)] int prunedays = 0)
         {
             if (id == Context.User.Id)
@@ -137,11 +139,11 @@ namespace Conbot.Modules.Moderation
         }
 
         [Command("unban")]
-        [Summary("Revokes a ban from a user.")]
+        [Description("Revokes a ban from a user.")]
         [RequireUserPermission(GuildPermission.BanMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
         public async Task UnbanAsync(
-            [Summary("The user to revoke the ban from.")] SocketGuildUser user)
+            [Description("The user to revoke the ban from.")] SocketGuildUser user)
         {
             try
             {
@@ -155,17 +157,17 @@ namespace Conbot.Modules.Moderation
         }
 
         [Command("softban")]
-        [Summary("Soft bans a member.")]
+        [Description("Soft bans a member.")]
         [Remarks(
             "A soft ban is like a kick but instead kicking the member, " +
             "the member will be banned and directly unbanned. " +
             "This is useful for pruning the messages of the member.")]
-        [RequireUserPermission(GuildPermission.BanMembers | GuildPermission.KickMembers)]
+        [RequireUserPermission(GuildPermission.BanMembers, GuildPermission.KickMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
         public async Task SoftBanAsync(
-            [Summary("The member to soft ban."), LowerHierarchy] SocketGuildUser member,
+            [Description("The member to soft ban."), LowerHierarchy] SocketGuildUser member,
             [Name("prune days")]
-            [Summary("The amount of days to prune messages from the member.")]
+            [Description("The amount of days to prune messages from the member.")]
             [MinValue(0), MaxValue(7)] int prunedays = 1)
         {
             if (member.Id == Context.User.Id)
@@ -181,11 +183,11 @@ namespace Conbot.Modules.Moderation
         }
 
         [Command("kick")]
-        [Summary("Kicks a member.")]
-        [RequireUserPermission(GuildPermission.BanMembers | GuildPermission.KickMembers)]
+        [Description("Kicks a member.")]
+        [RequireUserPermission(GuildPermission.BanMembers, GuildPermission.KickMembers)]
         [RequireBotPermission(GuildPermission.KickMembers)]
         public async Task KickAsync(
-            [Summary("The member to kick."), LowerHierarchy] SocketGuildUser user)
+            [Description("The member to kick."), LowerHierarchy] SocketGuildUser user)
         {
             if (user.Id == Context.User.Id)
             {

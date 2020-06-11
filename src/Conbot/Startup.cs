@@ -16,6 +16,7 @@ using Conbot.Services;
 using Conbot.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
+using Qmmands;
 
 namespace Conbot
 {
@@ -36,7 +37,7 @@ namespace Conbot
                     logging.ClearProviders();
                     logging.AddSerilog();
                 })
-                .ConfigureServices(services => ConfigureServices(services))
+                .ConfigureServices(ConfigureServices)
                 .UseConsoleLifetime()
                 .Build();
 
@@ -57,11 +58,9 @@ namespace Conbot
                     MessageCacheSize = 100,
                     DefaultRetryMode = RetryMode.AlwaysRetry
                 })
-                .AddSingleton(new CommandServiceConfig
+                .AddSingleton(new CommandServiceConfiguration
                 {
-                    CaseSensitiveCommands = false,
-                    DefaultRunMode = RunMode.Sync,
-                    LogLevel = LogSeverity.Debug
+                    StringComparison = StringComparison.OrdinalIgnoreCase
                 })
 
                 //Discord

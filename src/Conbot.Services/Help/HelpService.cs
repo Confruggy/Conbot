@@ -1,14 +1,13 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Conbot.Commands;
 using Conbot.Extensions;
 using Conbot.InteractiveMessages;
 using Conbot.Services.Interactive;
 using Discord;
-using Discord.Commands;
-using Microsoft.Extensions.DependencyInjection;
+using Qmmands;
 
 namespace Conbot.Services.Help
 {
@@ -23,14 +22,14 @@ namespace Conbot.Services.Help
             _interactiveService = interactiveService;
         }
 
-        public async Task ExecuteHelpMessageAsync(SocketCommandContext context, ModuleInfo startModule = null,
-            CommandInfo startCommand = null, IUserMessage message = null)
+        public async Task ExecuteHelpMessageAsync(DiscordCommandContext context, Module startModule = null,
+            Command startCommand = null, IUserMessage message = null)
         {
-            var moduleDictionary = new Dictionary<string, ModuleInfo>();
-            var commandDictionary = new Dictionary<string, CommandInfo>();
+            var moduleDictionary = new Dictionary<string, Module>();
+            var commandDictionary = new Dictionary<string, Command>();
 
-            ModuleInfo currentModule = null;
-            CommandInfo currentCommand = null;
+            Module currentModule = null;
+            Command currentCommand = null;
 
             Embed embed;
 
@@ -129,7 +128,7 @@ namespace Conbot.Services.Help
             await _interactiveService.ExecuteInteractiveMessageAsync(interactiveMessage, message, context.User);
         }
 
-        public Embed CreateStartEmbed(SocketCommandContext context, out Dictionary<string, ModuleInfo> moduleDictionary)
+        public Embed CreateStartEmbed(DiscordCommandContext context, out Dictionary<string, Module> moduleDictionary)
         {
             var embed = new EmbedBuilder()
                 .WithAuthor(context.Guild.CurrentUser.Username, context.Guild.CurrentUser.GetAvatarUrl())
@@ -139,12 +138,12 @@ namespace Conbot.Services.Help
                 .WithColor(Constants.DefaultEmbedColor)
                 .WithFooter("Enter a number for more information about a command.");
 
-            var modules = _commandService.Modules
-                .Where(x => !x.IsSubmodule)
+            var modules = _commandService.GetAllModules()
+                .Where(x => x.Parent == null)
                 .OrderBy(x => x.Name)
                 .ToArray();
 
-            moduleDictionary = new Dictionary<string, ModuleInfo>();
+            moduleDictionary = new Dictionary<string, Module>();
 
             var modulesText = new StringBuilder();
 
@@ -161,17 +160,16 @@ namespace Conbot.Services.Help
             return embed.Build();
         }
 
-        public Embed CreateModuleEmbed(ModuleInfo module,
-            out Dictionary<string, ModuleInfo> moduleDictionary,
-            out Dictionary<string, CommandInfo> commandDictionary)
+        public Embed CreateModuleEmbed(Module module,
+            out Dictionary<string, Module> moduleDictionary,
+            out Dictionary<string, Command> commandDictionary)
         {
             var embed = new EmbedBuilder()
                 .WithAuthor(GetPath(module))
-                .WithTitle(module.Group)
                 .WithColor(Constants.DefaultEmbedColor);
 
             var descriptionText = new StringBuilder()
-                    .AppendLine(module.Summary ?? "No summary.");
+                    .AppendLine(module.Description ?? "No Description.");
 
             if (!string.IsNullOrEmpty(module.Remarks))
                 descriptionText
@@ -182,10 +180,10 @@ namespace Conbot.Services.Help
 
             int i = 1;
 
-            commandDictionary = new Dictionary<string, CommandInfo>();
+            commandDictionary = new Dictionary<string, Command>();
 
             var commands = module.Commands
-                .Where(x => x.Aliases.First() == module.Group)
+                .Where(x => x.FullAliases.First() == module.FullAliases.FirstOrDefault())
                 .OrderBy(x => x.Name);
 
             var commandsText = new StringBuilder();
@@ -203,7 +201,7 @@ namespace Conbot.Services.Help
             var subcommandsAndSubmodules = new Dictionary<string, object>();
 
             var subcommands = module.Commands
-                .Where(x => x.Aliases.First() != module.Group);
+                .Where(x => x.FullAliases.First() != module.FullAliases.FirstOrDefault());
 
             foreach (var command in subcommands)
                 subcommandsAndSubmodules.Add(command.Aliases.First(), command);
@@ -211,7 +209,7 @@ namespace Conbot.Services.Help
             foreach (var submodule in module.Submodules)
                 subcommandsAndSubmodules.Add(submodule.Aliases.First(), submodule);
 
-            moduleDictionary = new Dictionary<string, ModuleInfo>();
+            moduleDictionary = new Dictionary<string, Module>();
 
             var subcommandText = new StringBuilder();
 
@@ -219,12 +217,12 @@ namespace Conbot.Services.Help
 
             foreach (var keyValuePair in subcommandsAndSubmodules.OrderBy(x => x.Key))
             {
-                if (keyValuePair.Value is CommandInfo commandInfo)
+                if (keyValuePair.Value is Command commandInfo)
                 {
                     subcommandText.AppendLine(GetShortCommand(commandInfo, i));
                     commandDictionary.Add(i.ToString(), commandInfo);
                 }
-                else if (keyValuePair.Value is ModuleInfo moduleInfo)
+                else if (keyValuePair.Value is Module moduleInfo)
                 {
                     subcommandText.AppendLine(GetShortModule(moduleInfo, i));
                     moduleDictionary.Add(i.ToString(), moduleInfo);
@@ -234,7 +232,7 @@ namespace Conbot.Services.Help
             }
 
             if (subcommandText.Length != 0)
-                embed.AddField(string.IsNullOrEmpty(module.Group) ? "Commands" : "Subcommands", subcommandText);
+                embed.AddField(string.IsNullOrEmpty(module.Name) ? "Commands" : "Subcommands", subcommandText);
 
             var footerText = new StringBuilder();
 
@@ -249,15 +247,15 @@ namespace Conbot.Services.Help
             return embed.Build();
         }
 
-        public Embed CreateCommandEmbed(CommandInfo command, out Dictionary<string, CommandInfo> commandDictionary)
+        public Embed CreateCommandEmbed(Command command, out Dictionary<string, Command> commandDictionary)
         {
             var embed = new EmbedBuilder()
                 .WithAuthor(GetPath(command))
-                .WithTitle($"{command.Aliases.First()} {FormatParameters(command)}")
+                .WithTitle($"{command.FullAliases.First()} {FormatParameters(command)}")
                 .WithColor(Constants.DefaultEmbedColor);
 
             var descriptionText = new StringBuilder()
-                    .AppendLine(command.Summary ?? "No summary.");
+                    .AppendLine(command.Description ?? "No Description.");
 
             if (!string.IsNullOrEmpty(command.Remarks))
                 descriptionText.Append($"> {command.Remarks}");
@@ -272,7 +270,7 @@ namespace Conbot.Services.Help
                 {
                     parameterText
                         .AppendLine($"{ParameterToString(parameter, true)}")
-                        .Append($"> {parameter.Summary ?? "No summary."}");
+                        .Append($"> {parameter.Description ?? "No Description."}");
 
                     if (parameter.DefaultValue != null)
                         parameterText.Append($" Default value is {parameter.DefaultValue}.");
@@ -284,10 +282,10 @@ namespace Conbot.Services.Help
             }
 
             var overloads = command.Module.Commands
-                .Where(x => x.Aliases.First() == command.Aliases.First() && x != command)
+                .Where(x => x.FullAliases.First() == command.FullAliases.First() && x != command)
                 .ToArray();
 
-            commandDictionary = new Dictionary<string, CommandInfo>();
+            commandDictionary = new Dictionary<string, Command>();
 
             var overloadsText = new StringBuilder();
             if (overloads.Any())
@@ -309,17 +307,19 @@ namespace Conbot.Services.Help
             return embed.Build();
         }
 
-        private string GetShortCommand(CommandInfo command, int index) =>
-            $"`{index}.` **{command.Aliases.First()}** {FormatParameters(command)}\n" +
-            $"> {command.Summary ?? "No summary."}";
+        private string GetShortCommand(Command command, int index) =>
+            $"`{index}.` **{command.FullAliases.First()}** {FormatParameters(command)}\n" +
+            $"> {command.Description ?? "No Description."}";
 
-        private string GetShortModule(ModuleInfo module, int index) =>
-            $"`{index}.` **{(module.IsSubmodule ? $"{module.Aliases.First()}*" : module.Name)}**\n" +
-            $"> {module.Summary ?? "No summary."}";
+        private string GetShortModule(Module module, int index) =>
+            $"`{index}.` **{(module.Parent != null ? $"{module.FullAliases.First()}*" : module.Name)}**\n" +
+            $"> {module.Description ?? "No Description."}";
 
-        private string GetPath(ModuleInfo module)
+        private string GetPath(Module module)
         {
-            if (!module.IsSubmodule && string.IsNullOrEmpty(module.Group))
+            string alias = module.FullAliases.FirstOrDefault();
+
+            if (string.IsNullOrEmpty(alias))
                 return module.Name;
 
             var parent = module.Parent;
@@ -327,20 +327,20 @@ namespace Conbot.Services.Help
             while (parent?.Parent != null)
                 parent = module.Parent;
 
-            return $"{parent?.Name ?? module.Name} › {string.Join(" › ", module.Aliases.First().Split(' '))}";
+            return $"{parent?.Name ?? module.Name} › {string.Join(" › ", alias.Split(' '))}";
         }
 
-        private string GetPath(CommandInfo command)
+        private string GetPath(Command command)
         {
             var module = command.Module;
 
-            while (module.IsSubmodule)
+            while (module.Parent != null)
                 module = module.Parent;
 
-            return $"{module.Name} › {command.Aliases.First().Replace(" ", " › ")}";
+            return $"{module.Name} › {command.FullAliases.First().Replace(" ", " › ")}";
         }
 
-        private string ParameterToString(ParameterInfo parameter, bool literal = false)
+        private string ParameterToString(Parameter parameter, bool literal = false)
         {
             if (literal)
             {
@@ -370,7 +370,7 @@ namespace Conbot.Services.Help
             }
         }
 
-        private string FormatParameters(CommandInfo command)
+        private string FormatParameters(Command command)
             => string.Join(" ", command.Parameters.Select(x => ParameterToString(x)));
     }
 }

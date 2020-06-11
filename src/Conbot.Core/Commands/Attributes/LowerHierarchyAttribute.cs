@@ -1,26 +1,27 @@
 using System;
 using System.Threading.Tasks;
-using Discord.Commands;
+using Qmmands;
 using Discord.WebSocket;
 
-namespace Conbot.Commands.Attributes
+namespace Conbot.Commands
 {
-    public class LowerHierarchyAttribute : ParameterPreconditionAttribute
+    public class LowerHierarchyAttribute : ParameterCheckAttribute
     {
-        public override async Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context,
-            ParameterInfo parameter, object value, IServiceProvider services)
+        public override ValueTask<CheckResult> CheckAsync(Object argument, CommandContext context)
         {
-            if (!(context.User is SocketGuildUser user))
-                return PreconditionResult.FromError("This command must be used in a server.");
+            var discordCommandContext = (DiscordCommandContext)context;
 
-            var currentUser = await context.Guild.GetCurrentUserAsync() as SocketGuildUser;
+            if (!(discordCommandContext.User is SocketGuildUser user))
+                return CheckResult.Unsuccessful("This command must be used in a server.");
 
-            if ((value is SocketRole role && user.Hierarchy > role.Position && currentUser.Hierarchy > role.Position) ||
-                (value is SocketGuildUser target && user.Hierarchy > target.Hierarchy &&
+            var currentUser = discordCommandContext.Guild.CurrentUser;
+
+            if ((argument is SocketRole role && user.Hierarchy > role.Position && currentUser.Hierarchy > role.Position) ||
+                (argument is SocketGuildUser target && user.Hierarchy > target.Hierarchy &&
                     currentUser.Hierarchy > target.Hierarchy))
-                return PreconditionResult.FromSuccess();
+                return CheckResult.Successful;
 
-            return PreconditionResult.FromError("Roles position is too high.");
+            return CheckResult.Unsuccessful("Roles position is too high.");
         }
     }
 }

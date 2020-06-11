@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Conbot.Commands;
 using Conbot.Extensions;
 using Conbot.InteractiveMessages;
 using Discord;
-using Discord.Commands;
 
 namespace Conbot.Services.Interactive
 {
@@ -18,7 +18,7 @@ namespace Conbot.Services.Interactive
 
         public void AddPage(string text) => AddPage(text, null);
 
-        public async Task<IUserMessage> RunAsync(InteractiveService service, SocketCommandContext context,
+        public async Task<IUserMessage> RunAsync(InteractiveService service, DiscordCommandContext context,
             int startIndex = 0)
         {
             if (startIndex >= _pages.Count || startIndex < 0)

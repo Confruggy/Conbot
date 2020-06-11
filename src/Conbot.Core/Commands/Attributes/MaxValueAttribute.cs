@@ -1,24 +1,21 @@
 using System;
 using System.Threading.Tasks;
-using Discord.Commands;
+using Qmmands;
 using Humanizer;
 
-namespace Conbot.Commands.Attributes
+namespace Conbot.Commands
 {
-    public class MaxValueAttribute : ParameterPreconditionAttribute
+    public class MaxValueAttribute : ParameterCheckAttribute
     {
         public object MaxValue { get; set; }
 
         public MaxValueAttribute(object maxValue) => MaxValue = maxValue;
 
-        public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, ParameterInfo parameter,
-            object value, IServiceProvider services)
+        public override ValueTask<CheckResult> CheckAsync(object argument, CommandContext context)
         {
-            if ((value as IComparable)?.CompareTo(MaxValue) <= 0)
-                return Task.FromResult(PreconditionResult.FromSuccess());
-
-            string message = $"{parameter.Name.Humanize()} must be less than or equal to {MaxValue}.";
-            return Task.FromResult(PreconditionResult.FromError(message));
+            return (argument as IComparable)?.CompareTo(MaxValue) <= 0
+                ? CheckResult.Successful
+                : CheckResult.Unsuccessful($"{Parameter.Name.Humanize()} must be less than or equal to {MaxValue}.");
         }
     }
 }

@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Conbot.Commands.TypeReaders;
-using Conbot.InteractiveMessages;
-using Conbot.Services.Help;
-using Conbot.Services.Interactive;
+using Conbot.Commands;
 using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
+using Humanizer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Qmmands;
 
 namespace Conbot.Services.Commands
 {
@@ -20,49 +20,62 @@ namespace Conbot.Services.Commands
     {
         private readonly DiscordShardedClient _discordClient;
         private readonly CommandService _commandService;
-        private readonly HelpService _helpService;
-        private readonly InteractiveService _interactiveService;
         private readonly IServiceProvider _provider;
         private readonly ILogger<CommandHandlingService> _logger;
         private readonly ConcurrentDictionary<ulong, DateTimeOffset> _channelLocks;
         private readonly ConcurrentDictionary<ulong, DateTimeOffset> _userTimeouts;
 
-        public CommandHandlingService(DiscordShardedClient client, CommandService service, HelpService helpService,
-            InteractiveService interactiveService, IServiceProvider provider, ILogger<CommandHandlingService> logger)
+        public CommandHandlingService(DiscordShardedClient client, CommandService service, IServiceProvider provider,
+            ILogger<CommandHandlingService> logger)
         {
             _discordClient = client;
             _commandService = service;
-            _helpService = helpService;
-            _interactiveService = interactiveService;
             _provider = provider;
             _logger = logger;
             _channelLocks = new ConcurrentDictionary<ulong, DateTimeOffset>();
             _userTimeouts = new ConcurrentDictionary<ulong, DateTimeOffset>();
         }
 
-        public async Task StartAsync(CancellationToken stoppingToken)
+        public Task StartAsync(CancellationToken stoppingToken)
         {
-            AddTypeReaders();
-            await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
+            AddTypeParsers();
+            _commandService.AddModules(Assembly.GetEntryAssembly());
 
             _discordClient.MessageReceived += OnMessageReceivedAsync;
-            _commandService.Log += OnLogAsync;
             _commandService.CommandExecuted += OnCommandExecutedAsync;
+
+
+            return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken stoppingToken)
         {
             _discordClient.MessageReceived -= OnMessageReceivedAsync;
-            _commandService.Log -= OnLogAsync;
             _commandService.CommandExecuted -= OnCommandExecutedAsync;
 
             return Task.CompletedTask;
         }
 
-        private void AddTypeReaders()
+        private void AddTypeParsers()
         {
-            _commandService.AddTypeReader<CommandInfo>(new CommandTypeReader());
-            _commandService.AddTypeReader<ModuleInfo>(new ModuleTypeReader());
+            _commandService.AddTypeParser(new CommandTypeParser());
+            _commandService.AddTypeParser(new ModuleTypeParser());
+
+            _commandService.AddTypeParser(new UserTypeParser<IUser>());
+            _commandService.AddTypeParser(new UserTypeParser<SocketUser>());
+            _commandService.AddTypeParser(new UserTypeParser<IGuildUser>());
+            _commandService.AddTypeParser(new UserTypeParser<SocketGuildUser>());
+
+            _commandService.AddTypeParser(new RoleTypeParser<IRole>());
+            _commandService.AddTypeParser(new RoleTypeParser<SocketRole>());
+
+            _commandService.AddTypeParser(new ChannelTypeParser<IChannel>());
+            _commandService.AddTypeParser(new ChannelTypeParser<ITextChannel>());
+            _commandService.AddTypeParser(new ChannelTypeParser<SocketTextChannel>());
+            _commandService.AddTypeParser(new ChannelTypeParser<IGuildChannel>());
+            _commandService.AddTypeParser(new ChannelTypeParser<SocketGuildChannel>());
+            _commandService.AddTypeParser(new ChannelTypeParser<IVoiceChannel>());
+            _commandService.AddTypeParser(new ChannelTypeParser<SocketVoiceChannel>());
         }
 
         private Task OnMessageReceivedAsync(SocketMessage message)
@@ -102,55 +115,115 @@ namespace Conbot.Services.Commands
             if (msg.Author.IsBot)
                 return;
 
-            int argPos = 0;
-
-            if (!(msg.HasMentionPrefix(_discordClient.CurrentUser, ref argPos) || msg.HasStringPrefix("!", ref argPos)))
+            if (!Qmmands.CommandUtilities.HasPrefix(msg.Content, "!", out string output))
                 return;
-
-            if (msg.Content.Length == argPos)
-                return;
-
-            var context = new ShardedCommandContext(_discordClient, msg);
 
             using var scope = _provider.CreateScope();
-            await _commandService.ExecuteAsync(context, argPos, scope.ServiceProvider);
+            var context = new DiscordCommandContext(_discordClient, msg, scope.ServiceProvider);
+            var result = await _commandService.ExecuteAsync(output, context);
+
+            if (result.IsSuccessful)
+                return;
+
+            await context.Channel.SendMessageAsync(GetErrorMessage(result as FailedResult));
         }
 
-        private Task OnCommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
+        public string GetErrorMessage(FailedResult result)
         {
-            Task.Run(async () =>
+            switch (result)
             {
-                if (result.IsSuccess)
-                    return;
+                case OverloadsFailedResult overloadsFailedResult:
+                    {
+                        var failedOverloads = overloadsFailedResult.FailedOverloads;
 
-                if (result is ExecuteResult executeResult && executeResult.Exception != null)
-                {
-                    await context.Channel.SendMessageAsync(
-                            $"{Format.Bold("An unexpected error occured")}: {executeResult.ErrorReason}");
-                    return;
-                }
+                        if (failedOverloads.Count() == 1)
+                            return GetErrorMessage(failedOverloads.First().Value);
 
-                var message = await context.Channel.SendMessageAsync(result.ErrorReason);
+                        var text = new StringBuilder().AppendLine("Several possible errors occured:");
 
-                var socketContext = context as SocketCommandContext;
+                        for (int i = 0; i < failedOverloads.Count; i++)
+                        {
+                            var failedResult = failedOverloads.Values.ElementAt(i);
+                            text.AppendLine($"`{i + 1}.` {GetErrorMessage(failedResult)}");
+                        }
 
-                if (command.IsSpecified)
-                {
-                    var interactiveMessage = new InteractiveMessageBuilder()
-                        .WithPrecondition(x => x.Id == context.User.Id)
-                        .AddReactionCallback(x => x
-                            .WithEmote("info:654781462360490025")
-                            .WithCallback(async r =>
-                            {
-                                await _helpService.ExecuteHelpMessageAsync(socketContext, startCommand: command.Value,
-                                    message: message);
-                            }))
-                        .Build();
+                        return text.ToString();
+                    }
+                case ArgumentParseFailedResult argumentParserFailedResult:
+                    {
+                        var commandParameters = argumentParserFailedResult.Command.Parameters.Where(x => !x.IsOptional);
+                        var parsedParameters = argumentParserFailedResult.ParserResult.Arguments
+                            .Select(x => x.Key).Where(x => !x.IsOptional);
 
-                    await _interactiveService.ExecuteInteractiveMessageAsync(interactiveMessage, message, context.User);
-                }
+                        if (commandParameters.Count() > parsedParameters.Count())
+                        {
+                            var missingParameters = commandParameters.Except(parsedParameters);
 
-            });
+                            return new StringBuilder()
+                                .Append("Required ")
+                                .Append("parameter".ToQuantity(missingParameters.Count(), ShowQuantityAs.None))
+                                .Append(" ")
+                                .Append(missingParameters.Humanize(x => Format.Bold(x.Name)))
+                                .Append(" ")
+                                .Append("is".ToQuantity(missingParameters.Count(), ShowQuantityAs.None))
+                                .Append(" missing.")
+                                .ToString();
+                        }
+
+                        goto default;
+                    }
+                case ChecksFailedResult checksFailedResult:
+                    {
+                        var failedChecks = checksFailedResult.FailedChecks;
+
+                        if (failedChecks.Count() == 1)
+                            return failedChecks.First().Result.Reason;
+
+                        var text = new StringBuilder().AppendLine("Several checks failed:");
+
+                        for (int i = 0; i < failedChecks.Count; i++)
+                        {
+                            var checkResult = failedChecks.ElementAt(i).Result;
+                            text.AppendLine($"`{i + 1}.` {checkResult.Reason}");
+                        }
+
+                        return text.ToString();
+                    }
+                case ParameterChecksFailedResult parameterChecksFailedResult:
+                    {
+                        var failedChecks = parameterChecksFailedResult.FailedChecks;
+
+                        if (failedChecks.Count() == 1)
+                            return failedChecks.First().Result.Reason;
+
+                        var text = new StringBuilder().AppendLine("Several parameter checks failed:");
+
+                        for (int i = 0; i < failedChecks.Count; i++)
+                        {
+                            var checkResult = failedChecks.ElementAt(i).Result;
+                            text.AppendLine($"`{i + 1}.` {checkResult.Reason}");
+                        }
+
+                        return text.ToString();
+
+                    }
+                default: return result.Reason;
+            }
+        }
+
+        private Task OnCommandExecutedAsync(CommandExecutedEventArgs args)
+        {
+            var discordCommandContext = args.Context as DiscordCommandContext;
+
+            string command = discordCommandContext.Command.FullAliases.FirstOrDefault();
+            string user = discordCommandContext.User.ToString();
+            string guild = discordCommandContext.Guild?.Name ?? "@me";
+            string channel = discordCommandContext.Channel.Name;
+
+            _logger.Log(LogLevel.Information,
+                "Commands: Command {command} executed for {user} in {guild}/{channel}",
+                command, user, guild, channel);
+
             return Task.CompletedTask;
         }
 

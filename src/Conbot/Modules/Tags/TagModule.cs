@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Conbot.Commands.Attributes;
 using Conbot.Data;
 using Conbot.Data.Entities;
 using Conbot.Data.Extensions;
@@ -11,14 +10,15 @@ using Conbot.Extensions;
 using Conbot.InteractiveMessages;
 using Conbot.Services.Interactive;
 using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
+using Qmmands;
 using Humanizer;
+using Conbot.Commands;
 
 namespace Conbot.Modules.Tags
 {
     [Name("Tags"), Group("tag")]
-    public class TagModule : ModuleBase<ShardedCommandContext>
+    public class TagModule : DiscordModuleBase
     {
         private readonly InteractiveService _interactiveService;
         private readonly ConbotContext _db;
@@ -30,16 +30,16 @@ namespace Conbot.Modules.Tags
         }
 
         [Command, Priority(-1)]
-        [Summary("Shows a tag.")]
-        public Task TagAsync([Remainder, Summary("The name of the tag.")] string name) => ShowTagAsync(name);
+        [Description("Shows a tag.")]
+        public Task TagAsync([Remainder, Description("The name of the tag.")] string name) => ShowTagAsync(name);
 
         [Command("raw")]
-        [Summary("Shows the raw content of a tag.")]
+        [Description("Shows the raw content of a tag.")]
         [Remarks(
             "This escapes certain formatting from the content, " +
             "so you see the content like you would've typed it in. " +
             "This is useful for editing tags.")]
-        public Task RawAsync([Remainder, Summary("The name of the tag.")] string name) => ShowTagAsync(name, true);
+        public Task RawAsync([Remainder, Description("The name of the tag.")] string name) => ShowTagAsync(name, true);
 
         private async Task ShowTagAsync(string name, bool raw = false)
         {
@@ -66,11 +66,11 @@ namespace Conbot.Modules.Tags
                 ReplyAsync(content));
         }
 
-        [Command("create"), Alias("add")]
-        [Summary("Creates a tag.")]
+        [Command("create", "add")]
+        [Description("Creates a tag.")]
         public async Task CreateAsync(
-            [Summary("The name of the tag."), NotEmpty, MaxLength(50)] string name,
-            [Remainder, Summary("The content of the tag.")] string content)
+            [Description("The name of the tag."), NotEmpty, MaxLength(50)] string name,
+            [Remainder, Description("The content of the tag.")] string content)
         {
             name = name.TrimEnd();
 
@@ -88,11 +88,11 @@ namespace Conbot.Modules.Tags
                 ReplyAsync($"Tag **{Format.Sanitize(name)}** has been created."));
         }
 
-        [Command("delete"), Alias("remove")]
-        [Summary("Deletes a tag or an alias.")]
+        [Command("delete", "remove")]
+        [Description("Deletes a tag or an alias.")]
         [Remarks("Only the owner of a tag or a member with **Manage Server** permission can delete the tag.")]
         [RequireBotPermission(ChannelPermission.AddReactions)]
-        public async Task DeleteAsync([Remainder, Summary("The name of the tag to delete.")] string name)
+        public async Task DeleteAsync([Remainder, Description("The name of the tag to delete.")] string name)
         {
             var user = (SocketGuildUser)Context.User;
 
@@ -150,11 +150,11 @@ namespace Conbot.Modules.Tags
             await _interactiveService.ExecuteInteractiveMessageAsync(interactiveMessage, message, Context.User);
         }
 
-        [Command("edit"), Alias("modify")]
-        [Summary("Edits the content of a tag you own.")]
+        [Command("edit", "modify")]
+        [Description("Edits the content of a tag you own.")]
         public async Task EditAsync(
-            [Summary("The name of the tag you want to edit.")] string name,
-            [Remainder, Name("new content"), Summary("The new content of the tag.")] string newContent)
+            [Description("The name of the tag you want to edit.")] string name,
+            [Remainder, Name("new content"), Description("The new content of the tag.")] string newContent)
         {
             var tag = await _db.GetTagAsync(Context.Guild, name);
             if (tag == null)
@@ -177,9 +177,9 @@ namespace Conbot.Modules.Tags
         }
 
         [Command("info")]
-        [Summary("Shows information about a tag or an alias.")]
+        [Description("Shows information about a tag or an alias.")]
         [RequireBotPermission(ChannelPermission.EmbedLinks)]
-        public async Task InfoAsync([Remainder, Summary("The name of the tag or alias.")] string name)
+        public async Task InfoAsync([Remainder, Description("The name of the tag or alias.")] string name)
         {
             var tags = await _db.GetTagsAsync(Context.Guild);
             var tag = tags.FirstOrDefault(x => x.GuildId == Context.Guild.Id && x.Name.ToLower() == name.ToLower());
@@ -258,11 +258,11 @@ namespace Conbot.Modules.Tags
             => $"[{date:d} at {date:t}]({url})";
 
         [Command("alias")]
-        [Summary("Creates an alias for an already existing tag.")]
+        [Description("Creates an alias for an already existing tag.")]
         [Remarks("When the original tag gets deleted, the alias gets deleted aswell.")]
         public async Task AliasAsync(
-            [Summary("The name of the alias."), NotEmpty, MaxLength(50)] string name,
-            [Remainder, Name("tag name"), Summary("The name of the tag the alias points to.")] string tagName)
+            [Description("The name of the alias."), NotEmpty, MaxLength(50)] string name,
+            [Remainder, Name("tag name"), Description("The name of the tag the alias points to.")] string tagName)
         {
             name = name.TrimEnd();
 
@@ -291,20 +291,18 @@ namespace Conbot.Modules.Tags
         }
 
         [Command("all")]
-        [Summary("Lists all tags in this server.")]
-        [RequireBotPermission(ChannelPermission.EmbedLinks)]
-        [RequireBotPermission(ChannelPermission.AddReactions)]
-        public Task AllAsync([Summary("The page to start with")] int page = 1)
+        [Description("Lists all tags in this server.")]
+        [RequireBotPermission(ChannelPermission.EmbedLinks | ChannelPermission.AddReactions)]
+        public Task AllAsync([Description("The page to start with")] int page = 1)
             => ListAsync(page: page);
 
         [Command("list")]
-        [Summary("Lists all your or someone else's tags in this server.")]
-        [RequireBotPermission(ChannelPermission.EmbedLinks)]
-        [RequireBotPermission(ChannelPermission.AddReactions)]
+        [Description("Lists all your or someone else's tags in this server.")]
+        [RequireBotPermission(ChannelPermission.EmbedLinks | ChannelPermission.AddReactions)]
         public Task AllAsync(
-            [Summary("The member to lists tags from. If no user is entered, it lists your tags instead.")]
+            [Description("The member to lists tags from. If no user is entered, it lists your tags instead.")]
                 IGuildUser user = null,
-            [Summary("The page to start with.")] int page = 1)
+            [Description("The page to start with.")] int page = 1)
             => ListAsync(user ?? Context.User as IGuildUser, page);
 
         public async Task ListAsync(IGuildUser user = null, int page = 1)

@@ -1,13 +1,14 @@
 using System.Threading.Tasks;
-using Discord.Commands;
+using Conbot.Commands;
+using Qmmands;
 
 namespace Conbot.Modules.Info
 {
     [Name("Info")]
-    public class InfoModule : ModuleBase
+    public class InfoModule : DiscordModuleBase
     {
         [Command("ping")]
-        [Summary("Sents a message and shows the time difference between the command message and the bots response.")]
+        [Description("Sents a message and shows the time difference between the command message and the bots response.")]
         [Remarks("This has nothing to do with your own ping.")]
         public async Task PingAsync()
         {
