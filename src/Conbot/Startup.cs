@@ -16,6 +16,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Hosting;
 using Qmmands;
+using Conbot.Plugins;
 
 namespace Conbot
 {
@@ -23,13 +24,18 @@ namespace Conbot
     {
         public async Task StartAsync()
         {
-            var host = new HostBuilder()
+            var builder = new HostBuilder()
                 .ConfigureAppConfiguration(BuildConfiguration)
                 .UseSerilog((hostingContext, loggerConfiguration) => loggerConfiguration
                     .ReadFrom.Configuration(hostingContext.Configuration))
                 .ConfigureServices(ConfigureServices)
-                .UseConsoleLifetime()
-                .Build();
+                .UseConsoleLifetime();
+
+
+            var assemblies = PluginHelper.LoadPluginAssemblies("Plugins");
+            PluginHelper.InstallPlugins(assemblies, builder);
+
+            var host = builder.Build();
 
             UpdateDatabase(host.Services);
 
