@@ -2,12 +2,10 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Conbot.Services.Commands;
 using Conbot.Services.Discord;
 using Conbot.Services.Urban;
 using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
 using Serilog;
 using Conbot.Services.Help;
@@ -16,27 +14,19 @@ using Conbot.Services;
 using Conbot.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Hosting;
 using Qmmands;
 
 namespace Conbot
 {
     public class Startup
     {
-        private readonly Config _config;
-
-        public Startup(Config config)
-        {
-            _config = config;
-        }
-
-        public async Task RunAsync()
+        public async Task StartAsync()
         {
             var host = new HostBuilder()
-                .ConfigureLogging(logging =>
-                {
-                    logging.ClearProviders();
-                    logging.AddSerilog();
-                })
+                .ConfigureAppConfiguration(BuildConfiguration)
+                .UseSerilog((hostingContext, loggerConfiguration) => loggerConfiguration
+                    .ReadFrom.Configuration(hostingContext.Configuration))
                 .ConfigureServices(ConfigureServices)
                 .UseConsoleLifetime()
                 .Build();
@@ -45,17 +35,16 @@ namespace Conbot
 
             await host.RunAsync();
         }
-
-        private void ConfigureServices(IServiceCollection services)
+        
+        public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
         {
             services
                 //Config
-                .AddSingleton(_config)
                 .AddSingleton(new DiscordSocketConfig
                 {
-                    TotalShards = _config.TotalShards,
+                    TotalShards = hostingContext.Configuration.GetValue<int>("Discord:TotalShards"),
                     LogLevel = LogSeverity.Debug,
-                    MessageCacheSize = 100,
+                    MessageCacheSize = hostingContext.Configuration.GetValue<int>("Discord:MessageCacheSize"),
                     DefaultRetryMode = RetryMode.AlwaysRetry
                 })
                 .AddSingleton(new CommandServiceConfiguration
@@ -80,6 +69,12 @@ namespace Conbot
 
                 //Utils
                 .AddSingleton<Random>();
+        }
+
+        public void BuildConfiguration(IConfigurationBuilder builder)
+        {
+            builder
+                .AddJsonFile("appsettings.json");
         }
 
         private static void UpdateDatabase(IServiceProvider services)

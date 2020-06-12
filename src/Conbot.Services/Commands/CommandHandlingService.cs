@@ -44,7 +44,6 @@ namespace Conbot.Services.Commands
             _discordClient.MessageReceived += OnMessageReceivedAsync;
             _commandService.CommandExecuted += OnCommandExecutedAsync;
 
-
             return Task.CompletedTask;
         }
 
@@ -217,12 +216,16 @@ namespace Conbot.Services.Commands
 
             string command = discordCommandContext.Command.FullAliases.FirstOrDefault();
             string user = discordCommandContext.User.ToString();
-            string guild = discordCommandContext.Guild?.Name ?? "@me";
+            string guild = discordCommandContext.Guild?.Name;
             string channel = discordCommandContext.Channel.Name;
 
-            _logger.Log(LogLevel.Information,
-                "Commands: Command {command} executed for {user} in {guild}/{channel}",
-                command, user, guild, channel);
+            if (guild != null)
+                _logger.Log(LogLevel.Information,
+                    "Commands: Command {command} executed for {user} in {guild}/{channel}",
+                        command, user, guild, channel);
+            else
+                _logger.Log(LogLevel.Information,
+                    "Commands: Command {command} executed for {user} in {channel}", command, user, channel);
 
             return Task.CompletedTask;
         }

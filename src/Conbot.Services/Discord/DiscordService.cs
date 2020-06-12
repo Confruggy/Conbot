@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Humanizer;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -13,10 +14,10 @@ namespace Conbot.Services.Discord
     public class DiscordService : IHostedService
     {
         private readonly DiscordShardedClient _client;
-        private readonly Config _config;
+        private readonly IConfiguration _config;
         private readonly ILogger<DiscordService> _logger;
 
-        public DiscordService(DiscordShardedClient client, Config config, ILogger<DiscordService> logger)
+        public DiscordService(DiscordShardedClient client, IConfiguration config, ILogger<DiscordService> logger)
         {
             _client = client;
             _config = config;
@@ -30,7 +31,7 @@ namespace Conbot.Services.Discord
             _client.ShardReady += OnShardReady;
             _client.Log += OnLogAsync;
 
-            await _client.LoginAsync(TokenType.Bot, _config.Token);
+            await _client.LoginAsync(TokenType.Bot, _config["Discord:Token"]);
             await _client.StartAsync();
         }
 
