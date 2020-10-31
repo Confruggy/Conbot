@@ -8,7 +8,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Conbot.Core\Conbot.Core.csproj" />
     <ProjectReference Include="..\Conbot.Services\Conbot.Services.csproj" />
-    <ProjectReference Include="..\Conbot.Data\Conbot.Data.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />

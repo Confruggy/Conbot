@@ -1,17 +1,16 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Conbot.Commands;
 using Discord;
 using Discord.WebSocket;
 using Humanizer;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Qmmands;
 
 namespace Conbot.Services.Commands
@@ -39,7 +38,6 @@ namespace Conbot.Services.Commands
         public Task StartAsync(CancellationToken stoppingToken)
         {
             AddTypeParsers();
-            _commandService.AddModules(Assembly.GetEntryAssembly());
 
             _discordClient.MessageReceived += OnMessageReceivedAsync;
             _commandService.CommandExecuted += OnCommandExecutedAsync;

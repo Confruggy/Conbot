@@ -1,6 +1,7 @@
 {
     "version": "2.0.0",
     "tasks": [
+        //build
         {
             "label": "build",
             "command": "dotnet",
@@ -11,8 +12,79 @@
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "dependsOn":
+            [
+                "build Conbot.Plugins.Test",
+                "build Conbot.HelpPlugin",
+                "build Conbot.InfoPlugin",
+                "build Conbot.ModerationPlugin",
+                "build Conbot.RngPlugin",
+                "build Conbot.TagPlugin",
+                "build Conbot.UrbanPlugin"
+            ]
         },
+        {
+            "label": "build Conbot.HelpPlugin",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/Plugins/Conbot.HelpPlugin/Conbot.HelpPlugin.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+        },
+        {
+            "label": "build Conbot.InfoPlugin",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/Plugins/Conbot.InfoPlugin/Conbot.InfoPlugin.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+        },
+        {
+            "label": "build Conbot.ModerationPlugin",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/Plugins/Conbot.ModerationPlugin/Conbot.ModerationPlugin.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+        },
+        {
+            "label": "build Conbot.RngPlugin",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/Plugins/Conbot.RngPlugin/Conbot.RngPlugin.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+        },
+        {
+            "label": "build Conbot.TagPlugin",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/Plugins/Conbot.TagPlugin/Conbot.TagPlugin.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+        },
+        {
+            "label": "build Conbot.UrbanPlugin",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/Plugins/Conbot.UrbanPlugin/Conbot.UrbanPlugin.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+        },
+        //publish
         {
             "label": "publish",
             "command": "dotnet",

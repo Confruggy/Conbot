@@ -1,22 +1,18 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Conbot.Plugins;
+using Conbot.Services;
 using Conbot.Services.Commands;
 using Conbot.Services.Discord;
-using Conbot.Services.Urban;
+using Conbot.Services.Interactive;
 using Discord;
 using Discord.WebSocket;
-using Serilog;
-using Conbot.Services.Help;
-using Conbot.Services.Interactive;
-using Conbot.Services;
-using Conbot.Data;
-using Microsoft.Extensions.Configuration;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Hosting;
 using Qmmands;
-using Conbot.Plugins;
+using Serilog;
 
 namespace Conbot
 {
@@ -36,8 +32,6 @@ namespace Conbot
             PluginHelper.InstallPlugins(assemblies, builder);
 
             var host = builder.Build();
-
-            UpdateDatabase(host.Services);
 
             await host.RunAsync();
         }
@@ -67,11 +61,6 @@ namespace Conbot
                 .AddHostedService<CommandHandlingService>()
                 .AddSingleton<InteractiveService>()
                 .AddHostedService<BackgroundServiceStarter<InteractiveService>>()
-                .AddSingleton<UrbanService>()
-                .AddSingleton<HelpService>()
-
-                //DbContext
-                .AddDbContext<ConbotContext>()
 
                 //Utils
                 .AddSingleton<Random>();
@@ -81,15 +70,6 @@ namespace Conbot
         {
             builder
                 .AddJsonFile("appsettings.json");
-        }
-
-        private static void UpdateDatabase(IServiceProvider services)
-        {
-            using var serviceScope = services
-                .GetRequiredService<IServiceScopeFactory>()
-                .CreateScope();
-            using var context = serviceScope.ServiceProvider.GetService<ConbotContext>();
-            context.Database.Migrate();
         }
     }
 }

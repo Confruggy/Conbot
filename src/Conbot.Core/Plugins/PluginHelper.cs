@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using McMaster.NETCore.Plugins;
 using Microsoft.Extensions.Hosting;
 
 namespace Conbot.Plugins
@@ -16,7 +17,9 @@ namespace Conbot.Plugins
             foreach (var dir in Directory.EnumerateDirectories(path))
             {
                 var name = Path.GetFileName(dir);
-                var assembly = LoadPluginAssembly(Path.Combine(dir, $"{name}.dll"));
+                var assembly = PluginLoader.CreateFromAssemblyFile( Path.Combine(Path.GetFullPath(dir), $"{name}.dll"),
+                    sharedTypes: new [] { typeof(IPluginStartup) })
+                    .LoadDefaultAssembly();
                 assemblies.Add(assembly);
             }
 
@@ -25,8 +28,8 @@ namespace Conbot.Plugins
 
         public static Assembly LoadPluginAssembly(string pluginLocation)
         {
-            var loadContext = new PluginLoadContext(pluginLocation);
-            return loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(pluginLocation)));
+            //var loadContext = new PluginLoadContext(pluginLocation);
+            return Assembly.LoadFrom(pluginLocation);
         }
 
         public static void InstallPlugins(Assembly assembly, IHostBuilder host)
