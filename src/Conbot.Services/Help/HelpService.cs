@@ -133,7 +133,7 @@ namespace Conbot.Services.Help
             var embed = new EmbedBuilder()
                 .WithAuthor(context.Guild.CurrentUser.Username, context.Guild.CurrentUser.GetAvatarUrl())
                 .WithDescription(
-                    "Below you see every modules you can use. " +
+                    "Below you see all available modules. " +
                     "Each module has one or several commands.")
                 .WithColor(Constants.DefaultEmbedColor)
                 .WithFooter("Enter a number for more information about a command.");
