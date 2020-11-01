@@ -24,13 +24,6 @@ namespace Conbot.Commands
 
         public override ValueTask<CheckResult> CheckAsync(CommandContext context)
         {
-            var dict = new Dictionary<char, string> {
-                ['x'] = "val1",
-                ['y'] = "val2"
-            };
-
-            var text = $"{dict['x']}. {dict['y']}";
-
             var discordCommandContext = context as DiscordCommandContext;
             
             return RequirePermissionUtils.CheckPermissionsAsync(discordCommandContext.Guild?.CurrentUser,
