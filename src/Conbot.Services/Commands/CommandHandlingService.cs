@@ -23,6 +23,8 @@ namespace Conbot.Services.Commands
         private readonly ILogger<CommandHandlingService> _logger;
         private readonly ConcurrentDictionary<ulong, DateTimeOffset> _channelLocks;
         private readonly ConcurrentDictionary<ulong, DateTimeOffset> _userTimeouts;
+        private DefaultPrefixHandler _defaultPrefixHandler;
+        public IPrefixHandler CustomPrefixHandler { get; set; }
 
         public CommandHandlingService(DiscordShardedClient client, CommandService service, IServiceProvider provider,
             ILogger<CommandHandlingService> logger)
@@ -33,6 +35,7 @@ namespace Conbot.Services.Commands
             _logger = logger;
             _channelLocks = new ConcurrentDictionary<ulong, DateTimeOffset>();
             _userTimeouts = new ConcurrentDictionary<ulong, DateTimeOffset>();
+            _defaultPrefixHandler = DefaultPrefixHandler.Instance;
         }
 
         public Task StartAsync(CancellationToken stoppingToken)
@@ -112,11 +115,14 @@ namespace Conbot.Services.Commands
             if (msg.Author.IsBot)
                 return;
 
-            if (!Qmmands.CommandUtilities.HasPrefix(msg.Content, "!", out string output))
-                return;
+            var prefixHandler = CustomPrefixHandler ?? _defaultPrefixHandler;
 
             using var scope = _provider.CreateScope();
             var context = new DiscordCommandContext(_discordClient, msg, scope.ServiceProvider);
+
+            if (!await prefixHandler.HandlePrefixAsync(context, out string output))
+                return;
+
             var result = await _commandService.ExecuteAsync(output, context);
 
             if (result.IsSuccessful)
