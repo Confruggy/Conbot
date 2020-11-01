@@ -1,5 +1,8 @@
+using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Conbot.Commands;
+using Conbot.Extensions;
 using Qmmands;
 
 namespace Conbot.InfoPlugin
@@ -15,6 +18,12 @@ namespace Conbot.InfoPlugin
             var msg = await ReplyAsync("**Pong:** ...");
             long difference = (msg.CreatedAt - Context.Message.CreatedAt).Milliseconds;
             await msg.ModifyAsync(x => x.Content = $"**Pong:** {difference} ms");
-        } 
+        }
+
+        [Command("uptime")]
+        [Description("Shows the uptime of the bot.")]
+        public Task UptimeAsync() => ReplyAsync($"The bot is running for {(GetUptime().ToLongFormattedString())}.");
+
+        private static TimeSpan GetUptime() => DateTime.Now.Subtract(Process.GetCurrentProcess().StartTime); 
     }
 }
