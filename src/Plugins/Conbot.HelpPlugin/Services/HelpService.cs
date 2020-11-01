@@ -172,9 +172,7 @@ namespace Conbot.HelpPlugin
                     .AppendLine(module.Description ?? "No Description.");
 
             if (!string.IsNullOrEmpty(module.Remarks))
-                descriptionText
-                    .AppendLine()
-                    .AppendLine($"\n\n> {module.Remarks}");
+                descriptionText.AppendLine($"> {module.Remarks}");
 
             embed.WithDescription(descriptionText.ToString());
 
