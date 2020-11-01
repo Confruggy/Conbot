@@ -58,7 +58,8 @@ namespace Conbot
                 //Services
                 .AddHostedService<DiscordService>()
                 .AddSingleton<CommandService>()
-                .AddHostedService<CommandHandlingService>()
+                .AddSingleton<CommandHandlingService>()
+                .AddHostedService<BackgroundServiceStarter<CommandHandlingService>>()
                 .AddSingleton<InteractiveService>()
                 .AddHostedService<BackgroundServiceStarter<InteractiveService>>()
 

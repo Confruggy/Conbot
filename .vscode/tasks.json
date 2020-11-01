@@ -19,6 +19,7 @@
                 "build Conbot.HelpPlugin",
                 "build Conbot.InfoPlugin",
                 "build Conbot.ModerationPlugin",
+                "build Conbot.PrefixPlugin",
                 "build Conbot.RngPlugin",
                 "build Conbot.TagPlugin",
                 "build Conbot.UrbanPlugin"
@@ -51,6 +52,16 @@
             "args": [
                 "build",
                 "${workspaceFolder}/src/Plugins/Conbot.ModerationPlugin/Conbot.ModerationPlugin.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+        },
+        {
+            "label": "build Conbot.PrefixPlugin",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/Plugins/Conbot.PrefixPlugin/Conbot.PrefixPlugin.csproj"
             ],
             "problemMatcher": "$msCompile",
         },
