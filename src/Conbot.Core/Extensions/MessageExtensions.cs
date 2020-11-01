@@ -47,5 +47,26 @@ namespace Conbot.Extensions
             }
             return true;
         }
+
+        public static bool HasMentionPrefix(this IUserMessage message, IUser user, out string output)
+        {
+            string content = message.Content;
+            output = null;
+
+            int endPos = content.IndexOf(' ');
+            if (endPos == -1)
+                return false;
+
+            string mention = content.Substring(0, endPos);
+
+            if (!MentionUtils.TryParseUser(mention, out ulong userId))
+                return false;
+
+            if (userId != user.Id)
+                return false;
+
+            output = content.Substring(mention.Length + 1);
+            return true;
+        }
     }
 }

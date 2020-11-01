@@ -120,10 +120,12 @@ namespace Conbot.Services.Commands
             using var scope = _provider.CreateScope();
             var context = new DiscordCommandContext(_discordClient, msg, scope.ServiceProvider);
 
-            if (!await prefixHandler.HandlePrefixAsync(context, out string output))
+            var prefixResult = await prefixHandler.HandlePrefixAsync(context);
+
+            if (!prefixResult.IsSuccessful)
                 return;
 
-            var result = await _commandService.ExecuteAsync(output, context);
+            var result = await _commandService.ExecuteAsync(prefixResult.Output, context);
 
             if (result.IsSuccessful)
                 return;

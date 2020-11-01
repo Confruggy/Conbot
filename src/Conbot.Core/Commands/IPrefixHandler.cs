@@ -4,6 +4,6 @@ namespace Conbot.Commands
 {
     public interface IPrefixHandler
     {
-        ValueTask<bool> HandlePrefixAsync(DiscordCommandContext context, out string output);
+        ValueTask<PrefixResult> HandlePrefixAsync(DiscordCommandContext context);
     }
 }

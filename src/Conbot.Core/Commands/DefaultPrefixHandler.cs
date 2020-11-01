@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Conbot.Extensions;
 using Discord;
 
 namespace Conbot.Commands
@@ -13,33 +14,21 @@ namespace Conbot.Commands
 
         private DefaultPrefixHandler() { }
 
-        public ValueTask<bool> HandlePrefixAsync(DiscordCommandContext context, out string output)
+        public ValueTask<PrefixResult> HandlePrefixAsync(DiscordCommandContext context)
         {
             string content = context.Message.Content;
-            output = null;
+            string output = null;
 
             if (content.StartsWith("!"))
             {
                 output = content.Substring(1);
-                return new ValueTask<bool>(true);
+                return PrefixResult.Successful(output);
             }
 
-            int endPos = content.IndexOf(' ');
-            if (endPos == -1)
-                return new ValueTask<bool>(false);
+            if (context.Message.HasMentionPrefix(context.Client.CurrentUser, out output))
+                return PrefixResult.Successful(output);
 
-            string mention = content.Substring(0, endPos);
-
-            if (!MentionUtils.TryParseUser(mention, out ulong userId))
-                return new ValueTask<bool>(false);
-
-            if (userId == context.Client.CurrentUser.Id)
-            {
-                output = content.Substring(mention.Length + 1);
-                return new ValueTask<bool>(true);
-            }
-
-            return new ValueTask<bool>(false);
+            return PrefixResult.Unsuccessful;
         }
     }
 }
