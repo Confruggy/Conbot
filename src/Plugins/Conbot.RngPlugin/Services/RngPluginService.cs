@@ -7,8 +7,7 @@ namespace Conbot.RngPlugin
 {
     public class RngPluginService : IHostedService
     {
-        private CommandService _commandService;
-
+        private readonly CommandService _commandService;
         private Module _module;
 
         public RngPluginService(CommandService commandService) => _commandService = commandService;

@@ -7,8 +7,7 @@ namespace Conbot.ModerationPlugin
 {
     public class ModerationPluginService : IHostedService
     {
-        private CommandService _commandService;
-
+        private readonly CommandService _commandService;
         private Module _module;
 
         public ModerationPluginService(CommandService commandService) => _commandService = commandService;

@@ -74,7 +74,7 @@ namespace Conbot.Extensions
             if (strings.Count == 1)
                 return strings[0];
 
-            return $"{string.Join(", ", strings.Take(strings.Count - 1))} and {strings[strings.Count - 1]}";
+            return $"{string.Join(", ", strings.Take(strings.Count - 1))} and {strings[^1]}";
         }
     }
 }

@@ -34,9 +34,8 @@ namespace Conbot.Commands
                 channel = foundChannels.FirstOrDefault();
             }
 
-            var tChannel = channel as T;
 
-            return tChannel != null
+            return channel is T tChannel
                 ? TypeParserResult<T>.Successful(tChannel)
                 : TypeParserResult<T>.Unsuccessful("Channel hasn't been found.");
         }

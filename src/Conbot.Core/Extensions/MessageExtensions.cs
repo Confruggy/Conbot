@@ -65,7 +65,7 @@ namespace Conbot.Extensions
             if (userId != user.Id)
                 return false;
 
-            output = content.Substring(mention.Length + 1);
+            output = content[(mention.Length + 1)..];
             return true;
         }
     }

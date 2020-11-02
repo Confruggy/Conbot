@@ -37,9 +37,8 @@ namespace Conbot.Commands
                 role = foundRoles.FirstOrDefault();
             }
 
-            var tRole = role as T;
 
-            return tRole != null
+            return role is T tRole
                 ? TypeParserResult<T>.Successful(tRole)
                 : TypeParserResult<T>.Unsuccessful("Role hasn't been found.");
         }

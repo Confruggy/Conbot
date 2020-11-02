@@ -7,8 +7,7 @@ namespace Conbot.UrbanPlugin
 {
     public class UrbanPluginService : IHostedService
     {
-        private CommandService _commandService;
-
+        private readonly CommandService _commandService;
         private Module _module;
 
         public UrbanPluginService(CommandService commandService) => _commandService = commandService;

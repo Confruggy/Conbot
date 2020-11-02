@@ -7,8 +7,7 @@ namespace Conbot.HelpPlugin
 {
     public class HelpPluginService : IHostedService
     {
-        private CommandService _commandService;
-
+        private readonly CommandService _commandService;
         private Module _module;
 
         public HelpPluginService(CommandService commandService) => _commandService = commandService;

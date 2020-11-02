@@ -7,7 +7,7 @@ namespace Conbot.Commands
 {
     public class LowerHierarchyAttribute : ParameterCheckAttribute
     {
-        public override ValueTask<CheckResult> CheckAsync(Object argument, CommandContext context)
+        public override ValueTask<CheckResult> CheckAsync(object argument, CommandContext context)
         {
             var discordCommandContext = (DiscordCommandContext)context;
 

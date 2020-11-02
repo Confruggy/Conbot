@@ -78,7 +78,7 @@ namespace Conbot.Commands
             int i = 0;
             while (value != 0)
             {
-                value = value & (value - 1);
+                value &= value - 1;
                 i++;
             }
             return i;

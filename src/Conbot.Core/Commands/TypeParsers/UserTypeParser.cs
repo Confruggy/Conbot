@@ -30,7 +30,7 @@ namespace Conbot.Commands
                 {
                     string username = value.Substring(0, index);
 
-                    if (ushort.TryParse(value.Substring(index + 1), out ushort discriminator))
+                    if (ushort.TryParse(value[(index + 1)..], out ushort discriminator))
                     {
                         if (discordCommandContext.Guild != null)
                         {
@@ -49,9 +49,8 @@ namespace Conbot.Commands
                 }
             };
 
-            var tUser = user as T;
 
-            return tUser != null
+            return user is T tUser
                 ? TypeParserResult<T>.Successful(tUser)
                 : TypeParserResult<T>.Unsuccessful("User hasn't been found.");
         }

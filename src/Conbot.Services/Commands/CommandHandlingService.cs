@@ -23,7 +23,7 @@ namespace Conbot.Services.Commands
         private readonly ILogger<CommandHandlingService> _logger;
         private readonly ConcurrentDictionary<ulong, DateTimeOffset> _channelLocks;
         private readonly ConcurrentDictionary<ulong, DateTimeOffset> _userTimeouts;
-        private DefaultPrefixHandler _defaultPrefixHandler;
+        private readonly DefaultPrefixHandler _defaultPrefixHandler;
         public IPrefixHandler CustomPrefixHandler { get; set; }
 
         public CommandHandlingService(DiscordShardedClient client, CommandService service, IServiceProvider provider,
@@ -235,15 +235,5 @@ namespace Conbot.Services.Commands
 
             return Task.CompletedTask;
         }
-
-        private Task OnLogAsync(LogMessage message)
-        {
-            _logger.Log(LogLevelFromSeverity(message.Severity), message.Exception,
-                $"{message.Source}: {{Message}}", message.Message);
-            return Task.CompletedTask;
-        }
-
-        private static LogLevel LogLevelFromSeverity(LogSeverity severity)
-            => (LogLevel)Math.Abs((int)severity - 5);
     }
 }

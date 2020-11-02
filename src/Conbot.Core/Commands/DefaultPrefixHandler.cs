@@ -17,11 +17,11 @@ namespace Conbot.Commands
         public ValueTask<PrefixResult> HandlePrefixAsync(DiscordCommandContext context)
         {
             string content = context.Message.Content;
-            string output = null;
-
+            string output;
+            
             if (content.StartsWith("!"))
             {
-                output = content.Substring(1);
+                output = content[1..];
                 return PrefixResult.Successful(output);
             }
 

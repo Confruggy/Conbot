@@ -7,8 +7,7 @@ namespace Conbot.InfoPlugin
 {
     public class InfoPluginService : IHostedService
     {
-        private CommandService _commandService;
-
+        private readonly CommandService _commandService;
         private Module _module;
 
         public InfoPluginService(CommandService commandService) => _commandService = commandService;

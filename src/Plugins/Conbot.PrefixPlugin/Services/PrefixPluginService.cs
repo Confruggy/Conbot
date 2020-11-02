@@ -11,8 +11,8 @@ namespace Conbot.PrefixPlugin
 {
     public class PrefixPluginService : IHostedService
     {
-        private IServiceProvider _services;
-        private CommandService _commandService;
+        private readonly IServiceProvider _services;
+        private readonly CommandService _commandService;
         private Module _module;
 
         public PrefixPluginService(IServiceProvider services, CommandService commandService)

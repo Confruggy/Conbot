@@ -10,8 +10,8 @@ namespace Conbot.TagPlugin
 {
     public class TagPluginService : IHostedService
     {
-        private IServiceProvider _services;
-        private CommandService _commandService;
+        private readonly IServiceProvider _services;
+        private readonly CommandService _commandService;
         private Module _module;
 
         public TagPluginService(IServiceProvider services, CommandService commandService)
