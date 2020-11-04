@@ -28,9 +28,9 @@ namespace Conbot.InteractiveMessages
             return this;
         }
 
-        public MessageCallbackBuilder WithCallback(Func<IUserMessage, bool> callback)
+        public MessageCallbackBuilder WithCallback(Action<IUserMessage> callback)
         {
-            Callback = x => Task.FromResult(callback(x));
+            Callback = x => { callback(x); return Task.CompletedTask; };
             return this;
         }
 
