@@ -172,7 +172,9 @@ namespace Conbot.HelpPlugin
                     .AppendLine(module.Description ?? "No Description.");
 
             if (!string.IsNullOrEmpty(module.Remarks))
-                descriptionText.AppendLine($"> {module.Remarks}");
+                descriptionText
+                    .AppendLine()
+                    .AppendLine($">>> {module.Remarks}");
 
             embed.WithDescription(descriptionText.ToString());
 
@@ -256,7 +258,9 @@ namespace Conbot.HelpPlugin
                     .AppendLine(command.Description ?? "No Description.");
 
             if (!string.IsNullOrEmpty(command.Remarks))
-                descriptionText.Append($"> {command.Remarks}");
+                descriptionText
+                    .AppendLine()
+                    .Append($">>> {command.Remarks}");
             embed.WithDescription(descriptionText.ToString());
 
             var parameters = command.Parameters;
@@ -268,10 +272,16 @@ namespace Conbot.HelpPlugin
                 {
                     parameterText
                         .AppendLine($"{ParameterToString(parameter, true)}")
-                        .Append($"> {parameter.Description ?? "No Description."}");
+                        .Append($">>> {parameter.Description ?? "No Description."}");
 
                     if (parameter.DefaultValue != null)
                         parameterText.Append($" Default value is {parameter.DefaultValue}.");
+
+                    if (!string.IsNullOrEmpty(parameter.Remarks))
+                        parameterText
+                            .AppendLine()
+                            .AppendLine()
+                            .Append(parameter.Remarks);
 
                     parameterText.AppendLine();
                 }
