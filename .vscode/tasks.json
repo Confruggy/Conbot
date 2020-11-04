@@ -22,7 +22,8 @@
                 "build Conbot.PrefixPlugin",
                 "build Conbot.RngPlugin",
                 "build Conbot.TagPlugin",
-                "build Conbot.UrbanPlugin"
+                "build Conbot.UrbanPlugin",
+                "build Conbot.TimeZonePlugin"
             ]
         },
         {
@@ -92,6 +93,16 @@
             "args": [
                 "build",
                 "${workspaceFolder}/src/Plugins/Conbot.UrbanPlugin/Conbot.UrbanPlugin.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+        },
+        {
+            "label": "build Conbot.TimeZonePlugin",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/Plugins/Conbot.TimeZonePlugin/Conbot.TimeZonePlugin.csproj"
             ],
             "problemMatcher": "$msCompile",
         },
