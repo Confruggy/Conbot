@@ -7,9 +7,11 @@ using Conbot.Commands;
 using Conbot.Extensions;
 using Conbot.InteractiveMessages;
 using Conbot.Services.Interactive;
+using Conbot.TimeZonePlugin.Extensions;
 using Discord;
 using Discord.WebSocket;
 using Humanizer;
+using NodaTime;
 using Qmmands;
 
 namespace Conbot.TagPlugin
@@ -181,6 +183,8 @@ namespace Conbot.TagPlugin
             var tags = await _db.GetTagsAsync(Context.Guild);
             var tag = tags.FirstOrDefault(x => x.GuildId == Context.Guild.Id && x.Name.ToLower() == name.ToLower());
 
+            var timeZone = await Context.GetUserTimeZoneAsync();
+
             if (tag == null)
             {
                 var alias = await _db.GetTagAliasAsync(Context.Guild, name);
@@ -191,18 +195,18 @@ namespace Conbot.TagPlugin
                     return;
                 }
 
-                await ReplyAsync("", embed: CreateTagAliasEmbed(alias));
+                await ReplyAsync("", embed: CreateTagAliasEmbed(alias, timeZone));
             }
             else
             {
                 int count = tags.Count;
                 int uses = tag.Uses.Count();
                 int rank = count - tags.Count(x => x.Uses.Count() <= uses) + 1;
-                await ReplyAsync("", embed: CreateTagEmbed(tag, uses, rank, count));
+                await ReplyAsync("", embed: CreateTagEmbed(tag, uses, rank, count, timeZone));
             }
         }
 
-        private Embed CreateTagEmbed(Tag tag, int uses, int rank, int count)
+        private Embed CreateTagEmbed(Tag tag, int uses, int rank, int count, DateTimeZone timeZone)
         {
             double days = (Context.Message.Timestamp - tag.Creation.CreatedAt).TotalDays;
             double average = days > 1 ? Math.Round(uses / days) : uses;
@@ -211,6 +215,14 @@ namespace Conbot.TagPlugin
 
             var owner = Context.Guild.GetUser(tag.OwnerId);
 
+            var createdAt = DateTimeToClickableString(
+                Instant.FromDateTimeUtc(tag.Creation.CreatedAt).InZone(timeZone), tag.Creation.Url);
+
+            var modifiedAt = modification == null
+                ? "Never"
+                : DateTimeToClickableString(
+                    Instant.FromDateTimeUtc(modification.ModifiedAt).InZone(timeZone), modification.Url); 
+
             return new EmbedBuilder()
                 .WithColor(Constants.DefaultEmbedColor)
                 .WithAuthor(x => x.WithIconUrl(owner?.GetAvatarUrl()).WithName(owner?.ToString()))
@@ -218,25 +230,21 @@ namespace Conbot.TagPlugin
                 .AddField("Owner", owner?.Mention ?? "Member not found", true)
                 .AddField("Uses", $"{uses:n0} (Ø {average}x/day)", true)
                 .AddField("Rank", $"{rank:n0}/{count:n0}", true)
-                .AddField("Created",
-                    DateTimeToClickableString(tag.Creation.CreatedAt, tag.Creation.Url), true)
-                .AddField("Last edited",
-                    modification == null
-                    ? "Never"
-                    : DateTimeToClickableString(modification.ModifiedAt, modification.Url),
-                        true)
-                .WithFooter("Tag")
-                .WithTimestamp(tag.Creation.CreatedAt)
+                .AddField("Created", createdAt, true)
+                .AddField("Last edited", modifiedAt, true)
                 .Build();
         }
 
-        private Embed CreateTagAliasEmbed(TagAlias alias)
+        private Embed CreateTagAliasEmbed(TagAlias alias, DateTimeZone timeZone)
         {
             double days = (Context.Message.Timestamp - alias.Creation.CreatedAt).TotalDays;
             int uses = alias.TagUses.Count();
             double average = days > 1 ? Math.Round(uses / days) : uses;
 
             var owner = Context.Guild.GetUser(alias.OwnerId);
+
+            var createdAt = DateTimeToClickableString(
+                Instant.FromDateTimeUtc(alias.Creation.CreatedAt).InZone(timeZone), alias.Creation.Url);
 
             return new EmbedBuilder()
                 .WithColor(Constants.DefaultEmbedColor)
@@ -245,14 +253,12 @@ namespace Conbot.TagPlugin
                 .AddField("Creator", owner?.Mention ?? "Member not found", true)
                 .AddField("Original Tag", alias.Tag.Name, true)
                 .AddField("Uses", $"{uses:n0} (Ø {average}x/day)", true)
-                .AddField("Created", DateTimeToClickableString(alias.Creation.CreatedAt, alias.Creation.Url), true)
-                .WithFooter("Alias")
-                .WithTimestamp(alias.Creation.CreatedAt)
+                .AddField("Created", createdAt, true)
                 .Build();
         }
 
-        public static string DateTimeToClickableString(DateTime date, string url)
-            => $"[{date:d} at {date:t}]({url})";
+        public static string DateTimeToClickableString(ZonedDateTime date, string url)
+            => $"[{date.ToReadableShortString()}]({url})";
 
         [Command("alias")]
         [Description("Creates an alias for an already existing tag.")]

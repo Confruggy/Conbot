@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Microsoft.EntityFrameworkCore;
 
 namespace Conbot.TagPlugin
@@ -43,6 +44,22 @@ namespace Conbot.TagPlugin
                 .HasMany(t => t.TagUses)
                 .WithOne(t => t.UsedAlias)
                 .HasForeignKey(t => t.UsedAliasId);
+
+            modelBuilder.Entity<TagCreation>()
+                .Property(t => t.CreatedAt)
+                .HasConversion(t => t, t => DateTime.SpecifyKind(t, DateTimeKind.Utc));
+
+            modelBuilder.Entity<TagAliasCreation>()
+                .Property(t => t.CreatedAt)
+                .HasConversion(t => t, t => DateTime.SpecifyKind(t, DateTimeKind.Utc));
+
+            modelBuilder.Entity<TagModification>()
+                .Property(t => t.ModifiedAt)
+                .HasConversion(t => t, t => DateTime.SpecifyKind(t, DateTimeKind.Utc));
+
+            modelBuilder.Entity<TagUse>()
+                .Property(t => t.UsedAt)
+                .HasConversion(t => t, t => DateTime.SpecifyKind(t, DateTimeKind.Utc));
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
