@@ -272,7 +272,7 @@ namespace Conbot.HelpPlugin
                 {
                     parameterText
                         .AppendLine($"{ParameterToString(parameter, true)}")
-                        .Append($">>> {parameter.Description ?? "No Description."}");
+                        .Append($"> {parameter.Description ?? "No Description."}");
 
                     if (parameter.DefaultValue != null)
                         parameterText.Append($" Default value is {parameter.DefaultValue}.");
@@ -280,8 +280,8 @@ namespace Conbot.HelpPlugin
                     if (!string.IsNullOrEmpty(parameter.Remarks))
                         parameterText
                             .AppendLine()
-                            .AppendLine()
-                            .Append(parameter.Remarks);
+                            .AppendLine("> ")
+                            .Append($"> {parameter.Remarks}");
 
                     parameterText.AppendLine();
                 }
