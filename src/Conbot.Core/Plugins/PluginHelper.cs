@@ -17,19 +17,11 @@ namespace Conbot.Plugins
             foreach (var dir in Directory.EnumerateDirectories(path))
             {
                 var name = Path.GetFileName(dir);
-                var assembly = PluginLoader.CreateFromAssemblyFile( Path.Combine(Path.GetFullPath(dir), $"{name}.dll"),
-                    sharedTypes: new [] { typeof(IPluginStartup) })
-                    .LoadDefaultAssembly();
+                var assembly = Assembly.LoadFrom(Path.Combine(Path.GetFullPath(dir), $"{name}.dll"));
                 assemblies.Add(assembly);
             }
 
             return assemblies;
-        }
-
-        public static Assembly LoadPluginAssembly(string pluginLocation)
-        {
-            //var loadContext = new PluginLoadContext(pluginLocation);
-            return Assembly.LoadFrom(pluginLocation);
         }
 
         public static void InstallPlugins(Assembly assembly, IHostBuilder host)
