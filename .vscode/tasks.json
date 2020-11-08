@@ -20,6 +20,7 @@
                 "build Conbot.InfoPlugin",
                 "build Conbot.ModerationPlugin",
                 "build Conbot.PrefixPlugin",
+                "build Conbot.ReminderPlugin",
                 "build Conbot.RngPlugin",
                 "build Conbot.TagPlugin",
                 "build Conbot.UrbanPlugin",
@@ -63,6 +64,16 @@
             "args": [
                 "build",
                 "${workspaceFolder}/src/Plugins/Conbot.PrefixPlugin/Conbot.PrefixPlugin.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+        },
+        {
+            "label": "build Conbot.ReminderPlugin",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/Plugins/Conbot.ReminderPlugin/Conbot.ReminderPlugin.csproj"
             ],
             "problemMatcher": "$msCompile",
         },
