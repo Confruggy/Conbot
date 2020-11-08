@@ -14,6 +14,7 @@ namespace Conbot.TimeZonePlugin
         private readonly CommandService _commandService;
         private TzdbZoneLocationsTypeParser _tzdbZoneLocationsTypeParser;
         private GmtTimeZoneTypeParser _gmtTimeZoneTypeParser;
+        private ZonedDateTimeTypeParser _zonedDateTimeTypeParser;
         private Module _module;
 
         public TimeZonePluginService(IServiceProvider provider, CommandService commandService)
@@ -30,6 +31,8 @@ namespace Conbot.TimeZonePlugin
             _commandService.AddTypeParser(_tzdbZoneLocationsTypeParser);
             _gmtTimeZoneTypeParser = new GmtTimeZoneTypeParser();
             _commandService.AddTypeParser(_gmtTimeZoneTypeParser);
+            _zonedDateTimeTypeParser = new ZonedDateTimeTypeParser();
+            _commandService.AddTypeParser(_zonedDateTimeTypeParser);
 
             _module = _commandService.AddModule<TimeZoneModule>();
 
@@ -42,6 +45,7 @@ namespace Conbot.TimeZonePlugin
 
             _commandService.RemoveTypeParser(_tzdbZoneLocationsTypeParser);
             _commandService.RemoveTypeParser(_gmtTimeZoneTypeParser);
+            _commandService.RemoveTypeParser(_zonedDateTimeTypeParser);
             
             return Task.CompletedTask;
         }
