@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -274,7 +275,7 @@ namespace Conbot.HelpPlugin
                         .AppendLine($"{ParameterToString(parameter, true)}")
                         .Append($"> {parameter.Description ?? "No Description."}");
 
-                    if (parameter.DefaultValue != null)
+                    if (parameter.DefaultValue != null && !(parameter.DefaultValue is Array))
                         parameterText.Append($" Default value is {parameter.DefaultValue}.");
 
                     if (!string.IsNullOrEmpty(parameter.Remarks))
