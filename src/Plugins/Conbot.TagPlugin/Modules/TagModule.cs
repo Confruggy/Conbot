@@ -228,7 +228,7 @@ namespace Conbot.TagPlugin
                 .WithAuthor(x => x.WithIconUrl(owner?.GetAvatarUrl()).WithName(owner?.ToString()))
                 .WithTitle(tag.Name)
                 .AddField("Owner", owner?.Mention ?? "Member not found", true)
-                .AddField("Uses", $"{uses:n0} (Ø {average}x/day)", true)
+                .AddField("Uses", $"{uses:n0} ({average}/day)", true)
                 .AddField("Rank", $"{rank:n0}/{count:n0}", true)
                 .AddField("Created", createdAt, true)
                 .AddField("Last edited", modifiedAt, true)
@@ -252,7 +252,7 @@ namespace Conbot.TagPlugin
                 .WithTitle(alias.Name)
                 .AddField("Creator", owner?.Mention ?? "Member not found", true)
                 .AddField("Original Tag", alias.Tag.Name, true)
-                .AddField("Uses", $"{uses:n0} (Ø {average}x/day)", true)
+                .AddField("Uses", $"{uses:n0} ({average}/day)", true)
                 .AddField("Created", createdAt, true)
                 .Build();
         }
