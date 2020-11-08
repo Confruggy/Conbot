@@ -1,4 +1,7 @@
+using System;
+using System.Globalization;
 using System.Text;
+using Humanizer;
 using NodaTime;
 using NodaTime.Extensions;
 
@@ -22,6 +25,60 @@ namespace Conbot.TimeZonePlugin.Extensions
 
             text.Append(" at ")
                 .Append($"{dateTime.TimeOfDay:t}");
+
+            return text.ToString();
+        }
+
+        public static string ToDurationFormattedString(this ZonedDateTime now, ZonedDateTime then)
+        {
+            if (now == then)
+                return "**now**";
+
+            var text = new StringBuilder();
+
+            var difference = then - now;
+
+            if (difference.TotalHours < 1 && difference.TotalHours > -1)
+            {
+                if (difference.TotalTicks > 0)
+                    text.Append("in ");
+
+                if (difference.Minutes > 0 || difference.Minutes < 0)
+                    text.Append("minute".ToQuantity(Math.Abs(difference.Minutes), "**#**"));
+
+                if ((difference.Minutes > 0 && difference.Seconds > 0) ||
+                    (difference.Minutes < 0 && difference.Seconds < 0))
+                    text.Append(" and ");
+
+                if (difference.Seconds > 0 || difference.Seconds < 0)
+                    text.Append("second".ToQuantity(Math.Abs(difference.Seconds), "**#**"));
+
+                if (difference.TotalTicks < 0)
+                    text.Append(" ago");
+            }
+            else
+            {
+                if (now.Date == then.Date)
+                    text.Append("**today** ");
+                else if (now.Date.PlusDays(1) == then.Date)
+                    text.Append("**tomorrow** ");
+                else if (now.Date.PlusDays(-1) == then.Date)
+                    text.Append("**yesterday** ");
+                else
+                {
+                    text.Append("on the **")
+                        .Append(then.ToString("d MMM yyyy", CultureInfo.InvariantCulture))
+                        .Append("** ");
+                }
+
+                text.Append("at **");
+
+                if (then.Second == 0)
+                    text.Append(then.ToString("H:mm", CultureInfo.InvariantCulture));
+                else text.Append(then.ToString("H:mm:ss", CultureInfo.InvariantCulture));
+
+                text.Append("**");
+            }
 
             return text.ToString();
         }
