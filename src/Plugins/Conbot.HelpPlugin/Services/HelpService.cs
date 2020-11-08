@@ -281,7 +281,7 @@ namespace Conbot.HelpPlugin
                         parameterText
                             .AppendLine()
                             .AppendLine("> ")
-                            .Append($"> {parameter.Remarks}");
+                            .Append($"> {parameter.Remarks.Replace("\n", "\n> ")}");
 
                     parameterText.AppendLine();
                 }
