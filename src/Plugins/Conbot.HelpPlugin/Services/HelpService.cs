@@ -251,7 +251,7 @@ namespace Conbot.HelpPlugin
         {
             var embed = new EmbedBuilder()
                 .WithAuthor(GetPath(command))
-                .WithTitle($"{command.FullAliases.First()} {FormatParameters(command)}")
+                .WithTitle($"{FormatCommandName(command)} {FormatParameters(command)}")
                 .WithColor(Constants.DefaultEmbedColor);
 
             var descriptionText = new StringBuilder()
@@ -376,6 +376,29 @@ namespace Conbot.HelpPlugin
                 else
                     return $"<{parameter.Name}>";
             }
+        }
+
+        private string FormatCommandName(Command command)
+        {
+            string commandText = command.Aliases.Count == 0
+                ? ""
+                : command.Aliases.Count == 1
+                    ? command.Aliases.First()
+                    : $"[{string.Join('|', command.Aliases)}]";
+
+            var module = command.Module;
+
+            while (module != null && module.Aliases.Any())
+            {
+                string moduleText = module.Aliases.Count == 1
+                    ? module.Aliases.First()
+                    : $"[{string.Join('|', module.Aliases)}]";
+
+                commandText = commandText == "" ? moduleText : $"{moduleText} {commandText}";
+                module = module.Parent;
+            }
+
+            return commandText;
         }
 
         private string FormatParameters(Command command)
