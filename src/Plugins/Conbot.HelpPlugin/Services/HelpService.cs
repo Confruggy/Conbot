@@ -133,10 +133,10 @@ namespace Conbot.HelpPlugin
             var embed = new EmbedBuilder()
                 .WithAuthor(context.Guild.CurrentUser.Username, context.Guild.CurrentUser.GetAvatarUrl())
                 .WithDescription(
-                    "Below you see all available modules. " +
-                    "Each module has one or several commands.")
+                    "Below you see all available categories. " +
+                    "Each category has one or several commands.")
                 .WithColor(Constants.DefaultEmbedColor)
-                .WithFooter("Enter a number for more information about a command.");
+                .WithFooter("Enter a number for more information about a category.");
 
             var modules = _commandService.GetAllModules()
                 .Where(x => x.Parent == null)
@@ -155,7 +155,7 @@ namespace Conbot.HelpPlugin
                 moduleDictionary.Add((i + 1).ToString(), module);
             }
 
-            embed.AddField("Modules", modulesText.ToString());
+            embed.AddField("Categories", modulesText.ToString());
 
             return embed.Build();
         }
@@ -353,7 +353,7 @@ namespace Conbot.HelpPlugin
             if (literal)
             {
                 if (parameter.IsMultiple)
-                    return ($"{parameter.Name} *(multiple)*");
+                    return $"{parameter.Name} *(multiple)*";
                 else if (parameter.IsOptional)
                     return $"{parameter.Name} *(optional)*";
                 else if (parameter.IsRemainder && !parameter.IsOptional)
@@ -366,7 +366,7 @@ namespace Conbot.HelpPlugin
             else
             {
                 if (parameter.IsMultiple)
-                    return ($"[{parameter.Name}] [...]");
+                    return $"[{parameter.Name}] [...]";
                 else if (parameter.IsOptional)
                     return $"[{parameter.Name}]";
                 else if (parameter.IsRemainder && !parameter.IsOptional)
