@@ -54,7 +54,7 @@ namespace Conbot.ReminderPlugin
                 when.Remainder?[1..]);
 
             var text = new StringBuilder()
-                .Append("⏱️ Reminder has been set. You'll be reminded ")
+                .Append("⏰ Reminder has been set. You'll be reminded ")
                 .Append(when.Now.ToDurationFormattedString(when.Then.Value))
                 .Append(".");
 
