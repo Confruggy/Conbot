@@ -5,6 +5,8 @@ using Conbot.Commands;
 using Conbot.Extensions;
 using Conbot.InteractiveMessages;
 using Discord;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conbot.Services.Interactive
 {
@@ -21,6 +23,8 @@ namespace Conbot.Services.Interactive
         public async Task<IUserMessage> RunAsync(InteractiveService service, DiscordCommandContext context,
             int startIndex = 0)
         {
+            var config = context.ServiceProvider.GetRequiredService<IConfiguration>();
+
             if (startIndex >= _pages.Count || startIndex < 0)
                 throw new ArgumentOutOfRangeException(nameof(startIndex));
 
@@ -38,7 +42,7 @@ namespace Conbot.Services.Interactive
             if (_pages.Count > 2)
             {
                 builder.AddReactionCallback(x => x
-                    .WithEmote("first:654781462490644501")
+                    .WithEmote(config.GetValue<string>("Emotes:First"))
                     .WithCallback(async _ =>
                     {
                         if (currentIndex != 0)
@@ -58,7 +62,7 @@ namespace Conbot.Services.Interactive
 
             builder
                 .AddReactionCallback(x => x
-                    .WithEmote("backward:654781463027515402")
+                    .WithEmote(config.GetValue<string>("Emotes:Backward"))
                     .WithCallback(async _ =>
                     {
                         if (currentIndex > 0)
@@ -75,7 +79,7 @@ namespace Conbot.Services.Interactive
                     })
                     .ShouldResumeAfterExecution(true))
                 .AddReactionCallback(x => x
-                    .WithEmote("forward:654781462402301964")
+                    .WithEmote(config.GetValue<string>("Emotes:Forward"))
                     .WithCallback(async _ =>
                     {
                         if (currentIndex < _pages.Count - 1)
@@ -96,7 +100,7 @@ namespace Conbot.Services.Interactive
             {
                 builder
                     .AddReactionCallback(x => x
-                        .WithEmote("last:654781462373203981")
+                        .WithEmote(config.GetValue<string>("Emotes:Last"))
                         .WithCallback(async _ =>
                         {
                             if (currentIndex != _pages.Count - 1)
@@ -119,7 +123,7 @@ namespace Conbot.Services.Interactive
             {
                 builder
                     .AddReactionCallback(x => x
-                        .WithEmote("go_to_page:654781462603628544")
+                        .WithEmote(config.GetValue<string>("Emotes:GoToPage"))
                         .WithCallback(async _ =>
                         {
                             var msg = await message.Channel.SendMessageAsync("To which page do you want to go?")
@@ -162,7 +166,7 @@ namespace Conbot.Services.Interactive
                         }).ShouldResumeAfterExecution(true));
             }
 
-            builder.AddReactionCallback(x => x.WithEmote("stop:654781462385655849").ShouldResumeAfterExecution(false));
+            builder.AddReactionCallback(x => x.WithEmote(config.GetValue<string>("Emotes:Stop")).ShouldResumeAfterExecution(false));
 
             await service.ExecuteInteractiveMessageAsync(builder.Build(), message, context.User).ConfigureAwait(false);
             return message;

@@ -59,7 +59,7 @@ namespace Conbot.HelpPlugin
             var interactiveMessage = new InteractiveMessageBuilder()
                 .WithPrecondition(x => x.Id == context.User.Id)
                 .AddReactionCallback(x => x
-                    .WithEmote("first:654781462490644501")
+                    .WithEmote(_config.GetValue<string>("Emotes:First"))
                     .WithCallback(async _ =>
                     {
                         if (currentModule != null || currentCommand != null)
@@ -71,7 +71,7 @@ namespace Conbot.HelpPlugin
                     })
                     .ShouldResumeAfterExecution(true))
                 .AddReactionCallback(x => x
-                    .WithEmote("backward:654781463027515402")
+                    .WithEmote(_config.GetValue<string>("Emotes:Backward"))
                     .WithCallback(async _ =>
                     {
                         if (currentCommand != null)
@@ -96,7 +96,7 @@ namespace Conbot.HelpPlugin
                     })
                     .ShouldResumeAfterExecution(true))
                 .AddReactionCallback(x => x
-                    .WithEmote("stop:654781462385655849")
+                    .WithEmote(_config.GetValue<string>("Emotes:Stop"))
                     .ShouldResumeAfterExecution(false))
                 .AddMessageCallback(x => x
                     .WithPrecondition(msg => int.TryParse(msg.Content, out int number))
