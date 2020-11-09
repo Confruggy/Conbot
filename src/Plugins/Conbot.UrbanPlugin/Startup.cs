@@ -14,9 +14,6 @@ namespace Conbot.UrbanPlugin
                 .AddSingleton<UrbanService>();
         }
 
-        public void BuildConfiguration(IConfigurationBuilder builder)
-        {
-            
-        }
+        public void BuildConfiguration(IConfigurationBuilder builder) { }
     }
 }

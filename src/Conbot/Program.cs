@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 
 namespace Conbot
 {
-    class Program
+    internal static class Program
     {
-        static async Task Main()
+        private static async Task Main()
         {
             Environment.CurrentDirectory = AppContext.BaseDirectory;
             await new Startup().StartAsync();

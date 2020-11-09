@@ -20,10 +20,10 @@ namespace Conbot.Commands
 
                 return CheckPermissionsAsync(guildUser, guildPermissions);
             }
-                
+
             if (channelPermissions.Length != 0)
                 return CheckPermissionsAsync(user, channel, channelPermissions);
-            
+
             return CheckResult.Successful;
         }
 
@@ -64,12 +64,17 @@ namespace Conbot.Commands
 
             bool isPlural = permissions.Length > 1 || GetSetBitCount((ulong)(object)permissions[0]) > 1;
             return new StringBuilder()
-                .Append($"{(isBot ? "The bot" : "You")} require{(isBot ? "s" : "")} the ")
+                .Append(isBot ? "The bot" : "You")
+                .Append(" require")
+                .Append(isBot ? "s" : "")
+                .Append(" the ")
                 .Append(typeof(TEnum).Name
                     .Replace("Guild", "Server")
                     .Humanize(LetterCasing.LowerCase)
                     .ToQuantity(isPlural ? 2 : 1, ShowQuantityAs.None))
-                .Append($" {permissionsText} to use this command.")
+                .Append(' ')
+                .Append(permissionsText)
+                .Append(" to use this command.")
                 .ToString();
         }
 

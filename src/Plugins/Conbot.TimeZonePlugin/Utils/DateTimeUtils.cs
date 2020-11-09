@@ -11,7 +11,6 @@ namespace Conbot.TimeZonePlugin
     {
         public static ZonedDateTimeParseResult ParseHumanReadableDateTime(string value, DateTimeZone timeZone)
         {
-
             var now = SystemClock.Instance.GetCurrentInstant().InZone(timeZone);
 
             var remainder = value;

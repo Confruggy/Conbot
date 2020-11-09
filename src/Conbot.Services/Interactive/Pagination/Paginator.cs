@@ -36,9 +36,10 @@ namespace Conbot.Services.Interactive
                 .WithPrecondition(x => x.Id == context.User.Id);
 
             if (_pages.Count > 2)
+            {
                 builder.AddReactionCallback(x => x
                     .WithEmote("first:654781462490644501")
-                    .WithCallback(async r =>
+                    .WithCallback(async _ =>
                     {
                         if (currentIndex != 0)
                         {
@@ -50,15 +51,15 @@ namespace Conbot.Services.Interactive
                                 m.Content = page.Item1;
                                 m.Embed = page.Item2;
                             });
-
                         }
                     })
                     .ShouldResumeAfterExecution(true));
+            }
 
             builder
                 .AddReactionCallback(x => x
                     .WithEmote("backward:654781463027515402")
-                    .WithCallback(async r =>
+                    .WithCallback(async _ =>
                     {
                         if (currentIndex > 0)
                         {
@@ -75,7 +76,7 @@ namespace Conbot.Services.Interactive
                     .ShouldResumeAfterExecution(true))
                 .AddReactionCallback(x => x
                     .WithEmote("forward:654781462402301964")
-                    .WithCallback(async r =>
+                    .WithCallback(async _ =>
                     {
                         if (currentIndex < _pages.Count - 1)
                         {
@@ -92,10 +93,11 @@ namespace Conbot.Services.Interactive
                     .ShouldResumeAfterExecution(true));
 
             if (_pages.Count > 2)
+            {
                 builder
                     .AddReactionCallback(x => x
                         .WithEmote("last:654781462373203981")
-                        .WithCallback(async r =>
+                        .WithCallback(async _ =>
                         {
                             if (currentIndex != _pages.Count - 1)
                             {
@@ -111,12 +113,14 @@ namespace Conbot.Services.Interactive
                             }
                         })
                         .ShouldResumeAfterExecution(true));
+            }
 
             if (_pages.Count > 3)
+            {
                 builder
                     .AddReactionCallback(x => x
                         .WithEmote("go_to_page:654781462603628544")
-                        .WithCallback(async r =>
+                        .WithCallback(async _ =>
                         {
                             var msg = await message.Channel.SendMessageAsync("To which page do you want to go?")
                                 .ConfigureAwait(false);
@@ -155,8 +159,8 @@ namespace Conbot.Services.Interactive
                             }).ConfigureAwait(false);
 
                             await Task.WhenAll(tasks).ConfigureAwait(false);
-
                         }).ShouldResumeAfterExecution(true));
+            }
 
             builder.AddReactionCallback(x => x.WithEmote("stop:654781462385655849").ShouldResumeAfterExecution(false));
 

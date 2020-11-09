@@ -22,7 +22,7 @@ namespace Conbot.TimeZonePlugin
             _services = provider;
             _commandService = commandService;
         }
-        
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             UpdateDatabase();
@@ -46,7 +46,7 @@ namespace Conbot.TimeZonePlugin
             _commandService.RemoveTypeParser(_tzdbZoneLocationsTypeParser);
             _commandService.RemoveTypeParser(_gmtTimeZoneTypeParser);
             _commandService.RemoveTypeParser(_zonedDateTimeTypeParser);
-            
+
             return Task.CompletedTask;
         }
 

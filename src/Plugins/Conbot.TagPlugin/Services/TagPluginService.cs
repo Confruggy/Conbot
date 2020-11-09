@@ -19,7 +19,7 @@ namespace Conbot.TagPlugin
             _services = services;
             _commandService = commandService;
         }
-        
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             UpdateDatabase();

@@ -20,7 +20,7 @@ namespace Conbot.TimeZonePlugin
 
             if (result.IsSuccessful)
                 return TypeParserResult<ZonedDateTimeParseResult>.Successful(result);
-            
+
             return TypeParserResult<ZonedDateTimeParseResult>.Unsuccessful(result.Reason);
         }
     }

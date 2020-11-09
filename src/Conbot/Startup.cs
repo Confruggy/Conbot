@@ -27,7 +27,6 @@ namespace Conbot
                 .ConfigureServices(ConfigureServices)
                 .UseConsoleLifetime();
 
-
             var assemblies = PluginHelper.LoadPluginAssemblies("Plugins");
             PluginHelper.InstallPlugins(assemblies, builder);
 
@@ -35,7 +34,7 @@ namespace Conbot
 
             await host.RunAsync();
         }
-        
+
         public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
         {
             services

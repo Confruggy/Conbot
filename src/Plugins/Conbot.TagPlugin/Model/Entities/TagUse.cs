@@ -16,7 +16,6 @@ namespace Conbot.TagPlugin
         public int? UsedAliasId { get; set; }
         public virtual TagAlias UsedAlias { get; set; }
 
-
         public DateTime UsedAt { get; set; }
         public ulong? GuildId { get; set; }
         public ulong ChannelId { get; set; }

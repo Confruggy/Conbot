@@ -41,15 +41,15 @@ namespace Conbot.PrefixPlugin
                 await ReplyAsync("You can't add more than 10 prefixes.");
                 return;
             }
-            
-            if (prefixes.FirstOrDefault(x => x.GuildId == Context.Guild.Id && x.Text == prefix) != null)
+
+            if (prefixes.Find(x => x.GuildId == Context.Guild.Id && x.Text == prefix) != null)
             {
                 await ReplyAsync("This prefix has been already added.");
                 return;
             }
 
             await _db.AddPrefixAsync(Context.Guild, prefix);
-            
+
             await Task.WhenAll(
                 _db.SaveChangesAsync(),
                 ReplyAsync($"Prefix **{Format.Sanitize(prefix)}** has been added."));
@@ -101,7 +101,11 @@ namespace Conbot.PrefixPlugin
 
             foreach (var prefix in prefixes)
             {
-                pageText.AppendLine($"`{i.ToString().PadLeft(padding)}.` {Format.Sanitize(prefix.Text)}");
+                pageText.Append('`')
+                    .Append(i.ToString().PadLeft(padding))
+                    .Append(".` ")
+                    .AppendLine(Format.Sanitize(prefix.Text));
+
                 if (i % 15 == 0 || i == count)
                 {
                     pages.Add(pageText.ToString());

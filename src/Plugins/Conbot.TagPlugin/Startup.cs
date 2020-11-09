@@ -10,13 +10,10 @@ namespace Conbot.TagPlugin
         public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
         {
             services.AddHostedService<TagPluginService>();
-                        
+
             services.AddDbContext<TagContext>();
         }
 
-        public void BuildConfiguration(IConfigurationBuilder builder)
-        {
-            
-        }
+        public void BuildConfiguration(IConfigurationBuilder builder){ }
     }
 }

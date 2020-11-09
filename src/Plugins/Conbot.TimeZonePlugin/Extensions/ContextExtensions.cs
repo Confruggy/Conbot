@@ -14,7 +14,7 @@ namespace Conbot.TimeZonePlugin.Extensions
 
             var userTimeZone = await db.GetUserTimeZoneAsync(context.User);
 
-            return userTimeZone != null ? provider.GetZoneOrNull(userTimeZone.TimeZoneId) : null;  
+            return userTimeZone != null ? provider.GetZoneOrNull(userTimeZone.TimeZoneId) : null;
         }
 
         public static async ValueTask<DateTimeZone> GetGuildTimeZoneAsync(this DiscordCommandContext context)
@@ -27,7 +27,7 @@ namespace Conbot.TimeZonePlugin.Extensions
 
             var guildTimeZone = await db.GetGuildTimeZoneAsync(context.Guild);
 
-            return guildTimeZone != null ? provider.GetZoneOrNull(guildTimeZone.TimeZoneId) : null;  
+            return guildTimeZone != null ? provider.GetZoneOrNull(guildTimeZone.TimeZoneId) : null;
         }
     }
 }

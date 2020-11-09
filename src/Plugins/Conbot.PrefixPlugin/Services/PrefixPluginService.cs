@@ -20,7 +20,7 @@ namespace Conbot.PrefixPlugin
             _services = services;
             _commandService = commandService;
         }
-        
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             UpdateDatabase();

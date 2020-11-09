@@ -89,7 +89,10 @@ namespace Conbot.Services.Commands
                         return;
                     _userTimeouts[message.Author.Id] = DateTimeOffset.Now.AddSeconds(1.1);
                 }
-                else _userTimeouts.TryAdd(message.Author.Id, DateTimeOffset.Now.AddSeconds(1.1));
+                else
+                {
+                    _userTimeouts.TryAdd(message.Author.Id, DateTimeOffset.Now.AddSeconds(1.1));
+                }
 
                 if (_channelLocks.TryGetValue(message.Channel.Id, out var date2))
                 {
@@ -100,7 +103,10 @@ namespace Conbot.Services.Commands
                         await Task.Delay((int)ms).ConfigureAwait(false);
                     }
                 }
-                else _channelLocks.TryAdd(message.Channel.Id, DateTimeOffset.Now.AddSeconds(1.1));
+                else
+                {
+                    _channelLocks.TryAdd(message.Channel.Id, DateTimeOffset.Now.AddSeconds(1.1));
+                }
 
                 await HandleCommandAsync(message as SocketUserMessage);
             });
@@ -141,7 +147,7 @@ namespace Conbot.Services.Commands
                     {
                         var failedOverloads = overloadsFailedResult.FailedOverloads;
 
-                        if (failedOverloads.Count() == 1)
+                        if (failedOverloads.Count == 1)
                             return GetErrorMessage(failedOverloads.First().Value);
 
                         var text = new StringBuilder().AppendLine("Several possible errors occured:");
@@ -149,7 +155,12 @@ namespace Conbot.Services.Commands
                         for (int i = 0; i < failedOverloads.Count; i++)
                         {
                             var failedResult = failedOverloads.Values.ElementAt(i);
-                            text.AppendLine($"`{i + 1}.` {GetErrorMessage(failedResult)}");
+
+                            text
+                                .Append('`')
+                                .Append(i + 1)
+                                .Append(".` ")
+                                .AppendLine(GetErrorMessage(failedResult));
                         }
 
                         return text.ToString();
@@ -181,15 +192,20 @@ namespace Conbot.Services.Commands
                     {
                         var failedChecks = checksFailedResult.FailedChecks;
 
-                        if (failedChecks.Count() == 1)
-                            return failedChecks.First().Result.Reason;
+                        if (failedChecks.Count == 1)
+                            return failedChecks[0].Result.Reason;
 
                         var text = new StringBuilder().AppendLine("Several checks failed:");
 
                         for (int i = 0; i < failedChecks.Count; i++)
                         {
-                            var checkResult = failedChecks.ElementAt(i).Result;
-                            text.AppendLine($"`{i + 1}.` {checkResult.Reason}");
+                            var checkResult = failedChecks[i].Result;
+
+                            text
+                                .Append('`')
+                                .Append(i + 1)
+                                .Append(".` ")
+                                .AppendLine(checkResult.Reason);
                         }
 
                         return text.ToString();
@@ -198,19 +214,23 @@ namespace Conbot.Services.Commands
                     {
                         var failedChecks = parameterChecksFailedResult.FailedChecks;
 
-                        if (failedChecks.Count() == 1)
-                            return failedChecks.First().Result.Reason;
+                        if (failedChecks.Count == 1)
+                            return failedChecks[0].Result.Reason;
 
                         var text = new StringBuilder().AppendLine("Several parameter checks failed:");
 
                         for (int i = 0; i < failedChecks.Count; i++)
                         {
-                            var checkResult = failedChecks.ElementAt(i).Result;
-                            text.AppendLine($"`{i + 1}.` {checkResult.Reason}");
+                            var checkResult = failedChecks[i].Result;
+
+                            text
+                                .Append('`')
+                                .Append(i + 1)
+                                .Append(".` ")
+                                .AppendLine(checkResult.Reason);
                         }
 
                         return text.ToString();
-
                     }
                 default: return result.Reason;
             }
@@ -226,12 +246,16 @@ namespace Conbot.Services.Commands
             string channel = discordCommandContext.Channel.Name;
 
             if (guild != null)
+            {
                 _logger.Log(LogLevel.Information,
-                    "Commands: Command {command} executed for {user} in {guild}/{channel}",
-                        command, user, guild, channel);
+                   "Commands: Command {command} executed for {user} in {guild}/{channel}",
+                       command, user, guild, channel);
+            }
             else
+            {
                 _logger.Log(LogLevel.Information,
-                    "Commands: Command {command} executed for {user} in {channel}", command, user, channel);
+                   "Commands: Command {command} executed for {user} in {channel}", command, user, channel);
+            }
 
             return Task.CompletedTask;
         }

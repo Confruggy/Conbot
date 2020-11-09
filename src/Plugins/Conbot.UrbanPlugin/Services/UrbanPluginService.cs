@@ -11,7 +11,7 @@ namespace Conbot.UrbanPlugin
         private Module _module;
 
         public UrbanPluginService(CommandService commandService) => _commandService = commandService;
-        
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _module = _commandService.AddModule<UrbanModule>();

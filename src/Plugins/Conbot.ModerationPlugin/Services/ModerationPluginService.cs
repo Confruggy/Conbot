@@ -11,7 +11,7 @@ namespace Conbot.ModerationPlugin
         private Module _module;
 
         public ModerationPluginService(CommandService commandService) => _commandService = commandService;
-        
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _module = _commandService.AddModule<ModerationModule>();

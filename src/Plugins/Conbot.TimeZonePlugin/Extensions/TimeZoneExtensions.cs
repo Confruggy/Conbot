@@ -41,7 +41,10 @@ namespace Conbot.TimeZonePlugin
 
                 await context.UserTimeZones.AddAsync(userTimeZone);
             }
-            else userTimeZone.TimeZoneId = timeZone.Id;
+            else
+            {
+                userTimeZone.TimeZoneId = timeZone.Id;
+            }
 
             return userTimeZone;
         }
@@ -65,7 +68,10 @@ namespace Conbot.TimeZonePlugin
 
                 await context.GuildTimeZones.AddAsync(guildTimeZone);
             }
-            else guildTimeZone.TimeZoneId = timeZone.Id;
+            else
+            {
+                guildTimeZone.TimeZoneId = timeZone.Id;
+            }
 
             return guildTimeZone;
         }

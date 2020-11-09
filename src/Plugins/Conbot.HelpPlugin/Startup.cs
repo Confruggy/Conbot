@@ -12,12 +12,8 @@ namespace Conbot.HelpPlugin
             services
                 .AddHostedService<HelpPluginService>()
                 .AddSingleton<HelpService>();
-
         }
 
-        public void BuildConfiguration(IConfigurationBuilder builder)
-        {
-            
-        }
+        public void BuildConfiguration(IConfigurationBuilder builder) { }
     }
 }

@@ -84,7 +84,7 @@ namespace Conbot.UrbanPlugin
 
         private string FillHyperlinks(string text)
         {
-            string baseUrl = "https://www.urbandictionary.com/define.php?term=";
+            const string baseUrl = "https://www.urbandictionary.com/define.php?term=";
 
             foreach (Match match in Regex.Matches(text, "\\[[^\\]]*\\]"))
             {

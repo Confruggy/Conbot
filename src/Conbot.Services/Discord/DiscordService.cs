@@ -59,7 +59,7 @@ namespace Conbot.Services.Discord
             => UpdateGameAsync(_client.GetShardFor(guild));
 
         private Task UpdateGameAsync(DiscordSocketClient client)
-            => _client.SetGameAsync($"{"server".ToQuantity(client.Guilds.Count())} | conbot.moe");
+            => _client.SetGameAsync($"{"server".ToQuantity(client.Guilds.Count)} | conbot.moe");
 
         private Task OnLogAsync(LogMessage message)
         {

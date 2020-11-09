@@ -19,21 +19,26 @@ namespace Conbot.Commands
             IChannel channel = null;
 
             if (MentionUtils.TryParseRole(value, out var id))
+            {
                 channel = discordCommandContext.Guild.GetChannel(id);
+            }
             else if (ulong.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out id))
+            {
                 channel = discordCommandContext.Guild.GetChannel(id);
-            else 
+            }
+            else
             {
                 var channels = discordCommandContext.Guild.Channels;
                 var foundChannels = channels.Where(x => string.Equals(value, x.Name, StringComparison.OrdinalIgnoreCase));
 
                 if (foundChannels.Count() > 1)
+                {
                     return TypeParserResult<T>.Unsuccessful(
                         "Channel name is ambiguous. Try mentioning the channel or enter the id.");
-                
+                }
+
                 channel = foundChannels.FirstOrDefault();
             }
-
 
             return channel is T tChannel
                 ? TypeParserResult<T>.Successful(tChannel)

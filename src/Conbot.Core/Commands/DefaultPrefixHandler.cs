@@ -18,7 +18,7 @@ namespace Conbot.Commands
         {
             string content = context.Message.Content;
             string output;
-            
+
             if (content.StartsWith("!"))
             {
                 output = content[1..];

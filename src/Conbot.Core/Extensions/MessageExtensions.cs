@@ -20,7 +20,6 @@ namespace Conbot.Extensions
             return true;
         }
 
-
         public static async Task<bool> TryRemoveReactionAsync(this IUserMessage message, IEmote emote, IUser user,
             RequestOptions options = null)
         {

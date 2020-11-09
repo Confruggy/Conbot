@@ -13,10 +13,11 @@ namespace Conbot.Commands
         {
             var commandService = context.ServiceProvider.GetRequiredService<CommandService>();
 
-            var module = commandService.GetAllModules()
-                    .FirstOrDefault(x =>
-                        (x.FullAliases.FirstOrDefault() != null && string.Equals(x.FullAliases.First(), value,
-                            StringComparison.OrdinalIgnoreCase)) ||
+            var module = commandService
+                .GetAllModules()
+                .FirstOrDefault(x =>
+                    (x.FullAliases.Count > 0 &&
+                        string.Equals(x.FullAliases[0], value, StringComparison.OrdinalIgnoreCase)) ||
                         (x.Name != null && string.Equals(x.Name, value, StringComparison.OrdinalIgnoreCase)));
 
             return module != null

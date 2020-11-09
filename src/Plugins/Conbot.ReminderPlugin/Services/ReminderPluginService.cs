@@ -10,8 +10,8 @@ namespace Conbot.ReminderPlugin
 {
     public class ReminderPluginService : IHostedService
     {
-        private IServiceProvider _provider;
-        private CommandService _commandService;
+        private readonly IServiceProvider _provider;
+        private readonly CommandService _commandService;
         private Module _module;
 
         public ReminderPluginService(IServiceProvider provider, CommandService commandService)
@@ -19,7 +19,7 @@ namespace Conbot.ReminderPlugin
             _provider = provider;
             _commandService = commandService;
         }
-        
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             UpdateDatabase();

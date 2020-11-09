@@ -21,10 +21,10 @@ namespace Conbot.TimeZonePlugin.Extensions
                 text.Append("Tomorrow");
             else if (dateTime.Date == now.Date.PlusDays(-1))
                 text.Append("Yesterday");
-            else text.Append($"{dateTime.Date:d}");
+            else text.Append(dateTime.Date.ToString("d", CultureInfo.InvariantCulture));
 
             text.Append(" at ")
-                .Append($"{dateTime.TimeOfDay:t}");
+                .Append(dateTime.TimeOfDay.ToString("t", CultureInfo.InvariantCulture));
 
             return text.ToString();
         }
@@ -48,7 +48,9 @@ namespace Conbot.TimeZonePlugin.Extensions
 
                 if ((difference.Minutes > 0 && difference.Seconds > 0) ||
                     (difference.Minutes < 0 && difference.Seconds < 0))
+                {
                     text.Append(" and ");
+                }
 
                 if (difference.Seconds > 0 || difference.Seconds < 0)
                     text.Append("second".ToQuantity(Math.Abs(difference.Seconds), "**#**"));
@@ -59,11 +61,17 @@ namespace Conbot.TimeZonePlugin.Extensions
             else
             {
                 if (now.Date == then.Date)
+                {
                     text.Append("**today** ");
+                }
                 else if (now.Date.PlusDays(1) == then.Date)
+                {
                     text.Append("**tomorrow** ");
+                }
                 else if (now.Date.PlusDays(-1) == then.Date)
+                {
                     text.Append("**yesterday** ");
+                }
                 else
                 {
                     text.Append("on the **")

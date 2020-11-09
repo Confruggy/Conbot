@@ -73,6 +73,6 @@ namespace Conbot.InteractiveMessages
         public InteractiveMessage Build()
             => new InteractiveMessage(Precondition, Timeout,
                 ReactionCallbacks.ToDictionary(k => k.Key, v => v.Value.Build()),
-                MessageCallbacks.Select(x => x.Build()).ToList(), AutoReactEmotes);
+                MessageCallbacks.ConvertAll(x => x.Build()), AutoReactEmotes);
     }
 }

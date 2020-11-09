@@ -112,7 +112,10 @@ namespace Conbot.Services.Interactive
                     var user = reaction.User.Value;
                     if (interactiveMessage.Precondition != null &&
                         !await interactiveMessage.Precondition(user).ConfigureAwait(false))
+                    {
                         return;
+                    }
+
                     if (!interactiveMessage.ReactionCallbacks.TryGetValue(emojiString, out var callback))
                         return;
 
@@ -126,13 +129,16 @@ namespace Conbot.Services.Interactive
                     finally
                     {
                         if (callback.ResumeAfterExecution)
+                        {
                             await executingInteractiveMessage.Message
-                                .TryRemoveReactionAsync(emote, user).ConfigureAwait(false);
+                               .TryRemoveReactionAsync(emote, user).ConfigureAwait(false);
+                        }
                         else
+                        {
                             StopExecutingInteractiveMessage(executingInteractiveMessage);
+                        }
                     }
                 }
-
             });
             return Task.CompletedTask;
         }
@@ -153,7 +159,9 @@ namespace Conbot.Services.Interactive
 
                     if (interactiveMessage.Precondition != null &&
                         !await interactiveMessage.Precondition(msg.Author).ConfigureAwait(false))
+                    {
                         continue;
+                    }
 
                     MessageCallback callback = null;
 

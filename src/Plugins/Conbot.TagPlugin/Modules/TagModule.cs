@@ -125,7 +125,7 @@ namespace Conbot.TagPlugin
                 .WithPrecondition(x => x.Id == Context.User.Id)
                 .AddReactionCallback(x => x
                     .WithEmote("greentick:314068319902760970")
-                    .WithCallback(async r =>
+                    .WithCallback(async _ =>
                     {
                         if (tag != null)
                             _db.RemoveTag(tag);
@@ -138,7 +138,7 @@ namespace Conbot.TagPlugin
                     }))
                 .AddReactionCallback(x => x
                     .WithEmote("redtick:314068319986647050")
-                    .WithCallback(async r =>
+                    .WithCallback(async _ =>
                     {
                         await Task.WhenAll(
                             base.ReplyAsync($"Tag **{Format.Sanitize(tag.Name)}** hasn't been deleted."),
@@ -181,7 +181,8 @@ namespace Conbot.TagPlugin
         public async Task InfoAsync([Remainder, Description("The name of the tag or alias.")] string name)
         {
             var tags = await _db.GetTagsAsync(Context.Guild);
-            var tag = tags.FirstOrDefault(x => x.GuildId == Context.Guild.Id && x.Name.ToLower() == name.ToLower());
+            var tag = tags.Find(
+                x => x.GuildId == Context.Guild.Id && string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
 
             var timeZone = await Context.GetUserTimeZoneAsync();
 
@@ -200,8 +201,8 @@ namespace Conbot.TagPlugin
             else
             {
                 int count = tags.Count;
-                int uses = tag.Uses.Count();
-                int rank = count - tags.Count(x => x.Uses.Count() <= uses) + 1;
+                int uses = tag.Uses.Count;
+                int rank = count - tags.Count(x => x.Uses.Count <= uses) + 1;
                 await ReplyAsync("", embed: CreateTagEmbed(tag, uses, rank, count, timeZone));
             }
         }
@@ -221,7 +222,7 @@ namespace Conbot.TagPlugin
             var modifiedAt = modification == null
                 ? "Never"
                 : DateTimeToClickableString(
-                    Instant.FromDateTimeUtc(modification.ModifiedAt).InZone(timeZone), modification.Url); 
+                    Instant.FromDateTimeUtc(modification.ModifiedAt).InZone(timeZone), modification.Url);
 
             return new EmbedBuilder()
                 .WithColor(Constants.DefaultEmbedColor)
@@ -238,7 +239,7 @@ namespace Conbot.TagPlugin
         private Embed CreateTagAliasEmbed(TagAlias alias, DateTimeZone timeZone)
         {
             double days = (Context.Message.Timestamp - alias.Creation.CreatedAt).TotalDays;
-            int uses = alias.TagUses.Count();
+            int uses = alias.TagUses.Count;
             double average = days > 1 ? Math.Round(uses / days) : uses;
 
             var owner = Context.Guild.GetUser(alias.OwnerId);
@@ -285,7 +286,6 @@ namespace Conbot.TagPlugin
 
             await _db.CreateTagAliasAsync(tag, Context.Message, name);
 
-
             await Task.WhenAll(
                 _db.SaveChangesAsync(),
                 ReplyAsync(
@@ -331,7 +331,11 @@ namespace Conbot.TagPlugin
 
             foreach (var tag in tags)
             {
-                pageText.AppendLine($"`{i.ToString().PadLeft(padding)}.` {Format.Sanitize(tag.Name)}");
+                pageText.Append('`')
+                    .Append(i.ToString().PadLeft(padding))
+                    .Append(".` ")
+                    .AppendLine(Format.Sanitize(tag.Name));
+
                 if (i % 15 == 0 || i == count)
                 {
                     pages.Add(pageText.ToString());

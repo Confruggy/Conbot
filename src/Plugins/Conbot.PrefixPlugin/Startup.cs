@@ -13,9 +13,6 @@ namespace Conbot.PrefixPlugin
             services.AddDbContext<PrefixContext>();
         }
 
-        public void BuildConfiguration(IConfigurationBuilder builder)
-        {
-            
-        }
+        public void BuildConfiguration(IConfigurationBuilder builder) { }
     }
 }

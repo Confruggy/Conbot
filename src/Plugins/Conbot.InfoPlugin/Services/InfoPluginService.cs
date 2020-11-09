@@ -11,7 +11,7 @@ namespace Conbot.InfoPlugin
         private Module _module;
 
         public InfoPluginService(CommandService commandService) => _commandService = commandService;
-        
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _module = _commandService.AddModule<InfoModule>();

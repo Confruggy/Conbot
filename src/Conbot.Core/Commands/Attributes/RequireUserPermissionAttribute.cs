@@ -29,7 +29,7 @@ namespace Conbot.Commands
         public override ValueTask<CheckResult> CheckAsync(CommandContext context)
         {
             var discordCommandContext = context as DiscordCommandContext;
-            
+
             return RequirePermissionUtils.CheckPermissionsAsync(discordCommandContext.User,
                 discordCommandContext.Channel, GuildPermissions, ChannelPermissions);
         }

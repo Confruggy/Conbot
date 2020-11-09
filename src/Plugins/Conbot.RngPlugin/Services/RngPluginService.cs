@@ -11,7 +11,7 @@ namespace Conbot.RngPlugin
         private Module _module;
 
         public RngPluginService(CommandService commandService) => _commandService = commandService;
-        
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _module = _commandService.AddModule<RngModule>();

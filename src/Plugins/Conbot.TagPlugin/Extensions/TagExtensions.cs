@@ -30,7 +30,7 @@ namespace Conbot.TagPlugin
 
         public static ValueTask<Tag> GetTagAsync(this TagContext context, IGuild guild, string name)
             => context.Tags.FirstOrDefaultAsync(x => x.GuildId == guild.Id &&
-                x.Name.ToLower() == name.ToLower());
+                string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
 
         public static async ValueTask<Tag> CreateTagAsync(this TagContext context, ulong guildId, ulong channelId,
             ulong messageId, ulong userId, string name, string content)
@@ -125,7 +125,8 @@ namespace Conbot.TagPlugin
             => context.TagAliases.AsAsyncEnumerable().Where(x => x.TagId == tag.Id).ToListAsync();
 
         public static ValueTask<TagAlias> GetTagAliasAsync(this TagContext context, IGuild guild, string name)
-            => context.TagAliases.FirstOrDefaultAsync(x => x.GuildId == guild.Id && x.Name.ToLower() == name.ToLower());
+            => context.TagAliases.FirstOrDefaultAsync(
+                x => x.GuildId == guild.Id && string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
 
         public static ValueTask<TagAlias> CreateTagAliasAsync(this TagContext context, Tag tag, IMessage message,
             string name)

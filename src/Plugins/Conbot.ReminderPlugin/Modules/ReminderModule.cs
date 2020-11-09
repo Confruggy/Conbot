@@ -44,7 +44,7 @@ namespace Conbot.ReminderPlugin
                 return;
             }
 
-            if (!when.Remainder?.StartsWith(' ') == true)
+            if (when.Remainder?.StartsWith(' ') == false)
             {
                 await ReplyAsync("There must be a space between the time and the message.");
                 return;
@@ -63,6 +63,5 @@ namespace Conbot.ReminderPlugin
                 _db.SaveChangesAsync()
             );
         }
-
     }
 }

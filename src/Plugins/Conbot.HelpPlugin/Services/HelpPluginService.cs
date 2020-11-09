@@ -11,7 +11,7 @@ namespace Conbot.HelpPlugin
         private Module _module;
 
         public HelpPluginService(CommandService commandService) => _commandService = commandService;
-        
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _module = _commandService.AddModule<HelpModule>();

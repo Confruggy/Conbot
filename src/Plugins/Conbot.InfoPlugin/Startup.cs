@@ -12,9 +12,6 @@ namespace Conbot.InfoPlugin
             services.AddHostedService<InfoPluginService>();
         }
 
-        public void BuildConfiguration(IConfigurationBuilder builder)
-        {
-            
-        }
+        public void BuildConfiguration(IConfigurationBuilder builder) { }
     }
 }

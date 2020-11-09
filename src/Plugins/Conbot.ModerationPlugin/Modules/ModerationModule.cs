@@ -28,7 +28,7 @@ namespace Conbot.ModerationPlugin
             [Priority(1)]
             public async Task PruneAsync([Description("The maximal amount of messages to delete.")] uint limit)
             {
-                int count = await DeleteMessagesAsync(msg => true, limit < 100 ? limit : 100);
+                int count = await DeleteMessagesAsync(_ => true, limit < 100 ? limit : 100);
 
                 var message = await ReplyAsync($"**{count}** messages has been deleted.");
                 await Task.Delay(10000);
@@ -82,7 +82,6 @@ namespace Conbot.ModerationPlugin
                 return count;
             }
         }
-
 
         [Command("ban")]
         [Description("Bans a member.")]

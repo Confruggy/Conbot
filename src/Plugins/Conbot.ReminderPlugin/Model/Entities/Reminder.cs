@@ -19,7 +19,7 @@ namespace Conbot.ReminderPlugin
 
         [Required]
         public ulong MessageId { get; set;}
-        
+
         public string Message { get; set; }
 
         [Required]

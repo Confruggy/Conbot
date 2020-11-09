@@ -16,9 +16,6 @@ namespace Conbot.TimeZonePlugin
                 .AddSingleton(DateTimeZoneProviders.Tzdb);
         }
 
-        public void BuildConfiguration(IConfigurationBuilder builder)
-        {
-            
-        }
+        public void BuildConfiguration(IConfigurationBuilder builder) { }
     }
 }

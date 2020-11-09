@@ -19,7 +19,9 @@ namespace Conbot.Commands
             if ((argument is SocketRole role && user.Hierarchy > role.Position && currentUser.Hierarchy > role.Position) ||
                 (argument is SocketGuildUser target && user.Hierarchy > target.Hierarchy &&
                     currentUser.Hierarchy > target.Hierarchy))
+            {
                 return CheckResult.Successful;
+            }
 
             return CheckResult.Unsuccessful("Roles position is too high.");
         }

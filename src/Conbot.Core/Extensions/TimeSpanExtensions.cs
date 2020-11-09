@@ -45,7 +45,7 @@ namespace Conbot.Extensions
             var strings = new List<string>();
 
             int weeks = timeSpan.Days / 7;
-            int days = timeSpan.Days - weeks * 7;
+            int days = timeSpan.Days - (weeks * 7);
 
             if (weeks == 1)
                 strings.Add($"{(formatted ? Format.Bold("1") : "1")} week");

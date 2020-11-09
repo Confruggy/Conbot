@@ -17,11 +17,15 @@ namespace Conbot.Commands
             IUser user = null;
 
             if (MentionUtils.TryParseUser(value, out var id))
+            {
                 user = discordCommandContext.Guild?.GetUser(id)
-                        ?? await discordCommandContext.Channel.GetUserAsync(id, CacheMode.CacheOnly);
+                       ?? await discordCommandContext.Channel.GetUserAsync(id, CacheMode.CacheOnly);
+            }
             else if (ulong.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out id))
+            {
                 user = discordCommandContext.Guild?.GetUser(id)
-                        ?? await discordCommandContext.Channel.GetUserAsync(id, CacheMode.CacheOnly);
+                       ?? await discordCommandContext.Channel.GetUserAsync(id, CacheMode.CacheOnly);
+            }
             else
             {
                 int index = value.LastIndexOf('#');
@@ -47,8 +51,7 @@ namespace Conbot.Commands
                         }
                     }
                 }
-            };
-
+            }
 
             return user is T tUser
                 ? TypeParserResult<T>.Successful(tUser)

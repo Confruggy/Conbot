@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -45,8 +46,11 @@ namespace Conbot.TimeZonePlugin
             var now = SystemClock.Instance.InZone(timeZone).GetCurrentTimeOfDay();
 
             var text = new StringBuilder()
-                .Append($"Your time zone is **{timeZoneText}**. ")
-                .Append($"Your local time is **{now}**.");
+                .Append("Your time zone is ")
+                .Append(Format.Bold(timeZoneText))
+                .Append(". Your local time is ")
+                .Append(Format.Bold(now.ToString("H:mm:ss", CultureInfo.InvariantCulture)))
+                .Append('.');
 
             await ReplyAsync(text.ToString());
         }
@@ -78,7 +82,7 @@ namespace Conbot.TimeZonePlugin
             public async Task TimeZoneAsync(
             [Description("The country to set the time zone from.")]
             [Remarks(
-                "Can be either the name of the country or a country code. " + 
+                "Can be either the name of the country or a country code. " +
                 "If you can't find your country, please refer to the country names and country codes provided " +
                 "[here](https://nodatime.org/TimeZones). If multiple time zones are available for a country, " +
                 "then you'll be prompted to select your time zone location from a list.")]
@@ -98,8 +102,12 @@ namespace Conbot.TimeZonePlugin
                 await _db.ModifyUserTimeZoneAsync(Context.User, timeZone);
 
                 var response = new StringBuilder()
-                    .Append($"Your time zone has been set to **{timeZone.Id.Replace("/", ", ").Replace('_', ' ')}**. ")
-                    .Append($"Your local time is **{now}**.");
+                    .Append("Your time zone has been set to ")
+                    .Append(Format.Bold(timeZone.Id.Replace("/", ", ").Replace('_', ' ')))
+                    .Append(". ")
+                    .Append("Your local time is ")
+                    .Append(Format.Bold(now.ToString("H:mm:ss", CultureInfo.InvariantCulture)))
+                    .Append('.');
 
                 await Task.WhenAll(
                     ReplyAsync(response.ToString()),
@@ -119,8 +127,11 @@ namespace Conbot.TimeZonePlugin
                 await _db.ModifyUserTimeZoneAsync(Context.User, gmt);
 
                 var response = new StringBuilder()
-                    .Append($"Your time zone has been set to **{TimeZoneUtils.TzdbGmtMapping[gmt.Id]}**. ")
-                    .Append($"Your local time is **{now}**.");
+                    .Append("Your time zone has been set to ")
+                    .Append(Format.Bold(TimeZoneUtils.TzdbGmtMapping[gmt.Id]))
+                    .Append(". Your local time is **")
+                    .Append(now)
+                    .Append("**.");
 
                 await Task.WhenAll(
                     ReplyAsync(response.ToString()),
@@ -138,7 +149,9 @@ namespace Conbot.TimeZonePlugin
             List<Task> tasks = new List<Task>();
 
             if (count == 1)
-                location = locations.First();
+            {
+                location = locations[0];
+            }
             else
             {
                 int padding = count.ToString().Length;
@@ -151,8 +164,14 @@ namespace Conbot.TimeZonePlugin
 
                     var localTime = now.InZone(timeZone).TimeOfDay;
 
-                    text.AppendLine(
-                        $"`{(i + 1).ToString().PadLeft(padding)}.` {timeZone.Id.Replace("/", ", ").Replace('_', ' ')} ({localTime})");
+                    text.Append('`')
+                        .Append((i + 1).ToString()
+                        .PadLeft(padding))
+                        .Append(".` ")
+                        .Append(timeZone.Id.Replace("/", ", ").Replace('_', ' '))
+                        .Append(" (")
+                        .Append(localTime)
+                        .AppendLine(")");
                 }
 
                 var embed = new EmbedBuilder()

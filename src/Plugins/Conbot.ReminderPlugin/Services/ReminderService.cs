@@ -19,7 +19,7 @@ namespace Conbot.ReminderPlugin
         private readonly ILogger<ReminderService> _logger;
         private readonly DiscordShardedClient _client;
         private readonly IDateTimeZoneProvider _provider;
-        Task _task;
+        private Task _task;
 
         public ReminderService(ILogger<ReminderService> logger, DiscordShardedClient client,
             IDateTimeZoneProvider provider)
@@ -55,7 +55,7 @@ namespace Conbot.ReminderPlugin
                     foreach (var reminder in reminders)
                         reminder.Finished = true;
 
-                    if (reminders.Any())
+                    if (reminders.Length > 0)
                         await db.SaveChangesAsync();
                 }
 
@@ -83,7 +83,10 @@ namespace Conbot.ReminderPlugin
                             }
                         }
                     }
-                    else toSendChannel = await _client.GetDMChannelAsync(reminder.UserId);
+                    else
+                    {
+                        toSendChannel = await _client.GetDMChannelAsync(reminder.UserId);
+                    }
 
                     if (toSendChannel != null)
                     {

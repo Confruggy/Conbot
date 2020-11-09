@@ -12,9 +12,6 @@ namespace Conbot.ModerationPlugin
             services.AddHostedService<ModerationPluginService>();
         }
 
-        public void BuildConfiguration(IConfigurationBuilder builder)
-        {
-            
-        }
+        public void BuildConfiguration(IConfigurationBuilder builder) { }
     }
 }

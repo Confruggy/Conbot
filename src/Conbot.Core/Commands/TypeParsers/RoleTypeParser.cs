@@ -19,24 +19,27 @@ namespace Conbot.Commands
 
             IRole role = null;
 
-            
-
             if (MentionUtils.TryParseRole(value, out var id))
+            {
                 role = discordCommandContext.Guild.GetRole(id);
+            }
             else if (ulong.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out id))
+            {
                 role = discordCommandContext.Guild.GetRole(id);
-            else 
+            }
+            else
             {
                 var roles = discordCommandContext.Guild.Roles;
                 var foundRoles = roles.Where(x => string.Equals(value, x.Name, StringComparison.OrdinalIgnoreCase));
 
                 if (foundRoles.Count() > 1)
+                {
                     return TypeParserResult<T>.Unsuccessful(
                         "Role name is ambiguous. Try mentioning the role or enter the id.");
-                
+                }
+
                 role = foundRoles.FirstOrDefault();
             }
-
 
             return role is T tRole
                 ? TypeParserResult<T>.Successful(tRole)

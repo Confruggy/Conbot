@@ -57,7 +57,7 @@ namespace Conbot.HelpPlugin
                 .WithPrecondition(x => x.Id == context.User.Id)
                 .AddReactionCallback(x => x
                     .WithEmote("first:654781462490644501")
-                    .WithCallback(async x =>
+                    .WithCallback(async _ =>
                     {
                         if (currentModule != null || currentCommand != null)
                         {
@@ -69,7 +69,7 @@ namespace Conbot.HelpPlugin
                     .ShouldResumeAfterExecution(true))
                 .AddReactionCallback(x => x
                     .WithEmote("backward:654781463027515402")
-                    .WithCallback(async x =>
+                    .WithCallback(async _ =>
                     {
                         if (currentCommand != null)
                         {
@@ -117,7 +117,10 @@ namespace Conbot.HelpPlugin
                             currentCommand = commandInfo;
                             currentModule = null;
                         }
-                        else return;
+                        else
+                        {
+                            return;
+                        }
 
                         tasks.Add(msg.TryDeleteAsync());
 
@@ -173,9 +176,12 @@ namespace Conbot.HelpPlugin
                     .AppendLine(module.Description ?? "No Description.");
 
             if (!string.IsNullOrEmpty(module.Remarks))
+            {
                 descriptionText
                     .AppendLine()
-                    .AppendLine($">>> {module.Remarks}");
+                    .Append(">>> ")
+                    .AppendLine(module.Remarks);
+            }
 
             embed.WithDescription(descriptionText.ToString());
 
@@ -184,7 +190,7 @@ namespace Conbot.HelpPlugin
             commandDictionary = new Dictionary<string, Command>();
 
             var commands = module.Commands
-                .Where(x => x.FullAliases.First() == module.FullAliases.FirstOrDefault())
+                .Where(x => x.FullAliases[0] == module.FullAliases.FirstOrDefault())
                 .OrderBy(x => x.Name);
 
             var commandsText = new StringBuilder();
@@ -202,13 +208,13 @@ namespace Conbot.HelpPlugin
             var subcommandsAndSubmodules = new Dictionary<string, object>();
 
             var subcommands = module.Commands
-                .Where(x => x.FullAliases.First() != module.FullAliases.FirstOrDefault());
+                .Where(x => x.FullAliases[0] != module.FullAliases.FirstOrDefault());
 
             foreach (var command in subcommands)
-                subcommandsAndSubmodules.Add(command.Aliases.First(), command);
+                subcommandsAndSubmodules.Add(command.Aliases[0], command);
 
             foreach (var submodule in module.Submodules)
-                subcommandsAndSubmodules.Add(submodule.Aliases.First(), submodule);
+                subcommandsAndSubmodules.Add(submodule.Aliases[0], submodule);
 
             moduleDictionary = new Dictionary<string, Module>();
 
@@ -259,56 +265,82 @@ namespace Conbot.HelpPlugin
                     .AppendLine(command.Description ?? "No Description.");
 
             if (!string.IsNullOrEmpty(command.Remarks))
+            {
                 descriptionText
                     .AppendLine()
-                    .Append($">>> {command.Remarks}");
+                    .Append(">>> ")
+                    .Append(command.Remarks);
+            }
+
             embed.WithDescription(descriptionText.ToString());
 
             var parameters = command.Parameters;
-            if (parameters.Any())
+            if (parameters.Count > 0)
             {
                 var parameterText = new StringBuilder();
 
                 foreach (var parameter in command.Parameters)
                 {
                     parameterText
-                        .AppendLine($"{ParameterToString(parameter, true)}")
-                        .Append($"> {parameter.Description ?? "No Description."}");
+                        .AppendLine(ParameterToString(parameter, true))
+                        .Append("> ")
+                        .Append(parameter.Description ?? "No Description.");
 
                     if (parameter.Checks.FirstOrDefault(x => x is MinLengthAttribute)
                         is MinLengthAttribute minLengthCheck)
                     {
                         parameterText
-                            .Append($" Minimal ")
+                            .Append(" Minimal ")
                             .Append(parameter.IsMultiple ? "amount" : "length")
-                            .Append($" is {minLengthCheck.Length}.");
+                            .Append(" is ")
+                            .Append(minLengthCheck.Length)
+                            .Append('.');
                     }
 
                     if (parameter.Checks.FirstOrDefault(x => x is MaxLengthAttribute)
                         is MaxLengthAttribute maxLengthCheck)
                     {
                         parameterText
-                            .Append($" Maximal ")
+                            .Append(" Maximal ")
                             .Append(parameter.IsMultiple ? "amount" : "length")
-                            .Append($" is {maxLengthCheck.Length}.");
+                            .Append(" is ")
+                            .Append(maxLengthCheck.Length)
+                            .Append('.');
                     }
 
                     if (parameter.Checks.FirstOrDefault(x => x is MinValueAttribute)
                         is MinValueAttribute minValueCheck)
-                        parameterText.Append($" Minimal value is {minValueCheck.MinValue}.");
+                    {
+                        parameterText
+                            .Append(" Minimal value is ")
+                            .Append(minValueCheck.MinValue)
+                            .Append('.');
+                    }
 
                     if (parameter.Checks.FirstOrDefault(x => x is MaxValueAttribute)
                         is MaxValueAttribute maxValueCheck)
-                        parameterText.Append($" Maximal length is {maxValueCheck.MaxValue}.");
+                    {
+                        parameterText
+                            .Append(" Maximal length is ")
+                            .Append(maxValueCheck.MaxValue)
+                            .Append('.');
+                    }
 
                     if (parameter.DefaultValue != null && !(parameter.DefaultValue is Array))
-                        parameterText.Append($" Default value is {parameter.DefaultValue}.");
+                    {
+                        parameterText.Append(" Default value is ")
+                            .Append(parameter.DefaultValue)
+                            .Append('.');
+                    }
 
                     if (!string.IsNullOrEmpty(parameter.Remarks))
+                    {
                         parameterText
                             .AppendLine()
                             .AppendLine("> ")
-                            .Append($"> {parameter.Remarks.Replace("\n", "\n> ")}");
+                            .Append("> ")
+                            .Append(parameter.Remarks.Replace("\n", "\n> "));
+                    }
 
                     parameterText.AppendLine();
                 }
@@ -317,13 +349,13 @@ namespace Conbot.HelpPlugin
             }
 
             var overloads = command.Module.Commands
-                .Where(x => x.FullAliases.First() == command.FullAliases.First() && x != command)
+                .Where(x => x.FullAliases[0] == command.FullAliases[0] && x != command)
                 .ToArray();
 
             commandDictionary = new Dictionary<string, Command>();
 
             var overloadsText = new StringBuilder();
-            if (overloads.Any())
+            if (overloads.Length > 0)
             {
                 for (int i = 0; i < overloads.Length; i++)
                 {
@@ -343,11 +375,11 @@ namespace Conbot.HelpPlugin
         }
 
         private string GetShortCommand(Command command, int index) =>
-            $"`{index}.` **{command.FullAliases.First()}** {FormatParameters(command)}\n" +
+            $"`{index}.` **{command.FullAliases[0]}** {FormatParameters(command)}\n" +
             $"> {command.Description ?? "No Description."}";
 
         private string GetShortModule(Module module, int index) =>
-            $"`{index}.` **{(module.Parent != null ? $"{module.FullAliases.First()}*" : module.Name)}**\n" +
+            $"`{index}.` **{(module.Parent != null ? $"{module.FullAliases[0]}*" : module.Name)}**\n" +
             $"> {module.Description ?? "No Description."}";
 
         private string GetPath(Module module)
@@ -372,7 +404,7 @@ namespace Conbot.HelpPlugin
             while (module.Parent != null)
                 module = module.Parent;
 
-            return $"{module.Name} › {command.FullAliases.First().Replace(" ", " › ")}";
+            return $"{module.Name} › {command.FullAliases[0].Replace(" ", " › ")}";
         }
 
         private string ParameterToString(Parameter parameter, bool literal = false)
@@ -410,18 +442,18 @@ namespace Conbot.HelpPlugin
             string commandText = command.Aliases.Count == 0
                 ? ""
                 : command.Aliases.Count == 1
-                    ? command.Aliases.First()
+                    ? command.Aliases[0]
                     : $"[{string.Join('|', command.Aliases)}]";
 
             var module = command.Module;
 
-            while (module != null && module.Aliases.Any())
+            while (module?.Aliases.Count > 0)
             {
                 string moduleText = module.Aliases.Count == 1
-                    ? module.Aliases.First()
+                    ? module.Aliases[0]
                     : $"[{string.Join('|', module.Aliases)}]";
 
-                commandText = commandText == "" ? moduleText : $"{moduleText} {commandText}";
+                commandText = commandText?.Length == 0 ? moduleText : $"{moduleText} {commandText}";
                 module = module.Parent;
             }
 

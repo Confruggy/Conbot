@@ -22,8 +22,11 @@ namespace Conbot.InfoPlugin
 
         [Command("uptime")]
         [Description("Shows the uptime of the bot.")]
-        public Task UptimeAsync() => ReplyAsync($"The bot is running for {(GetUptime().ToLongFormattedString())}.");
+        public Task UptimeAsync() => ReplyAsync($"The bot is running for {GetUptime().ToLongFormattedString()}.");
 
-        private static TimeSpan GetUptime() => DateTime.Now.Subtract(Process.GetCurrentProcess().StartTime); 
+        private static TimeSpan GetUptime()
+        {
+            return DateTime.Now.Subtract(Process.GetCurrentProcess().StartTime);
+        }
     }
 }

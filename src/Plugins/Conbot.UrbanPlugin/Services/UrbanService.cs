@@ -7,7 +7,7 @@ namespace Conbot.UrbanPlugin
 {
     public class UrbanService : IDisposable
     {
-        private static readonly string _apiUrl = "http://api.urbandictionary.com/v0/define?term=";
+        private const string _apiUrl = "http://api.urbandictionary.com/v0/define?term=";
 
         private readonly HttpClient _client;
 

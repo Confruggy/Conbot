@@ -8,10 +8,7 @@ namespace Conbot.TimeZonePlugin
         public DbSet<UserTimeZone> UserTimeZones { get; set; }
         public DbSet<GuildTimeZone> GuildTimeZones { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-
-        }
+        protected override void OnModelCreating(ModelBuilder modelBuilder) { }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

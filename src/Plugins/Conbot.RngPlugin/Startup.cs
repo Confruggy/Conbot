@@ -12,9 +12,6 @@ namespace Conbot.RngPlugin
             services.AddHostedService<RngPluginService>();
         }
 
-        public void BuildConfiguration(IConfigurationBuilder builder)
-        {
-            
-        }
+        public void BuildConfiguration(IConfigurationBuilder builder) { }
     }
 }

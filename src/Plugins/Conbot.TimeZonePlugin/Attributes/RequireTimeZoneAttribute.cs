@@ -15,8 +15,10 @@ namespace Conbot.TimeZonePlugin
             var userTimeZone = await db.GetUserTimeZoneAsync(discordCommandContext.User);
 
             if (userTimeZone == null)
+            {
                 return CheckResult.Unsuccessful(
                     "This command requires a time zone to be set. Use the `timezone set` command to set a time zone.");
+            }
 
             var provider = context.ServiceProvider.GetRequiredService<IDateTimeZoneProvider>();
             var timeZone = provider.GetZoneOrNull(userTimeZone.TimeZoneId);
