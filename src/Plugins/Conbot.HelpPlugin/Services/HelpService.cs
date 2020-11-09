@@ -275,6 +275,32 @@ namespace Conbot.HelpPlugin
                         .AppendLine($"{ParameterToString(parameter, true)}")
                         .Append($"> {parameter.Description ?? "No Description."}");
 
+                    if (parameter.Checks.FirstOrDefault(x => x is MinLengthAttribute)
+                        is MinLengthAttribute minLengthCheck)
+                    {
+                        parameterText
+                            .Append($" Minimal ")
+                            .Append(parameter.IsMultiple ? "amount" : "length")
+                            .Append($" is {minLengthCheck.Length}.");
+                    }
+
+                    if (parameter.Checks.FirstOrDefault(x => x is MaxLengthAttribute)
+                        is MaxLengthAttribute maxLengthCheck)
+                    {
+                        parameterText
+                            .Append($" Maximal ")
+                            .Append(parameter.IsMultiple ? "amount" : "length")
+                            .Append($" is {maxLengthCheck.Length}.");
+                    }
+
+                    if (parameter.Checks.FirstOrDefault(x => x is MinValueAttribute)
+                        is MinValueAttribute minValueCheck)
+                        parameterText.Append($" Minimal value is {minValueCheck.MinValue}.");
+
+                    if (parameter.Checks.FirstOrDefault(x => x is MaxValueAttribute)
+                        is MaxValueAttribute maxValueCheck)
+                        parameterText.Append($" Maximal length is {maxValueCheck.MaxValue}.");
+
                     if (parameter.DefaultValue != null && !(parameter.DefaultValue is Array))
                         parameterText.Append($" Default value is {parameter.DefaultValue}.");
 
