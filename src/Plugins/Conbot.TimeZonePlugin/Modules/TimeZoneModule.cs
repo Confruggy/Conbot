@@ -73,10 +73,10 @@ namespace Conbot.TimeZonePlugin
             }
 
             [Command]
-            [Description("Sets your time zone location.")]
+            [Description("Sets your time zone using a time zone location.")]
             [Remarks(
                 "Certain commands require your time zone information. " +
-                "In order to use those commands it's best to set your time zone location. " +
+                "In order to use those commands it's best to set your time zone using a time zone location. " +
                 "However, if you don't want to provide your location, you can set a GMT offset instead. " +
                 "Refer to the overload for more information.")]
             public async Task TimeZoneAsync(
@@ -115,7 +115,7 @@ namespace Conbot.TimeZonePlugin
             }
 
             [Command]
-            [Description("Sets your time zone using UTC/GMT offsets.")]
+            [Description("Sets your time zone using GMT offsets.")]
             [Remarks(
                 "Available offsets are: GMT-12, GMT-11, GMT-10, GMT-9, GMT-8, GMT-7, GMT-6, GMT-5, GMT-4, GMT-3, " +
                 "GMT-2, GMT-1, GMT, GMT+1, GMT+2, GMT+3, GMT+4, GMT+5, GMT+6, GMT+7, GMT+8, GMT+9, GMT+10, GMT+11, " +
