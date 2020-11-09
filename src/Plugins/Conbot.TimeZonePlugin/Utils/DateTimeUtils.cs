@@ -109,7 +109,8 @@ namespace Conbot.TimeZonePlugin
                         string day = gbDateMatch.Groups[1].Value
                             .Replace("st", "")
                             .Replace("nd", "")
-                            .Replace("rd", "");
+                            .Replace("rd", "")
+                            .Replace("th", "");
 
                         string month = GetMonthFromString(gbDateMatch.Groups[2].Value);
                         string year = gbDateMatch.Groups[3].Value;
