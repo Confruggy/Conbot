@@ -11,6 +11,7 @@ using Conbot.TimeZonePlugin.Extensions;
 using Discord;
 using Discord.WebSocket;
 using Humanizer;
+using Microsoft.Extensions.Configuration;
 using NodaTime;
 using Qmmands;
 
@@ -21,11 +22,13 @@ namespace Conbot.TagPlugin
     {
         private readonly InteractiveService _interactiveService;
         private readonly TagContext _db;
+        private readonly IConfiguration _config;
 
-        public TagModule(InteractiveService interactiveSerivce, TagContext db)
+        public TagModule(InteractiveService interactiveSerivce, TagContext db, IConfiguration config)
         {
             _interactiveService = interactiveSerivce;
             _db = db;
+            _config = config;
         }
 
         [Command, Priority(-1)]
@@ -225,7 +228,7 @@ namespace Conbot.TagPlugin
                     Instant.FromDateTimeUtc(modification.ModifiedAt).InZone(timeZone), modification.Url);
 
             return new EmbedBuilder()
-                .WithColor(Constants.DefaultEmbedColor)
+                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
                 .WithAuthor(x => x.WithIconUrl(owner?.GetAvatarUrl()).WithName(owner?.ToString()))
                 .WithTitle(tag.Name)
                 .AddField("Owner", owner?.Mention ?? "Member not found", true)
@@ -248,7 +251,7 @@ namespace Conbot.TagPlugin
                 Instant.FromDateTimeUtc(alias.Creation.CreatedAt).InZone(timeZone), alias.Creation.Url);
 
             return new EmbedBuilder()
-                .WithColor(Constants.DefaultEmbedColor)
+                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
                 .WithAuthor(owner?.ToString(), owner?.GetAvatarUrl())
                 .WithTitle(alias.Name)
                 .AddField("Creator", owner?.Mention ?? "Member not found", true)
@@ -355,7 +358,7 @@ namespace Conbot.TagPlugin
             for (int j = 0; j < pages.Count; j++)
             {
                 var embed = new EmbedBuilder()
-                    .WithColor(Constants.DefaultEmbedColor)
+                    .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
                     .WithAuthor(user?.Username ?? Context.Guild.Name, user?.GetAvatarUrl() ?? Context.Guild.IconUrl)
                     .WithTitle("Tags")
                     .WithDescription(pages[j])

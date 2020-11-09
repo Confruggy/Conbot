@@ -8,6 +8,7 @@ using Conbot.Extensions;
 using Conbot.InteractiveMessages;
 using Conbot.Services.Interactive;
 using Discord;
+using Microsoft.Extensions.Configuration;
 using Qmmands;
 
 namespace Conbot.HelpPlugin
@@ -16,11 +17,13 @@ namespace Conbot.HelpPlugin
     {
         private readonly CommandService _commandService;
         private readonly InteractiveService _interactiveService;
+        private readonly IConfiguration _config;
 
-        public HelpService(CommandService commandService, InteractiveService interactiveService)
+        public HelpService(CommandService commandService, InteractiveService interactiveService, IConfiguration config)
         {
             _commandService = commandService;
             _interactiveService = interactiveService;
+            _config = config;
         }
 
         public async Task ExecuteHelpMessageAsync(DiscordCommandContext context, Module startModule = null,
@@ -139,7 +142,7 @@ namespace Conbot.HelpPlugin
                 .WithDescription(
                     "Below you see all available categories. " +
                     "Each category has one or several commands.")
-                .WithColor(Constants.DefaultEmbedColor)
+                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
                 .WithFooter("Enter a number for more information about a category.");
 
             var modules = _commandService.GetAllModules()
@@ -170,7 +173,7 @@ namespace Conbot.HelpPlugin
         {
             var embed = new EmbedBuilder()
                 .WithAuthor(GetPath(module))
-                .WithColor(Constants.DefaultEmbedColor);
+                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"));
 
             var descriptionText = new StringBuilder()
                     .AppendLine(module.Description ?? "No Description.");
@@ -259,7 +262,7 @@ namespace Conbot.HelpPlugin
             var embed = new EmbedBuilder()
                 .WithAuthor(GetPath(command))
                 .WithTitle($"{FormatCommandName(command)} {FormatParameters(command)}")
-                .WithColor(Constants.DefaultEmbedColor);
+                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"));
 
             var descriptionText = new StringBuilder()
                     .AppendLine(command.Description ?? "No Description.");

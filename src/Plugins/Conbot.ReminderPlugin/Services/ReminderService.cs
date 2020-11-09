@@ -8,6 +8,7 @@ using Conbot.TimeZonePlugin.Extensions;
 using Discord;
 using Discord.WebSocket;
 using Humanizer;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NodaTime;
@@ -19,14 +20,16 @@ namespace Conbot.ReminderPlugin
         private readonly ILogger<ReminderService> _logger;
         private readonly DiscordShardedClient _client;
         private readonly IDateTimeZoneProvider _provider;
+        private readonly IConfiguration _config;
         private Task _task;
 
         public ReminderService(ILogger<ReminderService> logger, DiscordShardedClient client,
-            IDateTimeZoneProvider provider)
+            IDateTimeZoneProvider provider, IConfiguration config)
         {
             _logger = logger;
             _client = client;
             _provider = provider;
+            _config = config;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -93,7 +96,7 @@ namespace Conbot.ReminderPlugin
                         string hyperLink = $"[jump to message]({reminder.Url})";
 
                         var embed = new EmbedBuilder()
-                            .WithColor(Constants.DefaultEmbedColor)
+                            .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
                             .WithDescription(
                                 string.IsNullOrEmpty(reminder.Message)
                                     ? hyperLink

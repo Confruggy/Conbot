@@ -6,6 +6,7 @@ using Conbot.Commands;
 using Conbot.Services.Interactive;
 using Discord;
 using Humanizer;
+using Microsoft.Extensions.Configuration;
 using Qmmands;
 
 namespace Conbot.PrefixPlugin
@@ -19,11 +20,13 @@ namespace Conbot.PrefixPlugin
     {
         private readonly InteractiveService _interactiveService;
         private readonly PrefixContext _db;
+        private readonly IConfiguration _config;
 
-        public PrefixModule(InteractiveService interactiveSerivce, PrefixContext db)
+        public PrefixModule(InteractiveService interactiveSerivce, PrefixContext db, IConfiguration config)
         {
             _interactiveService = interactiveSerivce;
             _db = db;
+            _config = config;
         }
 
         [Command("add", "create")]
@@ -125,7 +128,7 @@ namespace Conbot.PrefixPlugin
             for (int j = 0; j < pages.Count; j++)
             {
                 var embed = new EmbedBuilder()
-                    .WithColor(Constants.DefaultEmbedColor)
+                    .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
                     .WithAuthor( Context.Guild.Name, Context.Guild.IconUrl)
                     .WithTitle("Prefixes")
                     .WithDescription(pages[j])

@@ -7,6 +7,7 @@ using Conbot.Commands;
 using Conbot.InteractiveMessages;
 using Conbot.Services.Interactive;
 using Discord;
+using Microsoft.Extensions.Configuration;
 using NodaTime;
 using NodaTime.Extensions;
 using NodaTime.TimeZones;
@@ -64,12 +65,15 @@ namespace Conbot.TimeZonePlugin
             private readonly TimeZoneContext _db;
             private readonly IDateTimeZoneProvider _provider;
             private readonly InteractiveService _interactive;
+            private readonly IConfiguration _config;
 
-            public SetCommands(TimeZoneContext context, IDateTimeZoneProvider provider, InteractiveService service)
+            public SetCommands(TimeZoneContext context, IDateTimeZoneProvider provider,
+                InteractiveService service, IConfiguration config)
             {
                 _db = context;
                 _provider = provider;
                 _interactive = service;
+                _config = config;
             }
 
             [Command]
@@ -88,7 +92,7 @@ namespace Conbot.TimeZonePlugin
                 "then you'll be prompted to select your time zone location from a list.")]
                 IList<TzdbZoneLocation> country)
             {
-                var location = await SelectZoneLocationAsync(Context, country, _provider, _interactive);
+                var location = await SelectZoneLocationAsync(Context, country, _provider, _interactive, _config);
 
                 if (location == null)
                 {
@@ -141,7 +145,7 @@ namespace Conbot.TimeZonePlugin
 
         public static async Task<TzdbZoneLocation> SelectZoneLocationAsync(
             DiscordCommandContext context, IList<TzdbZoneLocation> locations, IDateTimeZoneProvider provider,
-            InteractiveService interactiveService)
+            InteractiveService interactiveService, IConfiguration config)
         {
             TzdbZoneLocation location = null;
             int count = locations.Count;
@@ -175,7 +179,7 @@ namespace Conbot.TimeZonePlugin
                 }
 
                 var embed = new EmbedBuilder()
-                    .WithColor(Constants.DefaultEmbedColor)
+                    .WithColor(config.GetValue<uint>("DefaultEmbedColor"))
                     .WithTitle("Locations")
                     .WithDescription(text.ToString())
                     .Build();
