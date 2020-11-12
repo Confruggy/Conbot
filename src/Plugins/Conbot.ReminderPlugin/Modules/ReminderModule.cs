@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Conbot.Commands;
 using Conbot.TimeZonePlugin;
 using Conbot.TimeZonePlugin.Extensions;
+using NodaTime;
 using Qmmands;
 
 namespace Conbot.ReminderPlugin
@@ -55,7 +56,8 @@ namespace Conbot.ReminderPlugin
 
             var text = new StringBuilder()
                 .Append("⏰ Reminder has been set. You'll be reminded ")
-                .Append(when.Now.ToDurationFormattedString(when.Then.Value))
+                .Append(when.Now.ToDurationString(when.Then.Value, DurationLevel.Seconds,
+                    showDateAt: Duration.FromDays(1), formatted: true))
                 .Append(".");
 
             await Task.WhenAll(

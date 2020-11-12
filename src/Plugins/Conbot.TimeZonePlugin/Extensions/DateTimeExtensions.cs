@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
+using Discord;
 using Humanizer;
 using NodaTime;
 using NodaTime.Extensions;
@@ -29,66 +32,99 @@ namespace Conbot.TimeZonePlugin.Extensions
             return text.ToString();
         }
 
-        public static string ToDurationFormattedString(this ZonedDateTime now, ZonedDateTime then)
+        public static string ToDurationString(this ZonedDateTime now, ZonedDateTime then,
+            DurationLevel startLevel = DurationLevel.Seconds, int accuracy = 0,
+            Duration? showDateAt = null, bool formatted = false)
         {
-            if (now == then)
-                return "**now**";
-
+            var difference = then - now;
             var text = new StringBuilder();
 
-            var difference = then - now;
-
-            if (difference.TotalHours < 1 && difference.TotalHours > -1)
-            {
-                if (difference.TotalTicks > 0)
-                    text.Append("in ");
-
-                if (difference.Minutes > 0 || difference.Minutes < 0)
-                    text.Append("minute".ToQuantity(Math.Abs(difference.Minutes), "**#**"));
-
-                if ((difference.Minutes > 0 && difference.Seconds > 0) ||
-                    (difference.Minutes < 0 && difference.Seconds < 0))
-                {
-                    text.Append(" and ");
-                }
-
-                if (difference.Seconds > 0 || difference.Seconds < 0)
-                    text.Append("second".ToQuantity(Math.Abs(difference.Seconds), "**#**"));
-
-                if (difference.TotalTicks < 0)
-                    text.Append(" ago");
-            }
-            else
+            if (Math.Abs(difference.TotalTicks) >= showDateAt?.TotalTicks)
             {
                 if (now.Date == then.Date)
                 {
-                    text.Append("**today** ");
+                    text.Append(formatted ? Format.Bold("today") : "today");
                 }
                 else if (now.Date.PlusDays(1) == then.Date)
                 {
-                    text.Append("**tomorrow** ");
+                    text.Append(formatted ? Format.Bold("tomorrow") : "tomorrow");
                 }
                 else if (now.Date.PlusDays(-1) == then.Date)
                 {
-                    text.Append("**yesterday** ");
+                    text.Append(formatted ? Format.Bold("yesterday") : "yesterday");
                 }
                 else
                 {
-                    text.Append("on the **")
-                        .Append(then.ToString("d MMM yyyy", CultureInfo.InvariantCulture))
-                        .Append("** ");
+                    text
+                        .Append("on the ")
+                        .Append(then.ToString(formatted ? Format.Bold("d MMM yyyy") : "d MMM yyyy",
+                            CultureInfo.InvariantCulture));
                 }
 
-                text.Append("at **");
+                if (startLevel < DurationLevel.Days)
+                {
+                    text.Append(" at ");
 
-                if (then.Second == 0)
-                    text.Append(then.ToString("H:mm", CultureInfo.InvariantCulture));
-                else text.Append(then.ToString("H:mm:ss", CultureInfo.InvariantCulture));
+                    if (startLevel >= DurationLevel.Minutes || then.Second == 0)
+                    {
+                        text.Append(then.ToString(
+                            formatted ? Format.Bold("H:mm") : "H:mm", CultureInfo.InvariantCulture));
+                    }
+                    else
+                    {
+                        text.Append(then.ToString(
+                            formatted ? Format.Bold("H:mm:ss") : "H:mm:ss", CultureInfo.InvariantCulture));
+                    }
+                }
 
-                text.Append("**");
+                return text.ToString();
             }
 
+            int milliseconds = startLevel == DurationLevel.Milliseconds ? Math.Abs(difference.Milliseconds) : 0;
+            int seconds = startLevel <= DurationLevel.Seconds ? Math.Abs(difference.Seconds) : 0;
+            int minutes = startLevel <= DurationLevel.Minutes ? Math.Abs(difference.Minutes) : 0;
+            int hours = startLevel <= DurationLevel.Hours ? Math.Abs(difference.Hours) : 0;
+            int days = startLevel <= DurationLevel.Days ? Math.Abs(difference.Days) % 7 : 0;
+            int weeks = (difference.Days - days) / 7;
+
+            if (difference.TotalTicks > 0)
+                text.Append("in ");
+
+            text.Append(
+                CreateDurationString(weeks, days, hours, minutes, seconds, milliseconds, accuracy, formatted));
+
+            if (difference.TotalTicks < 0)
+                text.Append(" ago");
+
+
             return text.ToString();
+        }
+
+        private static string CreateDurationString(int weeks, int days, int hours, int minutes, int seconds,
+            int milliseconds, int accuracy = 0, bool formatted = false)
+        {
+            var strings = new List<string>();
+
+            if ((accuracy == 0 || accuracy > strings.Count) && weeks > 0)
+                strings.Add("week".ToQuantity(weeks, formatted ? Format.Bold("#") : "#"));
+            if ((accuracy == 0 || accuracy > strings.Count) && days > 0)
+                strings.Add("day".ToQuantity(days, formatted ? Format.Bold("#") : "#"));
+            if ((accuracy == 0 || accuracy > strings.Count) && hours > 0)
+                strings.Add("hour".ToQuantity(hours, formatted ? Format.Bold("#") : "#"));
+            if ((accuracy == 0 || accuracy > strings.Count) && minutes > 0)
+                strings.Add("minute".ToQuantity(minutes, formatted ? Format.Bold("#") : "#"));
+            if ((accuracy == 0 || accuracy > strings.Count) && seconds > 0)
+                strings.Add("second".ToQuantity(seconds, formatted ? Format.Bold("#") : "#"));
+            if ((accuracy == 0 || accuracy > strings.Count) && milliseconds > 0)
+                strings.Add("milliseconds".ToQuantity(weeks, formatted ? Format.Bold("#") : "#"));
+
+            if (strings.Count == 0)
+                return formatted ? Format.Bold("now") : "now";
+
+            if (strings.Count == 1)
+                return strings[0];
+
+            return $"{ string.Join(", ", strings.Take(strings.Count - 1))} and {strings[^1]}";
         }
     }
 }

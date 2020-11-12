@@ -66,29 +66,27 @@ namespace Conbot.ReminderPlugin
 
                 foreach (var reminder in reminders)
                 {
-                    IMessageChannel toSendChannel;
-                    var channel = _client.GetChannel(reminder.ChannelId) as IMessageChannel;
+                    var toSendChannel = _client.GetChannel(reminder.ChannelId) as IMessageChannel;
 
-                    if (channel != null)
+                    if (toSendChannel != null && toSendChannel is ITextChannel textChannel)
                     {
-                        toSendChannel = channel;
+                        var guild = (toSendChannel as IGuildChannel)?.Guild;
 
-                        if (channel is ITextChannel textChannel)
+                        if (guild != null)
                         {
-                            var guild = (channel as IGuildChannel)?.Guild;
+                            var botUser = await guild.GetCurrentUserAsync();
 
-                            if (guild != null)
-                            {
-                                var botUser = await guild.GetCurrentUserAsync();
-
-                                if (!botUser.GetPermissions(textChannel).SendMessages)
-                                    toSendChannel = await _client.GetDMChannelAsync(reminder.UserId);
-                            }
+                            if (!botUser.GetPermissions(textChannel).SendMessages)
+                                toSendChannel = null;
                         }
                     }
-                    else
+
+                    if (toSendChannel == null)
                     {
-                        toSendChannel = await _client.GetDMChannelAsync(reminder.UserId);
+                        var user = _client.GetUser(reminder.UserId);
+
+                        if (user != null)
+                            toSendChannel = await user.GetOrCreateDMChannelAsync();
                     }
 
                     if (toSendChannel != null)
@@ -120,16 +118,20 @@ namespace Conbot.ReminderPlugin
                         timeZone ??= _provider.GetSystemDefault();
 
                         string time = Instant.FromDateTimeUtc(reminder.EndsAt).InZone(timeZone)
-                            .ToDurationFormattedString(Instant.FromDateTimeUtc(reminder.CreatedAt).InZone(timeZone));
+                            .ToDurationString(
+                                Instant.FromDateTimeUtc(reminder.CreatedAt).InZone(timeZone),
+                                DurationLevel.Seconds,
+                                showDateAt: Duration.FromDays(1),
+                                formatted: true);
 
                         string text;
-                        if (toSendChannel.Id == channel.Id)
+                        if (toSendChannel.Id == reminder.ChannelId)
                             text = $"{mention}, you've set a reminder {time}.";
                         else text = $"{mention}, you've set a reminder in {MentionUtils.MentionChannel(reminder.ChannelId)} {time}.";
 
                         tasks.Add(Task.Run(async () =>
                         {
-                            try { await channel.SendMessageAsync(text, embed: embed); }
+                            try { await toSendChannel.SendMessageAsync(text, embed: embed); }
                             catch (Exception e) { _logger.LogError(e, "Failed sending reminder message"); }
                         }));
                     }
