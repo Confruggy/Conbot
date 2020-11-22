@@ -136,7 +136,7 @@ namespace Conbot.Services.Commands
             if (result.IsSuccessful)
                 return;
 
-            await context.Channel.SendMessageAsync(GetErrorMessage(result as FailedResult));
+            await msg.ReplyAsync(GetErrorMessage(result as FailedResult), allowedMentions: AllowedMentions.None);
         }
 
         public string GetErrorMessage(FailedResult result)

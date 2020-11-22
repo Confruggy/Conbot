@@ -65,7 +65,7 @@ namespace Conbot.TagPlugin
 
             await Task.WhenAll(
                 _db.SaveChangesAsync(),
-                ReplyAsync(content));
+                SendMessageAsync(content));
         }
 
         [Command("create", "add")]
@@ -126,9 +126,9 @@ namespace Conbot.TagPlugin
 
             var interactiveMessage = new InteractiveMessageBuilder()
                 .WithPrecondition(x => x.Id == Context.User.Id)
-                .AddReactionCallback(x => x
+                .AddReactionCallback((Func<ReactionCallbackBuilder, ReactionCallbackBuilder>)(x => x
                     .WithEmote("greentick:314068319902760970")
-                    .WithCallback(async _ =>
+                    .WithCallback((Func<IReaction, Task>)(async _ =>
                     {
                         if (tag != null)
                             _db.RemoveTag(tag);
@@ -136,17 +136,17 @@ namespace Conbot.TagPlugin
 
                         await Task.WhenAll(
                             _db.SaveChangesAsync(),
-                            ReplyAsync($"Tag **{Format.Sanitize(tag.Name)}** has been deleted."),
-                            message.TryDeleteAsync());
-                    }))
-                .AddReactionCallback(x => x
+                            base.ReplyAsync((string)$"Tag **{Format.Sanitize((string)tag.Name)}** has been deleted."),
+                            DeletableExtensions.TryDeleteAsync(message));
+                    }))))
+                .AddReactionCallback((Func<ReactionCallbackBuilder, ReactionCallbackBuilder>)(x => x
                     .WithEmote("redtick:314068319986647050")
-                    .WithCallback(async _ =>
+                    .WithCallback((Func<IReaction, Task>)(async _ =>
                     {
                         await Task.WhenAll(
-                            base.ReplyAsync($"Tag **{Format.Sanitize(tag.Name)}** hasn't been deleted."),
-                            message.TryDeleteAsync());
-                    }))
+                            base.ReplyAsync((string)$"Tag **{Format.Sanitize((string)tag.Name)}** hasn't been deleted."),
+                            DeletableExtensions.TryDeleteAsync(message));
+                    }))))
                 .Build();
 
             await _interactiveService.ExecuteInteractiveMessageAsync(interactiveMessage, message, Context.User);

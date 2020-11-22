@@ -33,7 +33,7 @@ namespace Conbot.RngPlugin
                 [Description("The maximal value.")] int max)
             {
                 int number = _random.Next(min, max);
-                await ReplyAsync($"{Context.User.Mention} rolled **{number}**.");
+                await ReplyAsync($"You rolled **{number}**.");
             }
         }
 

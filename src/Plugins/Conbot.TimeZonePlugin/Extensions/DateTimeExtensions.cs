@@ -96,7 +96,6 @@ namespace Conbot.TimeZonePlugin.Extensions
             if (difference.TotalTicks < 0)
                 text.Append(" ago");
 
-
             return text.ToString();
         }
 

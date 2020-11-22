@@ -53,8 +53,13 @@ namespace Conbot.HelpPlugin
             }
 
             if (message == null)
-                message = await context.Channel.SendMessageAsync(embed: embed);
-            else await message.ModifyAsync(x => x.Embed = embed);
+            {
+                message = await context.Message.ReplyAsync(embed: embed, allowedMentions: AllowedMentions.None);
+            }
+            else
+            {
+                await message.ModifyAsync(x => x.Embed = embed);
+            }
 
             var interactiveMessage = new InteractiveMessageBuilder()
                 .WithPrecondition(x => x.Id == context.User.Id)

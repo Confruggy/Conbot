@@ -21,7 +21,7 @@ namespace Conbot.Services.Interactive
         public void AddPage(string text) => AddPage(text, null);
 
         public async Task<IUserMessage> RunAsync(InteractiveService service, DiscordCommandContext context,
-            int startIndex = 0)
+            int startIndex = 0, bool reply = true)
         {
             var config = context.ServiceProvider.GetRequiredService<IConfiguration>();
 
@@ -31,7 +31,10 @@ namespace Conbot.Services.Interactive
             int currentIndex = startIndex;
             var start = _pages[currentIndex];
 
-            var message = await context.Channel.SendMessageAsync(start.Item1, embed: start.Item2).ConfigureAwait(false);
+            var reference = reply ? new MessageReference(context.Message.Id) : null;
+            var message = await context.Channel.SendMessageAsync(
+                start.Item1, embed: start.Item2, allowedMentions: AllowedMentions.None, messageReference: reference)
+                    .ConfigureAwait(false);
 
             if (_pages.Count <= 1)
                 return message;

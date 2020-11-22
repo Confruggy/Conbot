@@ -91,15 +91,12 @@ namespace Conbot.ReminderPlugin
 
                     if (toSendChannel != null)
                     {
-                        string hyperLink = $"[jump to message]({reminder.Url})";
-
-                        var embed = new EmbedBuilder()
-                            .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
-                            .WithDescription(
-                                string.IsNullOrEmpty(reminder.Message)
-                                    ? hyperLink
-                                    : $"{reminder.Message.Truncate(2021 - hyperLink.Length)} ({hyperLink})")
-                            .Build();
+                        var embed = string.IsNullOrEmpty(reminder.Message)
+                            ? null
+                            : new EmbedBuilder()
+                                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
+                                .WithDescription(reminder.Message)
+                                .Build();
 
                         string mention =
                             _client.GetUser(reminder.UserId)?.Mention
@@ -126,12 +123,13 @@ namespace Conbot.ReminderPlugin
 
                         string text;
                         if (toSendChannel.Id == reminder.ChannelId)
-                            text = $"{mention}, you've set a reminder {time}.";
-                        else text = $"{mention}, you've set a reminder in {MentionUtils.MentionChannel(reminder.ChannelId)} {time}.";
+                            text = $"You've set a reminder {time}.";
+                        else text = $"You've set a reminder in {MentionUtils.MentionChannel(reminder.ChannelId)} {time}.";
 
+                        var reference = new MessageReference(reminder.MessageId, reminder.ChannelId, reminder.GuildId);
                         tasks.Add(Task.Run(async () =>
                         {
-                            try { await toSendChannel.SendMessageAsync(text, embed: embed); }
+                            try { await toSendChannel.SendMessageAsync(text, embed: embed, messageReference: reference); }
                             catch (Exception e) { _logger.LogError(e, "Failed sending reminder message"); }
                         }));
                     }
