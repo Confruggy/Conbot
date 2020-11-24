@@ -136,7 +136,7 @@ namespace Conbot.Services.Commands
             if (result.IsSuccessful)
                 return;
 
-            await msg.ReplyAsync(GetErrorMessage(result as FailedResult), allowedMentions: AllowedMentions.None);
+            await context.ReplyAsync(GetErrorMessage(result as FailedResult), allowedMentions: AllowedMentions.None);
         }
 
         public string GetErrorMessage(FailedResult result)

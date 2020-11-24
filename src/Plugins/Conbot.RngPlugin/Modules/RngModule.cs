@@ -45,6 +45,7 @@ namespace Conbot.RngPlugin
 
         [Command("8ball")]
         [Description("Asks the Magic 8 Ball a question.")]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public Task EightBallAsync(
             [Description("The question to ask."), Remainder] string question)
         {

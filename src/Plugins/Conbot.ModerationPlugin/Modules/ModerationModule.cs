@@ -87,6 +87,7 @@ namespace Conbot.ModerationPlugin
         [Description("Bans a member.")]
         [RequireUserPermission(GuildPermission.BanMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task BanAsync(
             [Description("The member to ban."), LowerHierarchy] SocketGuildUser member,
             [Name("prune days")]
@@ -108,6 +109,7 @@ namespace Conbot.ModerationPlugin
         [Remarks("This is useful to ban a user that isn't in the server.")]
         [RequireUserPermission(GuildPermission.BanMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task HackbanAsync(
             [Description("The ID of the user to ban.")] ulong id,
             [Name("prune days")]
@@ -140,6 +142,7 @@ namespace Conbot.ModerationPlugin
         [Description("Revokes a ban from a user.")]
         [RequireUserPermission(GuildPermission.BanMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task UnbanAsync(
             [Description("The user to revoke the ban from.")] SocketGuildUser user)
         {
@@ -162,6 +165,7 @@ namespace Conbot.ModerationPlugin
             "This is useful for pruning the messages of the member.")]
         [RequireUserPermission(GuildPermission.BanMembers, GuildPermission.KickMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task SoftBanAsync(
             [Description("The member to soft ban."), LowerHierarchy] SocketGuildUser member,
             [Name("prune days")]
@@ -184,6 +188,7 @@ namespace Conbot.ModerationPlugin
         [Description("Kicks a member.")]
         [RequireUserPermission(GuildPermission.BanMembers, GuildPermission.KickMembers)]
         [RequireBotPermission(GuildPermission.KickMembers)]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task KickAsync(
             [Description("The member to kick."), LowerHierarchy] SocketGuildUser user)
         {

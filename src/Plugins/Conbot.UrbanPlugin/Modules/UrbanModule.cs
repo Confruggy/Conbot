@@ -29,6 +29,7 @@ namespace Conbot.UrbanPlugin
         [Command]
         [Description("Searches a definition for a word.")]
         [Priority(-1)]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task UrbanAsync([Remainder, Description("The word to search for.")] string word)
         {
             var searchResult = await _service.SearchAsync(word);

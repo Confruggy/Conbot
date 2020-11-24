@@ -3,11 +3,13 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Conbot.Commands;
 using Conbot.Extensions;
 using Conbot.InteractiveMessages;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
+using Qmmands;
 
 namespace Conbot.Services.Interactive
 {
@@ -15,15 +17,19 @@ namespace Conbot.Services.Interactive
     {
         private readonly ConcurrentDictionary<ulong, ExecutingInteractiveMessage> _interactiveMessages;
         private readonly DiscordShardedClient _discordClient;
+        private readonly CommandService _commandService;
 
-        public InteractiveService(DiscordShardedClient discordCLient)
+        public InteractiveService(DiscordShardedClient discordClient, CommandService commandService)
         {
-            _discordClient = discordCLient;
+            _discordClient = discordClient;
+            _commandService = commandService;
             _interactiveMessages = new ConcurrentDictionary<ulong, ExecutingInteractiveMessage>();
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            _commandService.AddArgumentParser(new InteractiveArgumentParser());
+
             _discordClient.ReactionAdded += OnReactionAddedAsync;
             _discordClient.MessageReceived += OnMessageReceivedAsync;
             _discordClient.MessageDeleted += OnMessageDeletedAsync;

@@ -33,6 +33,7 @@ namespace Conbot.TagPlugin
 
         [Command, Priority(-1)]
         [Description("Shows a tag.")]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public Task TagAsync([Remainder, Description("The name of the tag.")] string name) => ShowTagAsync(name);
 
         [Command("raw")]
@@ -41,6 +42,7 @@ namespace Conbot.TagPlugin
             "This escapes certain formatting from the content, " +
             "so you see the content like you would've typed it in. " +
             "This is useful for editing tags.")]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public Task RawAsync([Remainder, Description("The name of the tag.")] string name) => ShowTagAsync(name, true);
 
         private async Task ShowTagAsync(string name, bool raw = false)
@@ -70,6 +72,7 @@ namespace Conbot.TagPlugin
 
         [Command("create", "add")]
         [Description("Creates a tag.")]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task CreateAsync(
             [Description("The name of the tag."), NotEmpty, MaxLength(50)] string name,
             [Remainder, Description("The content of the tag.")] string content)
@@ -94,6 +97,7 @@ namespace Conbot.TagPlugin
         [Description("Deletes a tag or an alias.")]
         [Remarks("Only the owner of a tag or a member with **Manage Server** permission can delete the tag.")]
         [RequireBotPermission(ChannelPermission.AddReactions)]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task DeleteAsync([Remainder, Description("The name of the tag to delete.")] string name)
         {
             var user = (SocketGuildUser)Context.User;
@@ -154,6 +158,7 @@ namespace Conbot.TagPlugin
 
         [Command("edit", "modify")]
         [Description("Edits the content of a tag you own.")]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task EditAsync(
             [Description("The name of the tag you want to edit.")] string name,
             [Remainder, Name("new content"), Description("The new content of the tag.")] string newContent)
@@ -181,6 +186,7 @@ namespace Conbot.TagPlugin
         [Command("info")]
         [Description("Shows information about a tag or an alias.")]
         [RequireBotPermission(ChannelPermission.EmbedLinks)]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task InfoAsync([Remainder, Description("The name of the tag or alias.")] string name)
         {
             var tags = await _db.GetTagsAsync(Context.Guild);
@@ -267,6 +273,7 @@ namespace Conbot.TagPlugin
         [Command("alias")]
         [Description("Creates an alias for an already existing tag.")]
         [Remarks("When the original tag gets deleted, the alias gets deleted aswell.")]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task AliasAsync(
             [Description("The name of the alias."), NotEmpty, MaxLength(50)] string name,
             [Remainder, Name("tag name"), Description("The name of the tag the alias points to.")] string tagName)

@@ -32,6 +32,7 @@ namespace Conbot.PrefixPlugin
         [Command("add", "create")]
         [Description("Adds a command prefix.")]
         [RequireUserPermission(GuildPermission.ManageGuild)]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task AddAsync(
             [Description("The prefix to add."), NotEmpty, MaxLength(20)] string prefix)
         {
@@ -61,6 +62,7 @@ namespace Conbot.PrefixPlugin
         [Command("remove", "delete")]
         [Description("Removes a command prefix.")]
         [RequireUserPermission(GuildPermission.ManageGuild)]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task RemoveAsync([Description("The prefix to remove."), NotEmpty] string prefix)
         {
             prefix = prefix.TrimStart();
