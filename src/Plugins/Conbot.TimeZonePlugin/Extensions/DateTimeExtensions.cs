@@ -12,7 +12,7 @@ namespace Conbot.TimeZonePlugin.Extensions
 {
     public static class DateTimeExtensions
     {
-        public static string ToReadableShortString(this ZonedDateTime dateTime)
+        public static string ToReadableShortString(this ZonedDateTime dateTime, bool? showSeconds = null)
         {
             var now = SystemClock.Instance.InZone(dateTime.Zone).GetCurrentLocalDateTime();
 
@@ -24,10 +24,15 @@ namespace Conbot.TimeZonePlugin.Extensions
                 text.Append("Tomorrow");
             else if (dateTime.Date == now.Date.PlusDays(-1))
                 text.Append("Yesterday");
-            else text.Append(dateTime.Date.ToString("d", CultureInfo.InvariantCulture));
+            else text.Append(dateTime.Date.ToString("d MMM yyyy", CultureInfo.InvariantCulture));
 
-            text.Append(" at ")
-                .Append(dateTime.TimeOfDay.ToString("t", CultureInfo.InvariantCulture));
+            text.Append(" at ");
+
+            var time = dateTime.TimeOfDay;
+            if (showSeconds == true || (showSeconds == null && time.Second != 0))
+                text.Append(time.ToString("T", CultureInfo.InvariantCulture));
+            else
+                text.Append(time.ToString("t", CultureInfo.InvariantCulture));
 
             return text.ToString();
         }

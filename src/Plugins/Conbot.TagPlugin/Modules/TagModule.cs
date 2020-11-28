@@ -268,7 +268,7 @@ namespace Conbot.TagPlugin
         }
 
         public static string DateTimeToClickableString(ZonedDateTime date, string url)
-            => $"[{date.ToReadableShortString()}]({url})";
+            => $"[{date.ToReadableShortString(false)}]({url})";
 
         [Command("alias")]
         [Description("Creates an alias for an already existing tag.")]
