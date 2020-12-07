@@ -417,31 +417,49 @@ namespace Conbot.HelpPlugin
 
         private string ParameterToString(Parameter parameter, bool literal = false)
         {
+            string name;
+            if (parameter.Checks.FirstOrDefault(x => x.GetType() == typeof(OptionsAttribute))
+                is OptionsAttribute optionsAttribute)
+            {
+                name = string.Join('|', optionsAttribute.Options);
+            }
+            else
+            {
+                name = parameter.Name;
+            }
+
+
             if (literal)
             {
+                var text = new StringBuilder()
+                    .Append(name)
+                    .Append(" (*");
+
                 if (parameter.IsMultiple)
-                    return $"{parameter.Name} *(multiple)*";
+                    text.Append("multiple");
                 else if (parameter.IsOptional)
-                    return $"{parameter.Name} *(optional)*";
-                else if (parameter.IsRemainder && !parameter.IsOptional)
-                    return $"{parameter.Name} *(required, remainder)*";
-                else if (parameter.IsRemainder && parameter.IsOptional)
-                    return $"{parameter.Name} *(optional, remainder)*";
+                    text.Append("optional");
                 else
-                    return $"{parameter.Name} *(required)*";
+                    text.Append("required");
+
+                if (parameter.IsRemainder)
+                    text.Append(", remainder");
+
+                text.Append("*)");
+                return text.ToString();
             }
             else
             {
                 if (parameter.IsMultiple)
-                    return $"[{parameter.Name}] [...]";
-                else if (parameter.IsOptional)
-                    return $"[{parameter.Name}]";
+                    return $"[{name}] [...]";
                 else if (parameter.IsRemainder && !parameter.IsOptional)
-                    return $"<{parameter.Name}...>";
+                    return $"<{name}...>";
                 else if (parameter.IsRemainder && parameter.IsOptional)
-                    return $"[{parameter.Name}...]";
+                    return $"[{name}...]";
+                else if (parameter.IsOptional)
+                    return $"[{name}]";
                 else
-                    return $"<{parameter.Name}>";
+                    return $"<{name}>";
             }
         }
 
