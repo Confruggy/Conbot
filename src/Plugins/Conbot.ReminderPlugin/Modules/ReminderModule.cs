@@ -1,9 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Conbot.Commands;
+using Conbot.Services.Interactive;
 using Conbot.TimeZonePlugin;
 using Conbot.TimeZonePlugin.Extensions;
+using Discord;
+using Humanizer;
+using Microsoft.Extensions.Configuration;
 using NodaTime;
+using NodaTime.Extensions;
 using Qmmands;
 
 namespace Conbot.ReminderPlugin
@@ -11,18 +19,22 @@ namespace Conbot.ReminderPlugin
     [Name("Reminder")]
     [Description("Create scheduled reminders.")]
     [Group("reminder", "remind", "timer")]
+    [RequireTimeZone]
     public class ReminderModule : DiscordModuleBase
     {
         private readonly ReminderContext _db;
+        private readonly InteractiveService _interactiveService;
+        private readonly IConfiguration _config;
 
-        public ReminderModule(ReminderContext context)
+        public ReminderModule(ReminderContext context, InteractiveService interactiveService, IConfiguration config)
         {
             _db = context;
+            _interactiveService = interactiveService;
+            _config = config;
         }
 
         [Command]
         [Description("Reminds you about something after a certain time.")]
-        [RequireTimeZone]
         public async Task ReminderAsync(
             [Description("The time when you want to be reminded. You can also set a message optionally.")]
             [Remarks(
@@ -65,5 +77,105 @@ namespace Conbot.ReminderPlugin
                 _db.SaveChangesAsync()
             );
         }
+
+        [Command("list", "all")]
+        [Description("Lists all your upcoming reminders.")]
+        public async Task ListAsync(
+            [Description("Wether reminders should be displayed in a compact or detailed view.")]
+            [Options("compact", "detailed")]
+            [Remainder]
+            string view = "compact")
+        {
+            var timeZone = await Context.GetUserTimeZoneAsync();
+            var now = SystemClock.Instance.InZone(timeZone)
+                .GetCurrentZonedDateTime();
+
+            var reminders = (await _db.GetRemindersAsync(Context.User))
+                .Where(x => x.EndsAt > now.ToDateTimeUtc())
+                .OrderBy(x => x.EndsAt);
+
+            if (!reminders.Any())
+            {
+                await ReplyAsync("You don't have any upcoming reminders.");
+                return;
+            }
+
+            int count = reminders.Count();
+
+            var paginator = new Paginator();
+
+            view = view.ToLowerInvariant();
+            if (view == "compact")
+            {
+                int entryPos = 1;
+                int pageIndex = 0;
+                int pageCount = count / 5;
+                if (count % 5 != 0)
+                    pageCount++;
+
+                var page = new EmbedBuilder();
+
+                foreach (var reminder in reminders)
+                {
+                    var endsAt = Instant.FromDateTimeUtc(reminder.EndsAt).InZone(now.Zone);
+                    page.AddField(
+                        $"{now.ToDurationString(endsAt, accuracy: 3).Humanize()} (ID: {reminder.Id})",
+                        !string.IsNullOrEmpty(reminder.Message) ? reminder.Message.Truncate(1024) : "…");
+
+                    if (entryPos % 5 == 0 || entryPos == count)
+                    {
+                        page
+                            .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
+                            .WithAuthor(Context.User.Username, Context.User.GetAvatarUrl())
+                            .WithTitle("Reminders")
+                            .WithFooter($"Page {pageIndex + 1}/{pageCount} ({"entry".ToQuantity(count)})");
+
+                        paginator.AddPage(page.Build());
+                        page = new EmbedBuilder();
+                        pageIndex++;
+                    }
+
+                    entryPos++;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < count; i++)
+                    paginator.AddPage(CreateReminderEmbed(reminders.ElementAt(i), now, i, count));
+            }
+
+            await paginator.RunAsync(_interactiveService, Context);
+        }
+
+        private Embed CreateReminderEmbed(Reminder reminder, ZonedDateTime now, int? index, int? total)
+        {
+            var createdAt = Instant.FromDateTimeUtc(reminder.CreatedAt).InZone(now.Zone);
+            var endsAt = Instant.FromDateTimeUtc(reminder.EndsAt).InZone(now.Zone);
+
+            var embed = new EmbedBuilder()
+                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
+                .WithAuthor(Context.User.Username, Context.User.GetAvatarUrl())
+                .WithTitle("Reminder")
+                .WithDescription($"Ends {now.ToDurationString(endsAt, formatted: true)}.")
+                .AddField("Created", DateTimeToClickableString(createdAt, reminder.Url), true)
+                .AddField("Ends", endsAt.ToReadableShortString(), true)
+                .AddField("Channel", MentionUtils.MentionChannel(reminder.ChannelId), true);
+
+            if (!string.IsNullOrEmpty(reminder.Message))
+                embed.AddField("Message", reminder.Message.Truncate(1024));
+
+            if (index != null && total != null)
+                embed.WithFooter($"Reminder {index + 1}/{total} (ID: {reminder.Id})");
+            else
+                embed.WithFooter($"ID: {reminder.Id})");
+
+            return embed.Build();
+        }
+
+        private Embed CreateReminderEmbed(Reminder reminder, ZonedDateTime now)
+            => CreateReminderEmbed(reminder, now, null, null);
+
+        private static string DateTimeToClickableString(ZonedDateTime date, string url)
+            => $"[{date.ToReadableShortString()}]({url})";
     }
 }
