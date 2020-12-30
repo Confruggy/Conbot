@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -78,6 +76,33 @@ namespace Conbot.ReminderPlugin
                 ReplyAsync(text.ToString()),
                 _db.SaveChangesAsync()
             );
+        }
+
+        [Command("delete", "remove", "cancel")]
+        [Description("Deletes a reminder you created.")]
+        public async Task DeleteAsync(
+            [Description("The ID of the reminder.")]
+            [Remarks("You can find the ID by using the **/reminder list** command.")] int id)
+        {
+            var reminder = await _db.GetReminderAsync(id);
+
+            if (reminder == null)
+            {
+                await ReplyAsync("This reminder doesn't exist.");
+                return;
+            }
+
+            if (reminder.UserId != Context.User.Id)
+            {
+                await ReplyAsync("You can only delete reminders you created.");
+                return;
+            }
+
+            _db.RemoveReminder(reminder);
+
+            await Task.WhenAll(
+                ReplyAsync($"Reminder with ID **{id}** has been deleted."),
+                _db.SaveChangesAsync());
         }
 
         [Command("list", "all")]
