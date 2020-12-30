@@ -33,42 +33,44 @@ namespace Conbot.ReminderPlugin
             _config = config;
         }
 
-        [Command]
+        [Command("set", "")]
         [Description("Reminds you about something after a certain time.")]
+        [Remarks(
+            "With text commands the message can be placed directly after the time. However, with Slash Commands it " +
+            "must be seperated.\n\n" +
+            "Examples for times and dates:\n" +
+            "• \"at 7:30 wake up\"\n" +
+            "• \"on the 19th April wish them a happy birthday\"\n" +
+            "• \"next monday at 8pm watch the new episode\"\n\n" +
+            "Examples for durations:\n" +
+            "• \"in 20 minutes remove pizza from oven\"\n" +
+            "• \"in 5 hours 30 min do laundry\"\n" +
+            "• \"2h unmute someone\"")]
+        [OverrideArgumentParser(typeof(ReminderArgumentParser))]
         public async Task ReminderAsync(
-            [Description("The time when you want to be reminded. You can also set a message optionally.")]
+            [Description("The time when you want to be reminded.")]
             [Remarks(
-                "The input can be either a human readable time and/or date or a duration. " +
-                "However, you can't combine both. If a date has been set without a time, the time will default to 12 pm.\n\n" +
-                "Examples for times and dates:\n" +
-                "• \"at 7:30 wake up\"\n" +
-                "• \"on the 19th April wish them a happy birthday\"\n" +
-                "• \"next monday at 8pm watch the new episode\"\n\n" +
-                "Examples for durations:\n" +
-                "• \"in 20 minutes remove pizza from oven\"\n" +
-                "• \"in 5 hours 30 min do laundry\"\n" +
-                "• \"2h unmute someone\"")]
+                "It can be either a human readable time and/or date or a duration. " +
+                "However, you can't combine both. " +
+                "If a date has been set without a time, the time will default to 12 pm. " +
+                "With text commands this parameter has to be entered without quotation marks.")]
+            ZonedDateTimeParseResult time,
+            [Description("The message for the reminder.")]
             [Remainder]
-            ZonedDateTimeParseResult when)
+            string message = null)
         {
-            if (when.Then.Value.LocalDateTime < when.Now.LocalDateTime)
+            if (time.Then.Value.LocalDateTime < time.Now.LocalDateTime)
             {
                 await ReplyAsync("This time is in the past.");
                 return;
             }
 
-            if (when.Remainder?.StartsWith(' ') == false)
-            {
-                await ReplyAsync("There must be a space between the time and the message.");
-                return;
-            }
-
-            await _db.AddReminderAsync(Context, when.Now.ToDateTimeUtc(), when.Then.Value.ToDateTimeUtc(),
-                when.Remainder?[1..]);
+            await _db.AddReminderAsync(Context, time.Now.ToDateTimeUtc(), time.Then.Value.ToDateTimeUtc(),
+                message?.Trim());
 
             var text = new StringBuilder()
                 .Append("⏰ Reminder has been set. You'll be reminded ")
-                .Append(when.Now.ToDurationString(when.Then.Value, DurationLevel.Seconds,
+                .Append(time.Now.ToDurationString(time.Then.Value, DurationLevel.Seconds,
                     showDateAt: Duration.FromDays(1), formatted: true))
                 .Append(".");
 
@@ -82,7 +84,7 @@ namespace Conbot.ReminderPlugin
         [Description("Lists all your upcoming reminders.")]
         public async Task ListAsync(
             [Description("Wether reminders should be displayed in a compact or detailed view.")]
-            [Options("compact", "detailed")]
+            [Choices("compact", "detailed")]
             [Remainder]
             string view = "compact")
         {

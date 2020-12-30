@@ -8,6 +8,7 @@ using Conbot.Extensions;
 using Conbot.InteractiveMessages;
 using Conbot.Services.Interactive;
 using Discord;
+using Discord.Rest;
 using Microsoft.Extensions.Configuration;
 using Qmmands;
 
@@ -54,7 +55,9 @@ namespace Conbot.HelpPlugin
 
             if (message == null)
             {
-                message = await context.Message.ReplyAsync(embed: embed, allowedMentions: AllowedMentions.None);
+                message = context.Interaction != null
+                    ? await context.Interaction.RespondAsync(embed: embed) as RestUserMessage
+                    : await context.Message.ReplyAsync(embed: embed, allowedMentions: AllowedMentions.None);
             }
             else
             {
@@ -247,7 +250,7 @@ namespace Conbot.HelpPlugin
             }
 
             if (subcommandText.Length != 0)
-                embed.AddField(string.IsNullOrEmpty(module.Name) ? "Commands" : "Subcommands", subcommandText);
+                embed.AddField(module.Aliases.Count == 0 ? "Commands" : "Subcommands", subcommandText);
 
             var footerText = new StringBuilder();
 
@@ -266,7 +269,7 @@ namespace Conbot.HelpPlugin
         {
             var embed = new EmbedBuilder()
                 .WithAuthor(GetPath(command))
-                .WithTitle($"{FormatCommandName(command)} {FormatParameters(command)}")
+                .WithTitle($"/{command.FullAliases[0]} {FormatParameters(command)}")
                 .WithColor(_config.GetValue<uint>("DefaultEmbedColor"));
 
             var descriptionText = new StringBuilder()
@@ -329,7 +332,7 @@ namespace Conbot.HelpPlugin
                         is MaxValueAttribute maxValueCheck)
                     {
                         parameterText
-                            .Append(" Maximal length is ")
+                            .Append(" Maximal value is ")
                             .Append(maxValueCheck.MaxValue)
                             .Append('.');
                     }
@@ -344,9 +347,7 @@ namespace Conbot.HelpPlugin
                     if (!string.IsNullOrEmpty(parameter.Remarks))
                     {
                         parameterText
-                            .AppendLine()
-                            .AppendLine("> ")
-                            .Append("> ")
+                            .Append(' ')
                             .Append(parameter.Remarks.Replace("\n", "\n> "));
                     }
 
@@ -376,18 +377,43 @@ namespace Conbot.HelpPlugin
                 embed.AddField("Overloads", overloadsText);
             }
 
+            var footerText = new StringBuilder();
+
             if (overloadsText.Length != 0)
-                embed.WithFooter("Enter a number for more information about an overload.");
+                footerText.Append("Enter a number for more information about an overload.");
+
+            if (command.FullAliases.Count > 1)
+            {
+                var aliasesText = new StringBuilder();
+
+                foreach (var alias in command.FullAliases.Skip(1))
+                {
+                    aliasesText
+                        .Append(Format.Bold(alias))
+                        .Append(' ')
+                        .AppendLine(FormatParameters(command));
+                }
+
+                if (footerText.Length != 0)
+                    footerText.Append(' ');
+
+                footerText.Append("Aliases are only supported by text commands.");
+
+                embed
+                    .AddField("Aliases", aliasesText);
+            }
+
+            embed.WithFooter(footerText.ToString());
 
             return embed.Build();
         }
 
         private string GetShortCommand(Command command, int index) =>
-            $"`{index}.` **{command.FullAliases[0]}** {FormatParameters(command)}\n" +
+            $"`{index}.` **/{command.FullAliases[0]}** {FormatParameters(command)}\n" +
             $"> {command.Description ?? "No Description."}";
 
         private string GetShortModule(Module module, int index) =>
-            $"`{index}.` **{(module.Parent != null ? $"{module.FullAliases[0]}*" : module.Name)}**\n" +
+            $"`{index}.` **{(module.Parent != null ? $"/{module.FullAliases[0]}*" : module.Name)}**\n" +
             $"> {module.Description ?? "No Description."}";
 
         private string GetPath(Module module)
@@ -418,16 +444,15 @@ namespace Conbot.HelpPlugin
         private string ParameterToString(Parameter parameter, bool literal = false)
         {
             string name;
-            if (parameter.Checks.FirstOrDefault(x => x.GetType() == typeof(OptionsAttribute))
-                is OptionsAttribute optionsAttribute)
+            if (parameter.Checks.FirstOrDefault(x => x is ChoicesAttribute)
+                is ChoicesAttribute optionsAttribute)
             {
-                name = string.Join('|', optionsAttribute.Options);
+                name = string.Join('|', optionsAttribute.Choices);
             }
             else
             {
                 name = parameter.Name;
             }
-
 
             if (literal)
             {
@@ -451,39 +476,16 @@ namespace Conbot.HelpPlugin
             else
             {
                 if (parameter.IsMultiple)
-                    return $"[{name}] [...]";
-                else if (parameter.IsRemainder && !parameter.IsOptional)
-                    return $"<{name}...>";
-                else if (parameter.IsRemainder && parameter.IsOptional)
-                    return $"[{name}...]";
+                    return $"[{name}] […]";
+                else if (parameter.IsRemainder && !parameter.IsOptional && !name.Contains('|'))
+                    return $"<{name}…>";
+                else if (parameter.IsRemainder && parameter.IsOptional && !name.Contains('|'))
+                    return $"[{name}…]";
                 else if (parameter.IsOptional)
                     return $"[{name}]";
                 else
                     return $"<{name}>";
             }
-        }
-
-        private string FormatCommandName(Command command)
-        {
-            string commandText = command.Aliases.Count == 0
-                ? ""
-                : command.Aliases.Count == 1
-                    ? command.Aliases[0]
-                    : $"[{string.Join('|', command.Aliases)}]";
-
-            var module = command.Module;
-
-            while (module?.Aliases.Count > 0)
-            {
-                string moduleText = module.Aliases.Count == 1
-                    ? module.Aliases[0]
-                    : $"[{string.Join('|', module.Aliases)}]";
-
-                commandText = commandText?.Length == 0 ? moduleText : $"{moduleText} {commandText}";
-                module = module.Parent;
-            }
-
-            return commandText;
         }
 
         private string FormatParameters(Command command)

@@ -45,8 +45,8 @@ namespace Conbot.ReminderPlugin
         public static ValueTask<Reminder> AddReminderAsync(this ReminderContext db, DiscordCommandContext context,
             DateTime createdAt, DateTime endsAt, string message = null)
             => AddReminderAsync(
-                    db, context.User.Id, context.Guild?.Id, context.Channel.Id, context.Message.Id, createdAt, endsAt,
-                    message);
+                    db, context.User.Id, context.Guild?.Id, context.Channel.Id,
+                    context.Message?.Id ?? context.Interaction.Id , createdAt, endsAt, message);
 
         public static void RemoveReminder(this ReminderContext context, Reminder reminder)
             => context.Reminders.Remove(reminder);

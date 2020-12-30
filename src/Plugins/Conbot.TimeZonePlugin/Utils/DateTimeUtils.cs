@@ -28,6 +28,9 @@ namespace Conbot.TimeZonePlugin
 
                 if (timeMatch.Success)
                     remainder = remainder[timeMatch.Length..];
+
+                if (!string.IsNullOrWhiteSpace(remainder))
+                    return new ZonedDateTimeParseResult(now, reason: "Invalid time provided.");
             }
             else if ((timeMatch = timeRegex.Match(remainder.ToLowerInvariant())).Success)
             {
@@ -36,12 +39,15 @@ namespace Conbot.TimeZonePlugin
 
                 if (dateMatch.Success)
                     remainder = remainder[dateMatch.Length..];
+
+                if (!string.IsNullOrWhiteSpace(remainder))
+                    return new ZonedDateTimeParseResult(now, reason: "Invalid time provided.");
             }
             LocalDate? localDate = null;
 
             if (!dateMatch.Success && !timeMatch.Success)
             {
-                var durationRegex = new Regex("^ ?(?:in +)?(?:(-?\\d{1,9}) *y(?:ears?)?)?(?: *(-?\\d{1,9}) *mo(?:nths?)?)?(?: *(-?\\d{1,9}) *w(?:eeks?)?)?(?: *(-?\\d{1,9}) *d(?:ays?)?)?(?: *(-?\\d{1,9}) *h(?:ours?)?)?(?: *(-?\\d{1,9}) *m(?:inutes?)?)?(?: *(-?\\d{1,9}) *s(?:econds?)?)?");
+                var durationRegex = new Regex("^ ?(?:in +)?(?:(-?\\d{1,9}) *y(?:ears?)?)?(?: *(-?\\d{1,9}) *mo(?:nths?)?)?(?: *(-?\\d{1,9}) *w(?:eeks?)?)?(?: *(-?\\d{1,9}) *d(?:ays?)?)?(?: *(-?\\d{1,9}) *h(?:ours?)?)?(?: *(-?\\d{1,9}) *m(?:inutes?)?)?(?: *(-?\\d{1,9}) *s(?:econds?)?)? *$");
                 var durationMatch = durationRegex.Match(remainder.ToLowerInvariant());
 
                 if (!durationMatch.Success)
@@ -49,8 +55,6 @@ namespace Conbot.TimeZonePlugin
 
                 if (durationMatch.Groups.Values.Skip(1).Sum(x => x.Length) == 0)
                     return new ZonedDateTimeParseResult(now, reason: "Invalid duration provided.");
-
-                remainder =  remainder[durationMatch.Length..];
 
                 int years = !string.IsNullOrEmpty(durationMatch.Groups[1].Value)
                     ? int.Parse(durationMatch.Groups[1].Value)
@@ -92,7 +96,7 @@ namespace Conbot.TimeZonePlugin
                     .PlusSeconds(seconds);
 
                 var zonedDateTime = dateTime.InZoneLeniently(timeZone);
-                return new ZonedDateTimeParseResult(now, zonedDateTime, remainder.Length > 0 ? remainder : null);
+                return new ZonedDateTimeParseResult(now, zonedDateTime);
             }
 
             if (dateMatch.Success)
@@ -215,7 +219,7 @@ namespace Conbot.TimeZonePlugin
                     dateTime = localDate.Value.AtMidnight().PlusHours(12);
 
                 var zonedDateTime = dateTime.InZoneLeniently(timeZone);
-                return new ZonedDateTimeParseResult(now, zonedDateTime, remainder.Length > 0 ? remainder : null);
+                return new ZonedDateTimeParseResult(now, zonedDateTime);
             }
 
             if (localTime != null)
@@ -227,7 +231,7 @@ namespace Conbot.TimeZonePlugin
                     .At(localTime.Value);
 
                 var zonedDateTime = dateTime.InZoneLeniently(timeZone);
-                return new ZonedDateTimeParseResult(now, zonedDateTime, remainder.Length > 0 ? remainder : null);
+                return new ZonedDateTimeParseResult(now, zonedDateTime);
             }
 
             return new ZonedDateTimeParseResult(now, reason: "Invalid time entered.");

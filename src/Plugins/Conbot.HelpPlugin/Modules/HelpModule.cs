@@ -15,22 +15,28 @@ namespace Conbot.HelpPlugin
 
         public HelpModule(HelpService service) => _service = service;
 
-        [Command]
+        [Command("all", "")]
         [Description("Shows all available commands.")]
         public Task HelpAsync() => _service.ExecuteHelpMessageAsync(Context);
 
-        [Command]
-        [Description("Gives information about a specific group.")]
-        [Priority(2)]
-        public Task HelpAsync(
-            [Remainder, Description("The group to give information about.")] Module group)
-         => _service.ExecuteHelpMessageAsync(Context, startModule: group);
-
-        [Command]
+        [Command("command", "")]
         [Description("Gives information about a specific command.")]
         [Priority(1)]
         public Task HelpAsync(
-            [Remainder, Description("The command to give information about.")] Command command)
+            [Description("The command to give information about.")]
+            [Remarks("Can be either the name of the command or any alias.")]
+            [Remainder]
+            Command command)
             => _service.ExecuteHelpMessageAsync(Context, startCommand: command);
+
+        [Command("group", "")]
+        [Description("Gives information about a specific group.")]
+        [Priority(2)]
+        public Task HelpAsync(
+            [Description("The group to give information about.")]
+            [Remarks("Can be either the name of the group or the group's prefix.")]
+            [Remainder]
+            Module group)
+         => _service.ExecuteHelpMessageAsync(Context, startModule: group);
     }
 }

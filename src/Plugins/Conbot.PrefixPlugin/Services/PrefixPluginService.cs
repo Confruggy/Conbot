@@ -5,47 +5,43 @@ using Conbot.Services.Commands;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Qmmands;
 
 namespace Conbot.PrefixPlugin
 {
     public class PrefixPluginService : IHostedService
     {
         private readonly IServiceProvider _services;
-        private readonly CommandService _commandService;
-        private Module _module;
+        private readonly SlashCommandService _slashCommandService;
 
-        public PrefixPluginService(IServiceProvider services, CommandService commandService)
+        public PrefixPluginService(IServiceProvider services, SlashCommandService slashCommandService)
         {
             _services = services;
-            _commandService = commandService;
+            _slashCommandService = slashCommandService;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            UpdateDatabase();
+            await UpdateDatabaseAsync();
 
             var commandHandlingService = _services.GetRequiredService<CommandHandlingService>();
             commandHandlingService.CustomPrefixHandler = new CustomPrefixHandler();
 
-            _module = _commandService.AddModule<PrefixModule>();
-            return Task.CompletedTask;
+            await _slashCommandService.RegisterModuleAsync<PrefixModule>();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _commandService.RemoveModule(_module);
             return Task.CompletedTask;
         }
 
-        private void UpdateDatabase()
+        private async Task UpdateDatabaseAsync()
         {
             using var serviceScope = _services
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope();
             using var context = serviceScope.ServiceProvider.GetService<PrefixContext>();
 
-            context.Database.Migrate();
+            await context.Database.MigrateAsync();
         }
     }
 }

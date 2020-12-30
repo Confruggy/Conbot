@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using Conbot.Commands;
 using Conbot.Extensions;
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
+using Humanizer;
 using Qmmands;
 
 namespace Conbot.ModerationPlugin
@@ -16,71 +18,65 @@ namespace Conbot.ModerationPlugin
     [Description("Moderation related commands.")]
     public class ModerationModule : DiscordModuleBase
     {
-        [Group("prune", "purge", "clean", "clear")]
-        [Description("Deletes an amount of messages.")]
-        [RequireUserPermission(ChannelPermission.ManageMessages)]
-        [RequireBotPermission(ChannelPermission.ManageMessages)]
-        public class PruneCommands : DiscordModuleBase
+        [Command("prune", "purge", "clean", "clear")]
+        [Description("Deletes messages in a channel.")]
+        [Remarks("Only up to 100 of the latest 1.000 messages in the executing channel will be deleted.")]
+        public async Task PruneAsync(
+            [Description("The member to delete messages from.")] IGuildUser member = null,
+            [Description("The maximal amount of messages to delete."), MinValue(1), MaxValue(100)] int limit = 10)
         {
-            [Command]
-            [Description("Deletes a specific amount of messages.")]
-            [Remarks("Only up to 100 of the latest 1.000 messages in the executing channel will be deleted.")]
-            [Priority(1)]
-            public async Task PruneAsync([Description("The maximal amount of messages to delete.")] uint limit)
-            {
-                int count = await DeleteMessagesAsync(_ => true, limit < 100 ? limit : 100);
+            int count = await DeleteMessagesAsync(msg => member == null || msg.Author.Id == member.Id, limit);
 
-                var message = await ReplyAsync($"**{count}** messages has been deleted.");
-                await Task.Delay(10000);
-                await message.TryDeleteAsync();
+            var text = new StringBuilder()
+                .Append("messages".ToQuantity(count, Format.Bold("#")));
+
+            if (member != null)
+            {
+                text
+                    .Append(" from ")
+                    .Append(member.Mention);
             }
 
-            [Command]
-            [Description("Deletes a specifc amount of messages of a specific member.")]
-            [Remarks("Only up to 100 of the latest 1.000 messages in the executing channel will be deleted.")]
-            [Priority(0)]
-            public async Task PruneAsync(
-                [Description("The member to delete messages from.")] IGuildUser member,
-                [Description("The maximal amount of messages to delete.")] uint limit = 100)
-            {
-                int count = await DeleteMessagesAsync(msg => msg.Author.Id == member.Id, limit < 100 ? limit : 100);
-                var message = member != null
-                    ? await ReplyAsync($"**{count}** messages from {member.Mention} has been deleted.")
-                    : await ReplyAsync($"**{count}** messages has been deleted.");
-                await Task.Delay(10000);
-                await message.TryDeleteAsync();
-            }
+            text
+                .Append(' ')
+                .Append("ha")
+                .Append(count == 1 ? "s" : "ve")
+                .Append(" been deleted.");
 
-            public async Task<int> DeleteMessagesAsync(Func<IMessage, bool> condition, uint limit = 100)
-            {
-                var channel = (SocketTextChannel)Context.Channel;
+            var message = await ReplyAsync(text.ToString());
+            await Task.Delay(10000);
+            await message.TryDeleteAsync();
+        }
 
-                var messages = new List<IMessage>();
-                int count = 0;
-                var tasks = new List<Task>();
-                var now = DateTimeOffset.UtcNow;
-                ulong minimum = SnowflakeUtils.ToSnowflake(now.Subtract(new TimeSpan(13, 23, 59, 0)));
-                await Context.Channel.GetMessagesAsync(1000)
-                    .ForEachAsync(x =>
+        public async ValueTask<int> DeleteMessagesAsync(Func<IMessage, bool> condition, int limit = 100)
+        {
+            var channel = (SocketTextChannel)Context.Channel;
+
+            var messages = new List<IMessage>();
+            int count = 0;
+            var tasks = new List<Task>();
+            var now = DateTimeOffset.UtcNow;
+            ulong minimum = SnowflakeUtils.ToSnowflake(now.Subtract(new TimeSpan(13, 23, 59, 0)));
+            await Context.Channel.GetMessagesAsync(1000)
+                .ForEachAsync(x =>
+                {
+                    foreach (var msg in x)
                     {
-                        foreach (var msg in x)
-                        {
-                            if (count >= limit || msg.Id <= minimum)
-                                break;
-                            if (!condition(msg))
-                                continue;
-                            messages.Add(msg);
-                            count++;
-                            if (count % 100 != 0)
-                                continue;
-                            tasks.Add(channel.DeleteMessagesAsync(messages));
-                            messages = new List<IMessage>();
-                        }
-                    });
-                tasks.Add(channel.DeleteMessagesAsync(messages));
-                await Task.WhenAll(tasks);
-                return count;
-            }
+                        if (count >= limit || msg.Id <= minimum)
+                            break;
+                        if (!condition(msg))
+                            continue;
+                        messages.Add(msg);
+                        count++;
+                        if (count % 100 != 0)
+                            continue;
+                        tasks.Add(channel.DeleteMessagesAsync(messages));
+                        messages = new List<IMessage>();
+                    }
+                });
+            tasks.Add(channel.DeleteMessagesAsync(messages));
+            await Task.WhenAll(tasks);
+            return count;
         }
 
         [Command("ban")]
@@ -89,10 +85,17 @@ namespace Conbot.ModerationPlugin
         [RequireBotPermission(GuildPermission.BanMembers)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task BanAsync(
-            [Description("The member to ban."), LowerHierarchy] SocketGuildUser member,
+            [Description("The member to ban.")]
+            [LowerHierarchy]
+            SocketGuildUser member,
             [Name("prune days")]
             [Description("The amount of days to prune messages from the member.")]
-            [MinValue(0), MaxValue(7)] int prunedays = 0)
+            [MinValue(0), MaxValue(7)]
+            int pruneDays = 0,
+            [Description("The reason for the ban.")]
+            [Remarks("The reason will show up in the audit log.")]
+            [Remainder]
+            string reason = null)
         {
             if (member.Id == Context.User.Id)
             {
@@ -100,7 +103,7 @@ namespace Conbot.ModerationPlugin
                 return;
             }
 
-            await Context.Guild.AddBanAsync(member, prunedays);
+            await Context.Guild.AddBanAsync(member, pruneDays, reason);
             await ReplyAsync($"**{Format.Sanitize(member.ToString())}** has been banned.");
         }
 
@@ -111,10 +114,16 @@ namespace Conbot.ModerationPlugin
         [RequireBotPermission(GuildPermission.BanMembers)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task HackbanAsync(
-            [Description("The ID of the user to ban.")] ulong id,
+            [Description("The ID of the user to ban.")]
+            ulong id,
             [Name("prune days")]
             [Description("The amount of days to prune messages from the user.")]
-            [MinValue(0), MaxValue(7)] int prunedays = 0)
+            [MinValue(0), MaxValue(7)]
+            int pruneDays = 0,
+            [Description("The reason for the ban.")]
+            [Remarks("The reason will show up in the audit log.")]
+            [Remainder]
+            string reason = null)
         {
             if (id == Context.User.Id)
             {
@@ -124,7 +133,7 @@ namespace Conbot.ModerationPlugin
 
             try
             {
-                await Context.Guild.AddBanAsync(id, prunedays);
+                await Context.Guild.AddBanAsync(id, pruneDays, reason);
                 await ReplyAsync($"User with ID **{id}** has been banned.");
             }
             catch (HttpException e)
@@ -162,15 +171,22 @@ namespace Conbot.ModerationPlugin
         [Remarks(
             "A soft ban is like a kick but instead kicking the member, " +
             "the member will be banned and directly unbanned. " +
-            "This is useful for pruning the messages of the member.")]
+            "This is useful for pruning messages from the member.")]
         [RequireUserPermission(GuildPermission.BanMembers, GuildPermission.KickMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task SoftBanAsync(
-            [Description("The member to soft ban."), LowerHierarchy] SocketGuildUser member,
+            [Description("The member to soft ban.")]
+            [LowerHierarchy]
+            SocketGuildUser member,
             [Name("prune days")]
             [Description("The amount of days to prune messages from the member.")]
-            [MinValue(0), MaxValue(7)] int prunedays = 1)
+            [MinValue(0), MaxValue(7)]
+            int pruneDays = 0,
+            [Description("The reason for the soft ban.")]
+            [Remarks("The reason will show up in the audit log.")]
+            [Remainder]
+            string reason = null)
         {
             if (member.Id == Context.User.Id)
             {
@@ -178,7 +194,7 @@ namespace Conbot.ModerationPlugin
                 return;
             }
 
-            await Context.Guild.AddBanAsync(member, prunedays);
+            await Context.Guild.AddBanAsync(member, pruneDays, reason);
             await Context.Guild.RemoveBanAsync(member);
 
             await ReplyAsync($"**{Format.Sanitize(member.ToString())}** has been soft banned.");
@@ -190,7 +206,13 @@ namespace Conbot.ModerationPlugin
         [RequireBotPermission(GuildPermission.KickMembers)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task KickAsync(
-            [Description("The member to kick."), LowerHierarchy] SocketGuildUser user)
+            [Description("The member to kick.")]
+            [LowerHierarchy]
+            SocketGuildUser user,
+            [Description("The reason for the kick.")]
+            [Remarks("The reason will show up in the audit log.")]
+            [Remainder]
+            string reason = null)
         {
             if (user.Id == Context.User.Id)
             {
@@ -198,7 +220,7 @@ namespace Conbot.ModerationPlugin
                 return;
             }
 
-            await user.KickAsync();
+            await user.KickAsync(reason);
             await ReplyAsync($"**{Format.Sanitize(user.ToString())}** has been kicked.");
         }
     }

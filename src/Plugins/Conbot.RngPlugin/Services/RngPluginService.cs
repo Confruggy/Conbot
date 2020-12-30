@@ -1,26 +1,24 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using Conbot.Services.Commands;
 using Microsoft.Extensions.Hosting;
-using Qmmands;
 
 namespace Conbot.RngPlugin
 {
     public class RngPluginService : IHostedService
     {
-        private readonly CommandService _commandService;
-        private Module _module;
+        private readonly SlashCommandService _slashCommandService;
 
-        public RngPluginService(CommandService commandService) => _commandService = commandService;
+        public RngPluginService(SlashCommandService slashCommandService)
+            => _slashCommandService = slashCommandService;
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _module = _commandService.AddModule<RngModule>();
-            return Task.CompletedTask;
+            await _slashCommandService.RegisterModuleAsync<RngModule>();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _commandService.RemoveModule(_module);
             return Task.CompletedTask;
         }
     }

@@ -38,14 +38,16 @@ namespace Conbot.Services.Commands
             _defaultPrefixHandler = DefaultPrefixHandler.Instance;
         }
 
-        public Task StartAsync(CancellationToken stoppingToken)
+        public async Task StartAsync(CancellationToken stoppingToken)
         {
+            await UnregisterAllCommandsAsync();
+
+            _commandService.SetDefaultArgumentParser(new InteractionArgumentParser());
             AddTypeParsers();
 
             _discordClient.MessageReceived += OnMessageReceivedAsync;
+            _discordClient.InteractionCreated += OnInteractionCreatedAsync;
             _commandService.CommandExecuted += OnCommandExecutedAsync;
-
-            return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken stoppingToken)
@@ -54,6 +56,16 @@ namespace Conbot.Services.Commands
             _commandService.CommandExecuted -= OnCommandExecutedAsync;
 
             return Task.CompletedTask;
+        }
+
+        private async Task UnregisterAllCommandsAsync()
+        {
+            var commands = await _discordClient.Rest.GetGlobalApplicationCommands();
+
+            foreach (var command in commands)
+            {
+                await command.DeleteAsync();
+            }
         }
 
         private void AddTypeParsers()
@@ -76,6 +88,47 @@ namespace Conbot.Services.Commands
             _commandService.AddTypeParser(new ChannelTypeParser<SocketGuildChannel>());
             _commandService.AddTypeParser(new ChannelTypeParser<IVoiceChannel>());
             _commandService.AddTypeParser(new ChannelTypeParser<SocketVoiceChannel>());
+        }
+
+        private Task OnInteractionCreatedAsync(SocketInteraction interaction)
+        {
+            if (interaction.Type != InteractionType.ApplicationCommand)
+                return Task.CompletedTask;
+
+            var commandString = new StringBuilder()
+                .Append(interaction.Data.Name);
+
+            var option = interaction.Data.Options?.Cast<IApplicationCommandInteractionDataOption>()?.First();
+
+            if (option != null && option.Value == null)
+            {
+                commandString
+                    .Append(' ')
+                    .Append(option.Name);
+
+                option = option.Options?.First();
+
+                if (option != null && option.Value == null)
+                {
+                    commandString
+                        .Append(' ')
+                        .Append(option.Name);
+                }
+            }
+
+            Task.Run(async () =>
+            {
+                using var scope = _provider.CreateScope();
+                var context = new DiscordCommandContext(_discordClient, interaction, scope.ServiceProvider);
+
+                var result = await _commandService.ExecuteAsync(commandString.ToString(), context);
+
+                if (result.IsSuccessful)
+                    return;
+
+                await context.ReplyAsync(GetErrorMessage(result as FailedResult), allowedMentions: AllowedMentions.None);
+            });
+            return Task.CompletedTask;
         }
 
         private Task OnMessageReceivedAsync(SocketMessage message)

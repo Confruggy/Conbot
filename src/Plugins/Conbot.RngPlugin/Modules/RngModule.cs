@@ -13,28 +13,14 @@ namespace Conbot.RngPlugin
 
         public RngModule(Random random) => _random = random;
 
-        [Group("roll")]
-        [Description("Rolls a random number.")]
-        public class RollCommands : DiscordModuleBase
+        [Command("roll")]
+        [Description("Rolls a random number between a minimal and a maximal value.")]
+        public async Task RollAsync(
+            [Description("The maximal value.")] int max = 100,
+            [Description("The minimal value.")] int min = 1)
         {
-            private readonly Random _random;
-
-            public RollCommands(Random random) => _random = random;
-
-            [Command]
-            [Description("Rolls a random number between 1 and a maximal value.")]
-            public Task RollAsync([Description("The maximal value.")] int max = 100)
-                => RollAsync(1, max);
-
-            [Command]
-            [Description("Rolls a random number between a minimal and a maximal value.")]
-            public async Task RollAsync(
-                [Description("The minimal value.")] int min,
-                [Description("The maximal value.")] int max)
-            {
-                int number = _random.Next(min, max);
-                await ReplyAsync($"You rolled **{number}**.");
-            }
+            int number = _random.Next(min, max);
+            await ReplyAsync($"You rolled **{number}**.");
         }
 
         [Command("choose")]

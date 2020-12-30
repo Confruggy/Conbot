@@ -26,9 +26,8 @@ namespace Conbot.UrbanPlugin
             _interactiveService = interactiveService;
         }
 
-        [Command]
+        [Command("search", "")]
         [Description("Searches a definition for a word.")]
-        [Priority(-1)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task UrbanAsync([Remainder, Description("The word to search for.")] string word)
         {

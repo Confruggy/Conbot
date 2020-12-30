@@ -32,7 +32,7 @@ namespace Conbot.TimeZonePlugin
             _provider = provider;
         }
 
-        [Command]
+        [Command("show", "")]
         [Description("Shows your current time zone.")]
         [RequireTimeZone]
         public async Task TimeZoneAsync()
@@ -76,7 +76,7 @@ namespace Conbot.TimeZonePlugin
                 _config = config;
             }
 
-            [Command]
+            [Command("location", "")]
             [Description("Sets your time zone using a time zone location.")]
             [Remarks(
                 "Certain commands require your time zone information. " +
@@ -118,7 +118,7 @@ namespace Conbot.TimeZonePlugin
                     _db.SaveChangesAsync());
             }
 
-            [Command]
+            [Command("gmt", "")]
             [Description("Sets your time zone using GMT offsets.")]
             [Remarks(
                 "Available offsets are: GMT-12, GMT-11, GMT-10, GMT-9, GMT-8, GMT-7, GMT-6, GMT-5, GMT-4, GMT-3, " +

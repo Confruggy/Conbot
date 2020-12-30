@@ -13,8 +13,11 @@ namespace Conbot.PrefixPlugin
 {
     [Name("Prefix")]
     [Group("prefix")]
-    [Description("Sets up command prefixes.")]
-    [Remarks("You can set up up to 10 prefixes for this server. Commands can also be invoked by mentioning the bot.")]
+    [Description("Sets up command prefixes for text commands.")]
+    [Remarks(
+        "You can set up up to 10 prefixes for this server. " +
+        "Commands can also be invoked by mentioning the bot or using Slash Commands. " +
+        "Custom prefixes are only supported by text commands.")]
     [RequireContext(ContextType.Guild)]
     public class PrefixModule : DiscordModuleBase
     {
@@ -37,6 +40,12 @@ namespace Conbot.PrefixPlugin
             [Description("The prefix to add."), NotEmpty, MaxLength(20)] string prefix)
         {
             prefix = prefix.TrimStart();
+
+            if (prefix.StartsWith('/'))
+            {
+                await ReplyAsync("Prefix can't start with a slash character.");
+                return;
+            }
 
             var prefixes = await _db.GetPrefixesAsync(Context.Guild);
 

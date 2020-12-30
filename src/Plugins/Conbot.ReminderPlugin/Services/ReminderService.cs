@@ -91,17 +91,6 @@ namespace Conbot.ReminderPlugin
 
                     if (toSendChannel != null)
                     {
-                        var embed = string.IsNullOrEmpty(reminder.Message)
-                            ? null
-                            : new EmbedBuilder()
-                                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
-                                .WithDescription(reminder.Message)
-                                .Build();
-
-                        string mention =
-                            _client.GetUser(reminder.UserId)?.Mention
-                            ?? MentionUtils.MentionUser(reminder.UserId);
-
                         DateTimeZone timeZone;
 
                         using (var timeZoneContext = new TimeZoneContext())
@@ -122,11 +111,52 @@ namespace Conbot.ReminderPlugin
                                 formatted: true);
 
                         string text;
-                        if (toSendChannel.Id == reminder.ChannelId)
-                            text = $"You've set a reminder {time}.";
-                        else text = $"You've set a reminder in {MentionUtils.MentionChannel(reminder.ChannelId)} {time}.";
+                        MessageReference reference = null;
+                        IMessage message = null;
 
-                        var reference = new MessageReference(reminder.MessageId, reminder.ChannelId, reminder.GuildId);
+                        if (toSendChannel.Id == reminder.ChannelId)
+                        {
+                            message = await toSendChannel.GetMessageAsync(reminder.MessageId);
+
+                            if (message is IUserMessage)
+                            {
+                                text = $"You've set a reminder {time}.";
+                                reference = new MessageReference(
+                                    reminder.MessageId, reminder.ChannelId, reminder.GuildId);
+                            }
+                            else
+                            {
+                                text = $"{MentionUtils.MentionUser(reminder.UserId)}, you've set a reminder {time}.";
+                            }
+                        }
+                        else
+                        {
+                            text = $"You've set a reminder in {MentionUtils.MentionChannel(reminder.ChannelId)} {time}.";
+                        }
+
+                        Embed embed;
+                        if (reference != null)
+                        {
+                            embed = !string.IsNullOrEmpty(reminder.Message)
+                                ? new EmbedBuilder()
+                                    .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
+                                    .WithDescription(reminder.Message)
+                                    .Build()
+                                : null;
+                        }
+                        else
+                        {
+                            string hyperLink = $"[jump to message]({reminder.Url})";
+
+                            embed = new EmbedBuilder()
+                                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
+                                .WithDescription(
+                                    string.IsNullOrEmpty(reminder.Message)
+                                        ? hyperLink
+                                        : $"{reminder.Message.Truncate(2021 - hyperLink.Length)} ({hyperLink})")
+                                .Build();
+                        }
+
                         tasks.Add(Task.Run(async () =>
                         {
                             try { await toSendChannel.SendMessageAsync(text, embed: embed, messageReference: reference); }

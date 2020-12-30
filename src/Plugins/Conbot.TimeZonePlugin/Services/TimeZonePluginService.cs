@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Conbot.Services.Commands;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -12,20 +13,22 @@ namespace Conbot.TimeZonePlugin
     {
         private readonly IServiceProvider _services;
         private readonly CommandService _commandService;
+        private readonly SlashCommandService _slashCommandService;
         private TzdbZoneLocationsTypeParser _tzdbZoneLocationsTypeParser;
         private GmtTimeZoneTypeParser _gmtTimeZoneTypeParser;
         private ZonedDateTimeTypeParser _zonedDateTimeTypeParser;
-        private Module _module;
 
-        public TimeZonePluginService(IServiceProvider provider, CommandService commandService)
+        public TimeZonePluginService(IServiceProvider provider, CommandService commandService,
+            SlashCommandService slashCommandService)
         {
-            _services = provider;
             _commandService = commandService;
+            _services = provider;
+            _slashCommandService = slashCommandService;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            UpdateDatabase();
+            await UpdateDatabaseAsync();
 
             _tzdbZoneLocationsTypeParser = new TzdbZoneLocationsTypeParser();
             _commandService.AddTypeParser(_tzdbZoneLocationsTypeParser);
@@ -34,15 +37,11 @@ namespace Conbot.TimeZonePlugin
             _zonedDateTimeTypeParser = new ZonedDateTimeTypeParser();
             _commandService.AddTypeParser(_zonedDateTimeTypeParser);
 
-            _module = _commandService.AddModule<TimeZoneModule>();
-
-            return Task.CompletedTask;
+            await _slashCommandService.RegisterModuleAsync<TimeZoneModule>();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _commandService.RemoveModule(_module);
-
             _commandService.RemoveTypeParser(_tzdbZoneLocationsTypeParser);
             _commandService.RemoveTypeParser(_gmtTimeZoneTypeParser);
             _commandService.RemoveTypeParser(_zonedDateTimeTypeParser);
@@ -50,14 +49,14 @@ namespace Conbot.TimeZonePlugin
             return Task.CompletedTask;
         }
 
-        private void UpdateDatabase()
+        private async Task UpdateDatabaseAsync()
         {
             using var serviceScope = _services
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope();
             using var context = serviceScope.ServiceProvider.GetService<TimeZoneContext>();
 
-            context.Database.Migrate();
+            await context.Database.MigrateAsync();
         }
     }
 }

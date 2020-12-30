@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Conbot.Services.Commands;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -12,35 +13,37 @@ namespace Conbot.ReminderPlugin
     {
         private readonly IServiceProvider _provider;
         private readonly CommandService _commandService;
-        private Module _module;
+        private readonly SlashCommandService _slashCommandService;
 
-        public ReminderPluginService(IServiceProvider provider, CommandService commandService)
+        public ReminderPluginService(IServiceProvider provider, CommandService commandService,
+            SlashCommandService slashCommandService)
         {
             _provider = provider;
             _commandService = commandService;
+            _slashCommandService = slashCommandService;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            UpdateDatabase();
-            _module = _commandService.AddModule<ReminderModule>();
-            return Task.CompletedTask;
+            await UpdateDatabaseAsync();
+            _commandService.AddArgumentParser(new ReminderArgumentParser());
+            await _slashCommandService.RegisterModuleAsync<ReminderModule>();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _commandService.RemoveModule(_module);
+            _commandService.RemoveArgumentParser<ReminderArgumentParser>();
             return Task.CompletedTask;
         }
 
-        private void UpdateDatabase()
+        private async Task UpdateDatabaseAsync()
         {
             using var serviceScope = _provider
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope();
             using var context = serviceScope.ServiceProvider.GetService<ReminderContext>();
 
-            context.Database.Migrate();
+            await context.Database.MigrateAsync();
         }
     }
 }

@@ -16,6 +16,7 @@ namespace Conbot.Commands
         public SocketGuild Guild { get; }
         private readonly List<IUserMessage> _messages;
         public SocketUserMessage Message => (SocketUserMessage)_messages.FirstOrDefault();
+        public SocketInteraction Interaction { get; }
         public ReadOnlyCollection<IUserMessage> Messages => _messages.AsReadOnly();
         public ISocketMessageChannel Channel { get; set; }
         public SocketUser User { get; }
@@ -31,6 +32,18 @@ namespace Conbot.Commands
             _messages = new List<IUserMessage>() { message };
         }
 
+        public DiscordCommandContext(DiscordShardedClient client, SocketInteraction interaction,
+            IServiceProvider serviceProvider)
+            : base(serviceProvider)
+        {
+            Client = client;
+            Interaction = interaction;
+            Guild = Interaction.Guild;
+            Channel = Interaction.Channel;
+            User = Interaction.Member;
+            _messages = new List<IUserMessage>();
+        }
+
         public async Task<RestUserMessage> SendMessageAsync(string text = null, bool isTTS = false, Embed embed = null,
             RequestOptions options = null, AllowedMentions allowedMentions = null, MessageReference reference = null)
         {
@@ -42,10 +55,18 @@ namespace Conbot.Commands
         public async Task<RestUserMessage> ReplyAsync(string text = null, bool isTTS = false, Embed embed = null,
             AllowedMentions allowedMentions = null, RequestOptions options = null)
         {
-            var message =
-                await Messages[^1].ReplyAsync(text, isTTS, embed, allowedMentions ?? AllowedMentions.None, options);
-            _messages.Add(message);
-            return (RestUserMessage)message;
+            if (Interaction != null)
+            {
+                var message = await Interaction.RespondAsync(text, isTTS, embed, allowedMentions: allowedMentions);
+                return (RestUserMessage)message;
+            }
+            else
+            {
+                var message =
+                    await Messages[^1].ReplyAsync(text, isTTS, embed, allowedMentions ?? AllowedMentions.None, options);
+                _messages.Add(message);
+                return (RestUserMessage)message;
+            }
         }
 
         public void AddMessage(IUserMessage message) => _messages.Add(message);

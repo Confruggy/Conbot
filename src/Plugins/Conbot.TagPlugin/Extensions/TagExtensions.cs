@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
+using Discord.WebSocket;
 
 namespace Conbot.TagPlugin
 {
@@ -64,6 +65,14 @@ namespace Conbot.TagPlugin
             return CreateTagAsync(context, guild.Id, message.Channel.Id, message.Id, message.Author.Id, name, content);
         }
 
+        public static ValueTask<Tag> CreateTagAsync(this TagContext context, SocketInteraction interaction, string name,
+            string content)
+        {
+            var guild = (interaction.Channel as ITextChannel)?.Guild;
+            return CreateTagAsync(
+                context, guild.Id, interaction.Channel.Id, interaction.Id, interaction.Member.Id, name, content);
+        }
+
         public static void RemoveTag(this TagContext context, Tag tag)
             => context.Tags.Remove(tag);
 
@@ -90,6 +99,14 @@ namespace Conbot.TagPlugin
         {
             var guild = (message.Channel as ITextChannel)?.Guild;
             return AddTagUseAsync(context, tag, guild.Id, message.Channel.Id, message.Id, message.Author.Id, usedAlias);
+        }
+
+        public static ValueTask<TagUse> AddTagUseAsync(this TagContext context, Tag tag, SocketInteraction interaction,
+            TagAlias usedAlias = null)
+        {
+            var guild = (interaction.Channel as ITextChannel)?.Guild;
+            return AddTagUseAsync(
+                context, tag, guild.Id, interaction.Channel.Id, interaction.Id, interaction.Member.Id, usedAlias);
         }
 
         public static async ValueTask<TagModification> ModifyTagAsync(this TagContext context, Tag tag, ulong guildId,
@@ -121,6 +138,14 @@ namespace Conbot.TagPlugin
                 newContent);
         }
 
+        public static ValueTask<TagModification> ModifyTagAsync(this TagContext context, Tag tag,
+            SocketInteraction interaction, string newContent)
+        {
+            var guild = (interaction.Channel as ITextChannel)?.Guild;
+            return ModifyTagAsync(context, tag, guild.Id, interaction.Channel.Id, interaction.Id, interaction.Member.Id,
+                newContent);
+        }
+
         public static ValueTask<List<TagAlias>> GetTagAliasesAsync(this TagContext context, Tag tag)
             => context.TagAliases.AsAsyncEnumerable().Where(x => x.TagId == tag.Id).ToListAsync();
 
@@ -133,6 +158,14 @@ namespace Conbot.TagPlugin
         {
             var guild = (message.Channel as ITextChannel)?.Guild;
             return CreateTagAliasAsync(context, tag, guild.Id, message.Channel.Id, message.Id, message.Author.Id, name);
+        }
+
+        public static ValueTask<TagAlias> CreateTagAliasAsync(this TagContext context, Tag tag,
+            SocketInteraction interaction, string name)
+        {
+            var guild = (interaction.Channel as ITextChannel)?.Guild;
+            return CreateTagAliasAsync(
+                context, tag, guild.Id, interaction.Channel.Id, interaction.Id, interaction.Member.Id, name);
         }
 
         public static async ValueTask<TagAlias> CreateTagAliasAsync(this TagContext context, Tag tag, ulong guildId,

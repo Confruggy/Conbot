@@ -1,46 +1,43 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Conbot.Services.Commands;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Qmmands;
 
 namespace Conbot.TagPlugin
 {
     public class TagPluginService : IHostedService
     {
         private readonly IServiceProvider _services;
-        private readonly CommandService _commandService;
-        private Module _module;
+        private readonly SlashCommandService _slashCommandService;
 
-        public TagPluginService(IServiceProvider services, CommandService commandService)
+        public TagPluginService(IServiceProvider services, SlashCommandService slashCommandService)
         {
             _services = services;
-            _commandService = commandService;
+            _slashCommandService = slashCommandService;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            UpdateDatabase();
-            _module = _commandService.AddModule<TagModule>();
-            return Task.CompletedTask;
+            await UpdateDatabaseAsync();
+            await _slashCommandService.RegisterModuleAsync<TagModule>();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _commandService.RemoveModule(_module);
             return Task.CompletedTask;
         }
 
-        private void UpdateDatabase()
+        private async Task UpdateDatabaseAsync()
         {
             using var serviceScope = _services
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope();
             using var context = serviceScope.ServiceProvider.GetService<TagContext>();
 
-            context.Database.Migrate();
+            await context.Database.MigrateAsync();
         }
     }
 }

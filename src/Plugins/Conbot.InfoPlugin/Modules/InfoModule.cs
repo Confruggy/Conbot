@@ -16,7 +16,8 @@ namespace Conbot.InfoPlugin
         public async Task PingAsync()
         {
             var msg = await ReplyAsync("**Pong:** ...");
-            long difference = (msg.CreatedAt - Context.Message.CreatedAt).Milliseconds;
+            long difference =
+                (msg.CreatedAt - (Context.Interaction?.CreatedAt ?? Context.Message.CreatedAt)).Milliseconds;
             await msg.ModifyAsync(x => x.Content = $"**Pong:** {difference} ms");
         }
 

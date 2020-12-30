@@ -16,11 +16,14 @@ namespace Conbot.Commands
     {
         public async ValueTask<ArgumentParserResult> ParseAsync(CommandContext context)
         {
-            if (!string.IsNullOrEmpty(context.RawArguments))
-                return await DefaultArgumentParser.Instance.ParseAsync(context);
-
             if (!(context is DiscordCommandContext discordCommandContext))
-                return InteractiveArgumentParserResult.Failed("Invalid context.");
+                return ConbotArgumentParserResult.Failed("Invalid context.");
+
+            if (discordCommandContext.Interaction != null || !string.IsNullOrEmpty(context.RawArguments))
+            {
+                var commandService = context.ServiceProvider.GetRequiredService<CommandService>();
+                return await commandService.DefaultArgumentParser.ParseAsync(context);
+            }
 
             var config = context.ServiceProvider.GetRequiredService<IConfiguration>();
             var interactiveService = context.ServiceProvider.GetRequiredService<InteractiveService>();
@@ -93,12 +96,12 @@ namespace Conbot.Commands
                     interactiveMessage.Build(), message, discordCommandContext.User);
 
                 if (argument == null && !skipped)
-                    return InteractiveArgumentParserResult.Failed("Aborted");
+                    return ConbotArgumentParserResult.Failed("Aborted");
 
                 arguments.Add(parameter, argument);
             }
 
-            return InteractiveArgumentParserResult.Successful(arguments);
+            return ConbotArgumentParserResult.Successful(arguments);
         }
     }
 }

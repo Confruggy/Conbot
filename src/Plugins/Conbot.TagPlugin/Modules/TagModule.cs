@@ -31,7 +31,7 @@ namespace Conbot.TagPlugin
             _config = config;
         }
 
-        [Command, Priority(-1)]
+        [Command("show", "")]
         [Description("Shows a tag.")]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public Task TagAsync([Remainder, Description("The name of the tag.")] string name) => ShowTagAsync(name);
@@ -61,7 +61,9 @@ namespace Conbot.TagPlugin
                     return;
             }
 
-            await _db.AddTagUseAsync(tag, Context.Message, alias);
+            if (Context.Interaction != null)
+                await _db.AddTagUseAsync(tag, Context.Interaction, alias);
+            else await _db.AddTagUseAsync(tag, Context.Message, alias);
 
             string content = raw ? Format.Sanitize(tag.Content) : tag.Content;
 
@@ -86,7 +88,9 @@ namespace Conbot.TagPlugin
                 return;
             }
 
-            await _db.CreateTagAsync(Context.Message, name, content);
+            if (Context.Interaction != null)
+                await _db.CreateTagAsync(Context.Interaction, name, content);
+            else await _db.CreateTagAsync(Context.Message, name, content);
 
             await Task.WhenAll(
                 _db.SaveChangesAsync(),
@@ -176,7 +180,9 @@ namespace Conbot.TagPlugin
                 return;
             }
 
-            await _db.ModifyTagAsync(tag, Context.Message, newContent);
+            if (Context.Interaction != null)
+                await _db.ModifyTagAsync(tag, Context.Interaction, newContent);
+            else await _db.ModifyTagAsync(tag, Context.Message, newContent);
 
             await Task.WhenAll(
                 _db.SaveChangesAsync(),
@@ -218,7 +224,7 @@ namespace Conbot.TagPlugin
 
         private Embed CreateTagEmbed(Tag tag, int uses, int rank, int count, DateTimeZone timeZone)
         {
-            double days = (Context.Message.Timestamp - tag.Creation.CreatedAt).TotalDays;
+            double days = (DateTime.UtcNow - tag.Creation.CreatedAt).TotalDays;
             double average = days > 1 ? Math.Round(uses / days) : uses;
 
             var modification = tag.Modifications.OrderByDescending(x => x.ModifiedAt).FirstOrDefault();
@@ -247,7 +253,7 @@ namespace Conbot.TagPlugin
 
         private Embed CreateTagAliasEmbed(TagAlias alias, DateTimeZone timeZone)
         {
-            double days = (Context.Message.Timestamp - alias.Creation.CreatedAt).TotalDays;
+            double days = (DateTime.UtcNow - alias.Creation.CreatedAt).TotalDays;
             int uses = alias.TagUses.Count;
             double average = days > 1 ? Math.Round(uses / days) : uses;
 
@@ -272,7 +278,7 @@ namespace Conbot.TagPlugin
 
         [Command("alias")]
         [Description("Creates an alias for an already existing tag.")]
-        [Remarks("When the original tag gets deleted, the alias gets deleted aswell.")]
+        [Remarks("When the original tag gets deleted, the alias gets deleted as well.")]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task AliasAsync(
             [Description("The name of the alias."), NotEmpty, MaxLength(50)] string name,
@@ -294,7 +300,9 @@ namespace Conbot.TagPlugin
                 return;
             }
 
-            await _db.CreateTagAliasAsync(tag, Context.Message, name);
+            if (Context.Interaction != null)
+                await _db.CreateTagAliasAsync(tag, Context.Interaction, name);
+            else await _db.CreateTagAliasAsync(tag, Context.Message, name);
 
             await Task.WhenAll(
                 _db.SaveChangesAsync(),

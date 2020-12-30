@@ -1,26 +1,24 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using Conbot.Services.Commands;
 using Microsoft.Extensions.Hosting;
-using Qmmands;
 
 namespace Conbot.HelpPlugin
 {
     public class HelpPluginService : IHostedService
     {
-        private readonly CommandService _commandService;
-        private Module _module;
+        private readonly SlashCommandService _slashCommandService;
 
-        public HelpPluginService(CommandService commandService) => _commandService = commandService;
+        public HelpPluginService(SlashCommandService slashCommandService)
+            => _slashCommandService = slashCommandService;
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _module = _commandService.AddModule<HelpModule>();
-            return Task.CompletedTask;
+            await _slashCommandService.RegisterModuleAsync<HelpModule>();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _commandService.RemoveModule(_module);
             return Task.CompletedTask;
         }
     }

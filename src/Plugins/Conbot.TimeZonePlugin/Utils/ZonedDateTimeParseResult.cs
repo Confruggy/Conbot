@@ -9,14 +9,12 @@ namespace Conbot.TimeZonePlugin
         public ZonedDateTime? Then { get; }
         public bool IsSuccessful => Then != null;
         public string Reason { get; }
-        public string Remainder { get; }
 
-        public ZonedDateTimeParseResult(ZonedDateTime now, ZonedDateTime? then = null, string remainder = null,
+        public ZonedDateTimeParseResult(ZonedDateTime now, ZonedDateTime? then = null,
             string reason = null)
         {
             Now = now;
             Then = then;
-            Remainder = remainder;
             Reason = reason;
         }
     }

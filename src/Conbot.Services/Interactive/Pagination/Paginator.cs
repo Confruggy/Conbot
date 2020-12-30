@@ -5,6 +5,7 @@ using Conbot.Commands;
 using Conbot.Extensions;
 using Conbot.InteractiveMessages;
 using Discord;
+using Discord.Rest;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -31,9 +32,16 @@ namespace Conbot.Services.Interactive
             int currentIndex = startIndex;
             var start = _pages[currentIndex];
 
-            var reference = reply ? new MessageReference(context.Message.Id) : null;
-            var message = await context.Channel.SendMessageAsync(
-                start.Item1, embed: start.Item2, allowedMentions: AllowedMentions.None, messageReference: reference)
+            var message = context.Interaction != null
+                ? await context.Interaction.RespondAsync(
+                    start.Item1,
+                    embed: start.Item2)
+                    .ConfigureAwait(false) as RestUserMessage
+                : await context.Channel.SendMessageAsync(
+                    start.Item1,
+                    embed: start.Item2,
+                    allowedMentions: AllowedMentions.None,
+                    messageReference: reply ? new MessageReference(context.Message.Id) : null)
                     .ConfigureAwait(false);
 
             if (_pages.Count <= 1)
