@@ -1,17 +1,15 @@
 using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Conbot.Commands;
 using Conbot.Extensions;
-using Conbot.InteractiveMessages;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
 using Qmmands;
 
-namespace Conbot.Services.Interactive
+namespace Conbot.Interactive
 {
     public class InteractiveService : IHostedService
     {

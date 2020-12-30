@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using Conbot.Services.Commands;
+using Conbot.Commands;
 using Microsoft.Extensions.Hosting;
 
 namespace Conbot.RngPlugin

@@ -2,7 +2,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Conbot.Commands;
-using Conbot.Services.Interactive;
+using Conbot.Interactive;
 using Conbot.TimeZonePlugin;
 using Conbot.TimeZonePlugin.Extensions;
 using Discord;

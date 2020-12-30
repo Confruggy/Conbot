@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using Conbot.Extensions;
-using Discord;
 
 namespace Conbot.Commands
 {

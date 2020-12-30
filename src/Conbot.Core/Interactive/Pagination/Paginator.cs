@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Conbot.Commands;
 using Conbot.Extensions;
-using Conbot.InteractiveMessages;
 using Discord;
 using Discord.Rest;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Conbot.Services.Interactive
+namespace Conbot.Interactive
 {
     public class Paginator
     {

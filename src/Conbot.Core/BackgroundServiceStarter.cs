@@ -2,7 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 
-namespace Conbot.Services
+namespace Conbot
 {
     public class BackgroundServiceStarter<T> : IHostedService
     where T : IHostedService

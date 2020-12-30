@@ -12,13 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Conbot.Core\Conbot.Core.csproj">
-      
-    </ProjectReference>
-    <ProjectReference Include="..\..\Conbot.Services\Conbot.Services.csproj">
-      <Private>false</Private>
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </ProjectReference>
+    <ProjectReference Include="..\..\Conbot.Core\Conbot.Core.csproj" />
   </ItemGroup>
   
   <ItemGroup>

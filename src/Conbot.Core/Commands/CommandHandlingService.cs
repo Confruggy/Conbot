@@ -7,13 +7,12 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Conbot.Commands;
 using Discord;
 using Discord.WebSocket;
 using Humanizer;
 using Qmmands;
 
-namespace Conbot.Services.Commands
+namespace Conbot.Commands
 {
     public class CommandHandlingService : IHostedService
     {

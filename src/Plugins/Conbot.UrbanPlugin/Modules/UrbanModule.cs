@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using Conbot.Commands;
-using Conbot.Services.Interactive;
+using Conbot.Interactive;
 using Discord;
 using Humanizer;
 using Microsoft.AspNetCore.WebUtilities;

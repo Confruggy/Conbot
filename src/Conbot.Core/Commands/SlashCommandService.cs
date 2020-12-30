@@ -9,7 +9,7 @@ using Discord.Rest;
 using Discord.WebSocket;
 using Qmmands;
 
-namespace Conbot.Services.Commands
+namespace Conbot.Commands
 {
     public class SlashCommandService
     {

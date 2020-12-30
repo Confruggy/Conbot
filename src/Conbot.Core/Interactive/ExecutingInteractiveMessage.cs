@@ -1,9 +1,8 @@
 using System;
 using System.Threading;
-using Conbot.InteractiveMessages;
 using Discord;
 
-namespace Conbot.Services.Interactive
+namespace Conbot.Interactive
 {
     internal class ExecutingInteractiveMessage
     {
