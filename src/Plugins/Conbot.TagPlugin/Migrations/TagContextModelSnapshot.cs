@@ -14,7 +14,7 @@ namespace Conbot.TagPlugin.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.5");
+                .HasAnnotation("ProductVersion", "3.1.9");
 
             modelBuilder.Entity("Conbot.TagPlugin.Tag", b =>
                 {
@@ -25,6 +25,24 @@ namespace Conbot.TagPlugin.Migrations
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("CreationChannelId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("CreationGuildId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong?>("CreationInteractionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong?>("CreationMessageId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("CreatorId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<ulong>("GuildId")
                         .HasColumnType("INTEGER");
@@ -49,6 +67,24 @@ namespace Conbot.TagPlugin.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("CreationChannelId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("CreationGuildId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong?>("CreationInteractionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong?>("CreationMessageId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("CreatorId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<ulong>("GuildId")
                         .HasColumnType("INTEGER");
 
@@ -71,54 +107,47 @@ namespace Conbot.TagPlugin.Migrations
                     b.ToTable("TagAliases");
                 });
 
-            modelBuilder.Entity("Conbot.TagPlugin.TagAliasCreation", b =>
+            modelBuilder.Entity("Conbot.TagPlugin.TagAliasOwnerChange", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("ChannelId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("GuildId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong?>("InteractionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong?>("MessageId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("NewOwnerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("OldOwnerId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("TagAliasId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<ulong>("ChannelId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<ulong?>("GuildId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<ulong>("MessageId")
+                    b.Property<int>("Type")
                         .HasColumnType("INTEGER");
 
                     b.Property<ulong>("UserId")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("TagAliasId");
+                    b.HasKey("Id");
 
-                    b.ToTable("TagAliasCreations");
-                });
+                    b.HasIndex("TagAliasId");
 
-            modelBuilder.Entity("Conbot.TagPlugin.TagCreation", b =>
-                {
-                    b.Property<int>("TagId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<ulong>("ChannelId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<ulong?>("GuildId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<ulong>("MessageId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<ulong>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("TagId");
-
-                    b.ToTable("TagCreations");
+                    b.ToTable("TagAliasOwnerChanges");
                 });
 
             modelBuilder.Entity("Conbot.TagPlugin.TagModification", b =>
@@ -130,10 +159,13 @@ namespace Conbot.TagPlugin.Migrations
                     b.Property<ulong>("ChannelId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<ulong?>("GuildId")
+                    b.Property<ulong>("GuildId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<ulong>("MessageId")
+                    b.Property<ulong?>("InteractionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong?>("MessageId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("ModifiedAt")
@@ -160,6 +192,49 @@ namespace Conbot.TagPlugin.Migrations
                     b.ToTable("TagModifications");
                 });
 
+            modelBuilder.Entity("Conbot.TagPlugin.TagOwnerChange", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("ChannelId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("GuildId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong?>("InteractionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong?>("MessageId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("NewOwnerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("OldOwnerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("TagOwnerChanges");
+                });
+
             modelBuilder.Entity("Conbot.TagPlugin.TagUse", b =>
                 {
                     b.Property<int>("Id")
@@ -169,10 +244,13 @@ namespace Conbot.TagPlugin.Migrations
                     b.Property<ulong>("ChannelId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<ulong?>("GuildId")
+                    b.Property<ulong>("GuildId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<ulong>("MessageId")
+                    b.Property<ulong?>("InteractionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong?>("MessageId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("TagId")
@@ -205,20 +283,11 @@ namespace Conbot.TagPlugin.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Conbot.TagPlugin.TagAliasCreation", b =>
+            modelBuilder.Entity("Conbot.TagPlugin.TagAliasOwnerChange", b =>
                 {
                     b.HasOne("Conbot.TagPlugin.TagAlias", "TagAlias")
-                        .WithOne("Creation")
-                        .HasForeignKey("Conbot.TagPlugin.TagAliasCreation", "TagAliasId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Conbot.TagPlugin.TagCreation", b =>
-                {
-                    b.HasOne("Conbot.TagPlugin.Tag", "Tag")
-                        .WithOne("Creation")
-                        .HasForeignKey("Conbot.TagPlugin.TagCreation", "TagId")
+                        .WithMany("OwnerChanges")
+                        .HasForeignKey("TagAliasId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -227,6 +296,15 @@ namespace Conbot.TagPlugin.Migrations
                 {
                     b.HasOne("Conbot.TagPlugin.Tag", "Tag")
                         .WithMany("Modifications")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Conbot.TagPlugin.TagOwnerChange", b =>
+                {
+                    b.HasOne("Conbot.TagPlugin.Tag", "Tag")
+                        .WithMany("OwnerChanges")
                         .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

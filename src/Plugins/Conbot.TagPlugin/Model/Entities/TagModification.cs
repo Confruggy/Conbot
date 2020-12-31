@@ -18,13 +18,19 @@ namespace Conbot.TagPlugin
         [Required]
         public string OldContent { get; set; }
 
-        public DateTime ModifiedAt { get; set; }
-        public ulong? GuildId { get; set; }
-        public ulong ChannelId { get; set; }
-        public ulong MessageId { get; set; }
+        [Required]
         public ulong UserId { get; set; }
+        [Required]
+        public DateTime ModifiedAt { get; set; }
+        [Required]
+        public ulong GuildId { get; set; }
+        [Required]
+        public ulong ChannelId { get; set; }
+        public ulong? MessageId { get; set; }
+        public ulong? InteractionId { get; set; }
 
         [NotMapped]
-        public string Url => $"https://discordapp.com/channels/{GuildId?.ToString() ?? "@me"}/{ChannelId}/{MessageId}";
+        public string Url =>
+            $"https://discordapp.com/channels/{GuildId}/{ChannelId}/{MessageId ?? InteractionId}";
     }
 }

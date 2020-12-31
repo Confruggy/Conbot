@@ -214,7 +214,7 @@ namespace Conbot.TagPlugin
 
         private Embed CreateTagEmbed(Tag tag, int uses, int rank, int count, DateTimeZone timeZone)
         {
-            double days = (DateTime.UtcNow - tag.Creation.CreatedAt).TotalDays;
+            double days = (DateTime.UtcNow - tag.CreatedAt).TotalDays;
             double average = days > 1 ? Math.Round(uses / days) : uses;
 
             var modification = tag.Modifications.OrderByDescending(x => x.ModifiedAt).FirstOrDefault();
@@ -222,7 +222,7 @@ namespace Conbot.TagPlugin
             var owner = Context.Guild.GetUser(tag.OwnerId);
 
             var createdAt = DateTimeToClickableString(
-                Instant.FromDateTimeUtc(tag.Creation.CreatedAt).InZone(timeZone), tag.Creation.Url);
+                Instant.FromDateTimeUtc(tag.CreatedAt).InZone(timeZone), tag.CreationUrl);
 
             var modifiedAt = modification == null
                 ? "Never"
@@ -243,14 +243,14 @@ namespace Conbot.TagPlugin
 
         private Embed CreateTagAliasEmbed(TagAlias alias, DateTimeZone timeZone)
         {
-            double days = (DateTime.UtcNow - alias.Creation.CreatedAt).TotalDays;
+            double days = (DateTime.UtcNow - alias.CreatedAt).TotalDays;
             int uses = alias.TagUses.Count;
             double average = days > 1 ? Math.Round(uses / days) : uses;
 
             var owner = Context.Guild.GetUser(alias.OwnerId);
 
             var createdAt = DateTimeToClickableString(
-                Instant.FromDateTimeUtc(alias.Creation.CreatedAt).InZone(timeZone), alias.Creation.Url);
+                Instant.FromDateTimeUtc(alias.CreatedAt).InZone(timeZone), alias.CreationUrl);
 
             return new EmbedBuilder()
                 .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))

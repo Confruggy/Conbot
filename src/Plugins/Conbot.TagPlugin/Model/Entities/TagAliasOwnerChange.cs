@@ -4,22 +4,27 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Conbot.TagPlugin
 {
-    public class TagUse
+    public class TagAliasOwnerChange
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Required]
-        public int TagId { get; set; }
-        public virtual Tag Tag { get; set; }
+        public int TagAliasId { get; set; }
+        public virtual TagAlias TagAlias { get; set; }
 
-        public int? UsedAliasId { get; set; }
-        public virtual TagAlias UsedAlias { get; set; }
+        [Required]
+        public ulong NewOwnerId { get; set; }
+        [Required]
+        public ulong OldOwnerId { get; set; }
+
+        [Required]
+        public OwnerChangeType Type { get; set; }
 
         [Required]
         public ulong UserId { get; set; }
         [Required]
-        public DateTime UsedAt { get; set; }
+        public DateTime ChangedAt { get; set; }
         [Required]
         public ulong GuildId { get; set; }
         [Required]
