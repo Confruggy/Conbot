@@ -34,9 +34,9 @@ namespace Conbot.Interactive
             return this;
         }
 
-        public ReactionCallbackBuilder WithCallback(Func<IReaction, bool> callback)
+        public ReactionCallbackBuilder WithCallback(Action<IReaction> callback)
         {
-            Callback = x => Task.FromResult(callback(x));
+            Callback = x => { callback(x); return Task.CompletedTask; };
             return this;
         }
 
