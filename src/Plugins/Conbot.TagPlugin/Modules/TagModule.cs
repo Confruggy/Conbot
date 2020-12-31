@@ -179,6 +179,73 @@ namespace Conbot.TagPlugin
                 ReplyAsync($"Tag **{Format.Sanitize(tag.Name)}** has been edited."));
         }
 
+        [Command("transfer")]
+        [Description("Transfers a tag or alias you own to another member.")]
+        [Remarks(
+            "This will only change the owner of a tag or alias, but not the creator. However, only the owner " +
+            "of a tag or alias is able to edit or delete it.")]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
+        public async Task TransferAsync(
+            [Description("The name of the tag or alias you want to transfer.")] string name,
+            [Description("The member you want to transfer the tag or alias to.")] IGuildUser member)
+        {
+            if (member.Id == Context.User.Id)
+            {
+                await ReplyAsync("You can't transfer tags or aliases to yourself.");
+                return;
+            }
+
+            if (member.IsBot)
+            {
+                await ReplyAsync("You can't transfer tags or aliases to bots.");
+                return;
+            }
+
+            TagAlias alias = null;
+            var tag = await _db.GetTagAsync(Context.Guild, name);
+
+            if (tag == null)
+            {
+                alias = await _db.GetTagAliasAsync(Context.Guild, name);
+                if (alias == null)
+                {
+                    await ReplyAsync($"Tag **{Format.Sanitize(name)}** hasn't been found.");
+                    return;
+                }
+            }
+
+            if (!(tag?.OwnerId == Context.User.Id || alias?.OwnerId == Context.User.Id))
+            {
+                await ReplyAsync("You aren't the owner of this tag.");
+                return;
+            }
+
+            if (tag != null)
+            {
+                if (Context.Interaction != null)
+                    await _db.ChangeTagOwnerAsync(tag, Context.Interaction, member.Id, OwnerChangeType.Transfer);
+                else await _db.ChangeTagOwnerAsync(tag, Context.Message, member.Id, OwnerChangeType.Transfer);
+
+                await Task.WhenAll(
+                    ReplyAsync(
+                        $"Tag **{Format.Sanitize(tag.Name)}** has been transferred to {member.Mention}.",
+                        allowedMentions: AllowedMentions.None),
+                    _db.SaveChangesAsync());
+            }
+            else
+            {
+                if (Context.Interaction != null)
+                    await _db.ChangeTagAliasOwnerAsync(alias, Context.Interaction, member.Id, OwnerChangeType.Transfer);
+                else await _db.ChangeTagAliasOwnerAsync(alias, Context.Message, member.Id, OwnerChangeType.Transfer);
+
+                await Task.WhenAll(
+                    ReplyAsync(
+                        $"Alias **{Format.Sanitize(alias.Name)}** has been transferred to {member.Mention}.",
+                        allowedMentions: AllowedMentions.None),
+                    _db.SaveChangesAsync());
+            }
+        }
+
         [Command("info")]
         [Description("Shows information about a tag or an alias.")]
         [RequireBotPermission(ChannelPermission.EmbedLinks)]
@@ -214,52 +281,86 @@ namespace Conbot.TagPlugin
 
         private Embed CreateTagEmbed(Tag tag, int uses, int rank, int count, DateTimeZone timeZone)
         {
+            var owner = Context.Guild.GetUser(tag.OwnerId);
             double days = (DateTime.UtcNow - tag.CreatedAt).TotalDays;
             double average = days > 1 ? Math.Round(uses / days) : uses;
 
+            var createdAtText = new StringBuilder()
+                .AppendLine(DateTimeToClickableString(
+                    Instant.FromDateTimeUtc(tag.CreatedAt).InZone(timeZone), tag.CreationUrl));
+
+            if (tag.CreatorId != tag.OwnerId)
+            {
+                var creator = Context.Guild.GetUser(tag.CreatorId);
+
+                createdAtText
+                    .Append("by ")
+                    .Append(creator?.Mention ?? "Member Not Found");
+            }
+
+            var modifiedAtText = new StringBuilder();
             var modification = tag.Modifications.OrderByDescending(x => x.ModifiedAt).FirstOrDefault();
 
-            var owner = Context.Guild.GetUser(tag.OwnerId);
+            if (modification == null)
+            {
+                modifiedAtText.Append("Never");
+            }
+            else
+            {
+                modifiedAtText
+                    .AppendLine(DateTimeToClickableString(
+                        Instant.FromDateTimeUtc(modification.ModifiedAt).InZone(timeZone), modification.Url));
 
-            var createdAt = DateTimeToClickableString(
-                Instant.FromDateTimeUtc(tag.CreatedAt).InZone(timeZone), tag.CreationUrl);
+                if (modification.UserId != tag.OwnerId)
+                {
+                    var modificationUser = Context.Guild.GetUser(modification.UserId);
 
-            var modifiedAt = modification == null
-                ? "Never"
-                : DateTimeToClickableString(
-                    Instant.FromDateTimeUtc(modification.ModifiedAt).InZone(timeZone), modification.Url);
+                    modifiedAtText
+                        .Append("by ")
+                        .Append(modificationUser?.Mention ?? "Member Not Found");
+                }
+            }
 
             return new EmbedBuilder()
                 .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
                 .WithAuthor(x => x.WithIconUrl(owner?.GetAvatarUrl()).WithName(owner?.ToString()))
                 .WithTitle(tag.Name)
-                .AddField("Owner", owner?.Mention ?? "Member not found", true)
+                .AddField("Owner", owner?.Mention ?? "Member Not Found", true)
                 .AddField("Uses", $"{uses:n0} ({average}/day)", true)
                 .AddField("Rank", $"{rank:n0}/{count:n0}", true)
-                .AddField("Created", createdAt, true)
-                .AddField("Last edited", modifiedAt, true)
+                .AddField("Created", createdAtText.ToString(), true)
+                .AddField("Last Edited", modifiedAtText.ToString(), true)
                 .Build();
         }
 
         private Embed CreateTagAliasEmbed(TagAlias alias, DateTimeZone timeZone)
         {
+            var owner = Context.Guild.GetUser(alias.OwnerId);
             double days = (DateTime.UtcNow - alias.CreatedAt).TotalDays;
             int uses = alias.TagUses.Count;
             double average = days > 1 ? Math.Round(uses / days) : uses;
 
-            var owner = Context.Guild.GetUser(alias.OwnerId);
+            var createdAtText = new StringBuilder()
+                .AppendLine(DateTimeToClickableString(
+                    Instant.FromDateTimeUtc(alias.CreatedAt).InZone(timeZone), alias.CreationUrl));
 
-            var createdAt = DateTimeToClickableString(
-                Instant.FromDateTimeUtc(alias.CreatedAt).InZone(timeZone), alias.CreationUrl);
+            if (alias.CreatorId != alias.OwnerId)
+            {
+                var creator = Context.Guild.GetUser(alias.CreatorId);
+
+                createdAtText
+                    .Append("by ")
+                    .Append(creator?.Mention ?? "Member Not Found");
+            }
 
             return new EmbedBuilder()
                 .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
                 .WithAuthor(owner?.ToString(), owner?.GetAvatarUrl())
                 .WithTitle(alias.Name)
-                .AddField("Creator", owner?.Mention ?? "Member not found", true)
+                .AddField("Owner", owner?.Mention ?? "Member Not Found", true)
                 .AddField("Original Tag", alias.Tag.Name, true)
                 .AddField("Uses", $"{uses:n0} ({average}/day)", true)
-                .AddField("Created", createdAt, true)
+                .AddField("Created", createdAtText.ToString(), true)
                 .Build();
         }
 
