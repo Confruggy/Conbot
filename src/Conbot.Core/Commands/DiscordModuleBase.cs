@@ -11,8 +11,13 @@ namespace Conbot.Commands
             RequestOptions options = null, AllowedMentions allowedMentions = null, MessageReference reference = null)
             => Context.SendMessageAsync(text, isTTS, embed, options, allowedMentions, reference);
 
-        public async Task<RestUserMessage> ReplyAsync(string text = null, bool isTTS = false, Embed embed = null,
+        public Task<RestUserMessage> ReplyAsync(string text = null, bool isTTS = false, Embed embed = null,
             AllowedMentions allowedMentions = null, RequestOptions options = null)
-            => await Context.ReplyAsync(text, isTTS, embed, allowedMentions ?? AllowedMentions.None, options);
+            => Context.ReplyAsync(text, isTTS, embed, allowedMentions ?? AllowedMentions.None, options);
+
+        public Task<(RestUserMessage, bool?)> ConfirmAsync(string text, bool isTTS = false,
+            Embed embed = null, AllowedMentions allowedMentions = null, RequestOptions options = null,
+            int timeout = 60000)
+            => Context.ConfirmAsync(text, isTTS, embed, allowedMentions, options, timeout);
     }
 }

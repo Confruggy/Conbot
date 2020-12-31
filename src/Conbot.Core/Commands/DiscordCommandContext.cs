@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Conbot.Interactive;
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Qmmands;
 
 namespace Conbot.Commands
@@ -67,6 +70,32 @@ namespace Conbot.Commands
                 _messages.Add(message);
                 return (RestUserMessage)message;
             }
+        }
+
+        public async Task<(RestUserMessage, bool?)> ConfirmAsync(string text, bool isTTS = false,
+            Embed embed = null, AllowedMentions allowedMentions = null, RequestOptions options = null,
+            int timeout = 60000)
+        {
+            var interactiveService = ServiceProvider.GetRequiredService<InteractiveService>();
+            var config = ServiceProvider.GetRequiredService<IConfiguration>();
+
+            var message = await ReplyAsync(text, isTTS, embed, allowedMentions, options);
+
+            bool? confirmed = null;
+
+            var interactiveMessage = new InteractiveMessageBuilder()
+                .WithPrecondition(x => x.Id == User.Id)
+                .WithTimeout(timeout)
+                .AddReactionCallback(x => x
+                    .WithEmote(config.GetValue<string>("Emotes:CheckMark"))
+                    .WithCallback(_ => confirmed = true))
+                .AddReactionCallback(x => x
+                    .WithEmote(config.GetValue<string>("Emotes:CrossMark"))
+                    .WithCallback(_ => confirmed = false))
+                .Build();
+
+            await interactiveService.ExecuteInteractiveMessageAsync(interactiveMessage, message, User);
+            return (message, confirmed);
         }
 
         public void AddMessage(IUserMessage message) => _messages.Add(message);

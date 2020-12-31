@@ -68,17 +68,20 @@ namespace Conbot.Commands
 
                 if (parameter.IsOptional)
                 {
-                    text.Append(" Click on <:greentick:314068319902760970> to skip this parameter.");
+                    text
+                        .Append(" Click on ")
+                        .Append(config.GetValue<string>("Emotes:CheckMark"))
+                        .Append(" to skip this parameter.");
 
                     interactiveMessage.AddReactionCallback(x => x
-                        .WithEmote("greentick:314068319902760970")
+                        .WithEmote(config.GetValue<string>("Emotes:CheckMark"))
                         .ShouldResumeAfterExecution(false)
                         .WithCallback(_ => skipped = true));
                 }
 
                 interactiveMessage
                     .AddReactionCallback(x => x
-                        .WithEmote("redtick:314068319986647050")
+                        .WithEmote(config.GetValue<string>("Emotes:CrossMark"))
                         .ShouldResumeAfterExecution(false))
                     .AddMessageCallback(x => x
                         .WithCallback(message =>

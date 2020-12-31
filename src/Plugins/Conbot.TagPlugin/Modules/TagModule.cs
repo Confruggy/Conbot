@@ -129,34 +129,25 @@ namespace Conbot.TagPlugin
                 return;
             }
 
-            var message = await ReplyAsync("Do you really want to delete this tag?");
+            var message = await ConfirmAsync("Do you really want to delete this tag?");
 
-            var interactiveMessage = new InteractiveMessageBuilder()
-                .WithPrecondition(x => x.Id == Context.User.Id)
-                .AddReactionCallback((Func<ReactionCallbackBuilder, ReactionCallbackBuilder>)(x => x
-                    .WithEmote("greentick:314068319902760970")
-                    .WithCallback((Func<IReaction, Task>)(async _ =>
-                    {
-                        if (tag != null)
-                            _db.RemoveTag(tag);
-                        else _db.RemoveTagAlias(alias);
+            if (message.Item2 == true)
+            {
+                if (tag != null)
+                    _db.RemoveTag(tag);
+                else _db.RemoveTagAlias(alias);
 
-                        await Task.WhenAll(
-                            _db.SaveChangesAsync(),
-                            base.ReplyAsync((string)$"Tag **{Format.Sanitize((string)tag.Name)}** has been deleted."),
-                            DeletableExtensions.TryDeleteAsync(message));
-                    }))))
-                .AddReactionCallback((Func<ReactionCallbackBuilder, ReactionCallbackBuilder>)(x => x
-                    .WithEmote("redtick:314068319986647050")
-                    .WithCallback((Func<IReaction, Task>)(async _ =>
-                    {
-                        await Task.WhenAll(
-                            base.ReplyAsync((string)$"Tag **{Format.Sanitize((string)tag.Name)}** hasn't been deleted."),
-                            DeletableExtensions.TryDeleteAsync(message));
-                    }))))
-                .Build();
-
-            await _interactiveService.ExecuteInteractiveMessageAsync(interactiveMessage, message, Context.User);
+                await Task.WhenAll(
+                    ReplyAsync($"Tag **{Format.Sanitize(tag.Name)}** has been deleted."),
+                    _db.SaveChangesAsync(),
+                    message.Item1.TryDeleteAsync());
+            }
+            else
+            {
+                await Task.WhenAll(
+                    ReplyAsync($"Tag **{Format.Sanitize(tag.Name)}** hasn't been deleted."),
+                    message.Item1.TryDeleteAsync());
+            }
         }
 
         [Command("edit", "modify")]
