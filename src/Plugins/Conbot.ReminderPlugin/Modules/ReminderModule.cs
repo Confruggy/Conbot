@@ -2,6 +2,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Conbot.Commands;
+using Conbot.Extensions;
 using Conbot.Interactive;
 using Conbot.TimeZonePlugin;
 using Conbot.TimeZonePlugin.Extensions;
@@ -103,6 +104,40 @@ namespace Conbot.ReminderPlugin
             await Task.WhenAll(
                 ReplyAsync($"Reminder with ID **{id}** has been deleted."),
                 _db.SaveChangesAsync());
+        }
+
+        [Command("clear")]
+        [Description("Clears all reminders you have set.")]
+        public async Task ClearAsync()
+        {
+            var reminders = await _db.GetRemindersAsync(Context.User);
+
+            if (reminders.Count == 0)
+            {
+                await ReplyAsync("You don't have any reminders.");
+                return;
+            }
+
+            var message = await ConfirmAsync(
+                $"Do you really want to delete {"reminder".ToQuantity(reminders.Count, Format.Bold("#"))}?");
+
+            if (message.Item2 == true)
+            {
+                _db.RemoveRange(reminders);
+
+                await Task.WhenAll(
+                    ReplyAsync("Reminders have been cleared."),
+                    message.Item1.TryDeleteAsync(),
+                    _db.SaveChangesAsync()
+                );
+            }
+            else
+            {
+                await Task.WhenAll(
+                    ReplyAsync("No reminders have been deleted."),
+                    message.Item1.TryDeleteAsync()
+                );
+            }
         }
 
         [Command("list", "all")]
