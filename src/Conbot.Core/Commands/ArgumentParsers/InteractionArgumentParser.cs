@@ -53,7 +53,7 @@ namespace Conbot.Commands
                     string name = parameter.Name.Kebaberize();
                     var option = options?.FirstOrDefault(x => x.Name == name);
 
-                    if (option == null)
+                    if (option?.Value == null)
                     {
                         if (parameter.IsOptional)
                         {
