@@ -15,11 +15,11 @@
             "problemMatcher": "$msCompile",
             "dependsOn":
             [
-                "build Conbot.Plugins.Test",
                 "build Conbot.HelpPlugin",
                 "build Conbot.InfoPlugin",
                 "build Conbot.ModerationPlugin",
                 "build Conbot.PrefixPlugin",
+                "build Conbot.RankingPlugin",
                 "build Conbot.ReminderPlugin",
                 "build Conbot.RngPlugin",
                 "build Conbot.TagPlugin",
@@ -64,6 +64,16 @@
             "args": [
                 "build",
                 "${workspaceFolder}/src/Plugins/Conbot.PrefixPlugin/Conbot.PrefixPlugin.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+        },
+        {
+            "label": "build Conbot.RankingPlugin",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/Plugins/Conbot.RankingPlugin/Conbot.RankingPlugin.csproj"
             ],
             "problemMatcher": "$msCompile",
         },
