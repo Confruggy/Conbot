@@ -13,7 +13,7 @@ namespace Conbot.TagPlugin
         public virtual Tag Tag { get; set; } = null!;
 
         public int? UsedAliasId { get; set; }
-        public virtual TagAlias UsedAlias { get; set; } = null!;
+        public virtual TagAlias? UsedAlias { get; set; }
 
         public ulong UserId { get; set; }
         public DateTime UsedAt { get; set; }
@@ -39,16 +39,8 @@ namespace Conbot.TagPlugin
             InteractionId = interactionId;
         }
 
-        public TagUse(Tag tag, int? usedAliasId, ulong userId, DateTime usedAt, ulong guildId, ulong channelId,
+        public TagUse(Tag tag, TagAlias? usedAlias, ulong userId, DateTime usedAt, ulong guildId, ulong channelId,
             ulong? messageId, ulong? interactionId)
-            : this(tag.Id, usedAliasId, userId, usedAt, guildId, channelId, messageId, interactionId) { }
-
-        public TagUse(int tagId, TagAlias? usedAliasId, ulong userId, DateTime usedAt, ulong guildId, ulong channelId,
-            ulong? messageId, ulong? interactionId)
-            : this(tagId, usedAliasId?.Id, userId, usedAt, guildId, channelId, messageId, interactionId) { }
-
-        public TagUse(Tag tag, TagAlias? usedAliasId, ulong userId, DateTime usedAt, ulong guildId, ulong channelId,
-            ulong? messageId, ulong? interactionId)
-            : this(tag.Id, usedAliasId?.Id, userId, usedAt, guildId, channelId, messageId, interactionId) { }
+            : this(tag.Id, usedAlias?.Id, userId, usedAt, guildId, channelId, messageId, interactionId) { }
     }
 }

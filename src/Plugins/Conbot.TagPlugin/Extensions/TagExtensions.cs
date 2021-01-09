@@ -15,16 +15,23 @@ namespace Conbot.TagPlugin
         public static IAsyncEnumerable<Tag> GetTagsAsync(this TagContext context,
             ulong? guildId = null, ulong? ownerId = null)
         {
+            var tags = context.Tags
+                .Include(x => x.Aliases)
+                .Include(x => x.Uses)
+                .Include(x => x.Modifications)
+                .Include(x => x.OwnerChanges)
+                .AsNoTracking();
+
             if (guildId == null && ownerId == null)
-                return context.Tags.AsNoTracking().AsAsyncEnumerable();
+                return tags.AsAsyncEnumerable();
 
             if (guildId == null)
-                return context.Tags.AsNoTracking().Where(x => x.OwnerId == ownerId).AsAsyncEnumerable();
+                return tags.Where(x => x.OwnerId == ownerId).AsAsyncEnumerable();
 
             if (ownerId == null)
-                return context.Tags.AsNoTracking().Where(x => x.GuildId == guildId).AsAsyncEnumerable();
+                return tags.Where(x => x.GuildId == guildId).AsAsyncEnumerable();
 
-            return context.Tags.AsNoTracking().Where(x => x.GuildId == guildId && x.OwnerId == ownerId)
+            return tags.Where(x => x.GuildId == guildId && x.OwnerId == ownerId)
                 .AsAsyncEnumerable();
         }
 
