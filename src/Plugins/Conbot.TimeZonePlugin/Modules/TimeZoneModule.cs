@@ -3,13 +3,18 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Configuration;
+
 using Conbot.Commands;
 using Conbot.Interactive;
+
 using Discord;
-using Microsoft.Extensions.Configuration;
+
 using NodaTime;
 using NodaTime.Extensions;
 using NodaTime.TimeZones;
+
 using Qmmands;
 
 namespace Conbot.TimeZonePlugin
@@ -37,7 +42,7 @@ namespace Conbot.TimeZonePlugin
         public async Task TimeZoneAsync()
         {
             var userTimeZone = await _db.GetUserTimeZoneAsync(Context.User);
-            var timeZone = _provider.GetZoneOrNull(userTimeZone.TimeZoneId);
+            var timeZone = _provider.GetZoneOrNull(userTimeZone.TimeZoneId)!;
 
             string timeZoneText = timeZone.Id.StartsWith("Etc/GMT")
                 ? TimeZoneUtils.TzdbGmtMapping[timeZone.Id]
@@ -99,7 +104,7 @@ namespace Conbot.TimeZonePlugin
                     return;
                 }
 
-                var timeZone = _provider.GetZoneOrNull(location.ZoneId);
+                var timeZone = _provider.GetZoneOrNull(location.ZoneId)!;
                 var now = SystemClock.Instance.InZone(timeZone).GetCurrentTimeOfDay();
 
                 await _db.ModifyUserTimeZoneAsync(Context.User, timeZone);
@@ -142,14 +147,12 @@ namespace Conbot.TimeZonePlugin
             }
         }
 
-        public static async Task<TzdbZoneLocation> SelectZoneLocationAsync(
+        public static async Task<TzdbZoneLocation?> SelectZoneLocationAsync(
             DiscordCommandContext context, IList<TzdbZoneLocation> locations, IDateTimeZoneProvider provider,
             InteractiveService interactiveService, IConfiguration config)
         {
-            TzdbZoneLocation location = null;
+            TzdbZoneLocation? location = null;
             int count = locations.Count;
-
-            List<Task> tasks = new List<Task>();
 
             if (count == 1)
             {
@@ -163,13 +166,14 @@ namespace Conbot.TimeZonePlugin
 
                 for (int i = 0; i < count; i++)
                 {
-                    var timeZone = provider.GetZoneOrNull(locations[i].ZoneId);
+                    var timeZone = provider.GetZoneOrNull(locations[i].ZoneId)!;
 
                     var localTime = now.InZone(timeZone).TimeOfDay;
 
-                    text.Append('`')
+                    text
+                        .Append('`')
                         .Append((i + 1).ToString()
-                        .PadLeft(padding))
+                            .PadLeft(padding))
                         .Append(".` ")
                         .Append(timeZone.Id.Replace("/", ", ").Replace('_', ' '))
                         .Append(" (")
@@ -190,26 +194,20 @@ namespace Conbot.TimeZonePlugin
 
                 var interactiveMessage = new InteractiveMessageBuilder()
                     .WithPrecondition(x => x.Id == context.User.Id)
-                    .AddReactionCallback(x => x
-                        .WithEmote("stop:654781462385655849")
+                    .AddReactionCallback("stop:654781462385655849", x => x
                         .ShouldResumeAfterExecution(false))
-                        .AddMessageCallback(x => x
-                            .WithPrecondition(msg => int.TryParse(msg.Content, out number) &&
-                                number <= count && number > 0)
-                            .WithCallback(msg =>
-                            {
-                                _ = msg.DeleteAsync();
+                    .AddMessageCallback(x => x
+                        .WithPrecondition(msg => int.TryParse(msg.Content, out number) && number <= count && number > 0)
+                        .WithCallback(msg =>
+                        {
+                            _ = msg.DeleteAsync();
 
-                                var selectedLocation = locations.ElementAtOrDefault(number - 1);
+                            var selectedLocation = locations.ElementAtOrDefault(number - 1);
 
-                                if (selectedLocation != null)
-                                {
-                                    location = selectedLocation;
-                                    return;
-                                }
-                                return;
-                            })
-                            .ShouldResumeAfterExecution(false))
+                            if (selectedLocation != null)
+                                location = selectedLocation;
+                        })
+                        .ShouldResumeAfterExecution(false))
                     .Build();
 
                 await interactiveService.ExecuteInteractiveMessageAsync(interactiveMessage, message, context.User);

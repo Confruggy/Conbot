@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Conbot.Commands;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
+using Conbot.Commands;
 
 namespace Conbot.TagPlugin
 {
@@ -35,8 +37,8 @@ namespace Conbot.TagPlugin
             using var serviceScope = _services
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope();
-            using var context = serviceScope.ServiceProvider.GetService<TagContext>();
 
+            using var context = serviceScope.ServiceProvider.GetRequiredService<TagContext>();
             await context.Database.MigrateAsync();
         }
     }

@@ -1,15 +1,20 @@
 using System;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using Conbot.Commands;
 using Conbot.Interactive;
 using Conbot.Plugins;
+
 using Discord;
 using Discord.WebSocket;
+
 using Qmmands;
+
 using Serilog;
 
 namespace Conbot
@@ -20,8 +25,10 @@ namespace Conbot
         {
             var builder = new HostBuilder()
                 .ConfigureAppConfiguration(BuildConfiguration)
-                .UseSerilog((hostingContext, loggerConfiguration) => loggerConfiguration
-                    .ReadFrom.Configuration(hostingContext.Configuration))
+                .UseSerilog((hostingContext, loggerConfiguration)
+                    => loggerConfiguration
+                        .ReadFrom
+                        .Configuration(hostingContext.Configuration))
                 .ConfigureServices(ConfigureServices)
                 .UseConsoleLifetime();
 
@@ -35,8 +42,8 @@ namespace Conbot
 
         public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
         {
+            //Config
             services
-                //Config
                 .AddSingleton(new DiscordSocketConfig
                 {
                     TotalShards = hostingContext.Configuration.GetValue<int>("Discord:TotalShards"),
@@ -44,24 +51,24 @@ namespace Conbot
                     MessageCacheSize = hostingContext.Configuration.GetValue<int>("Discord:MessageCacheSize"),
                     DefaultRetryMode = RetryMode.AlwaysRetry
                 })
-                .AddSingleton(new CommandServiceConfiguration
-                {
-                    StringComparison = StringComparison.OrdinalIgnoreCase
-                })
+                .AddSingleton(new CommandServiceConfiguration { StringComparison = StringComparison.OrdinalIgnoreCase });
 
-                //Discord
-                .AddSingleton<DiscordShardedClient>()
+            //Discord
+            services
+                .AddSingleton<DiscordShardedClient>();
 
-                //Services
+            //Services
+            services
                 .AddHostedService<DiscordService>()
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandlingService>()
                 .AddSingleton<SlashCommandService>()
                 .AddHostedService<BackgroundServiceStarter<CommandHandlingService>>()
                 .AddSingleton<InteractiveService>()
-                .AddHostedService<BackgroundServiceStarter<InteractiveService>>()
+                .AddHostedService<BackgroundServiceStarter<InteractiveService>>();
 
-                //Utils
+            //Utils
+            services
                 .AddSingleton<Random>();
         }
 

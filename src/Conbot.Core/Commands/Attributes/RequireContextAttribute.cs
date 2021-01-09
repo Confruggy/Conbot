@@ -1,5 +1,7 @@
 using System.Threading.Tasks;
+
 using Discord;
+
 using Qmmands;
 
 namespace Conbot.Commands
@@ -12,11 +14,12 @@ namespace Conbot.Commands
 
         public override ValueTask<CheckResult> CheckAsync(CommandContext context)
         {
-            var discordCommandContext = context as DiscordCommandContext;
+            var discordCommandContext = (DiscordCommandContext)context;
 
-            if (Context == ContextType.Guild && !(discordCommandContext.Channel is IGuildChannel))
+            if (Context == ContextType.Guild && discordCommandContext.Channel is not IGuildChannel)
                 return CheckResult.Unsuccessful("This command must be used in a server.");
-            if (Context == ContextType.DM && !(discordCommandContext.Channel is IDMChannel))
+
+            if (Context == ContextType.DM && discordCommandContext.Channel is not IDMChannel)
                 return CheckResult.Unsuccessful("This command must be used in a DM channel.");
 
             return CheckResult.Successful;

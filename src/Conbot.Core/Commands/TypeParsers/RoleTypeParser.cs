@@ -2,7 +2,9 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Discord;
+
 using Qmmands;
 
 namespace Conbot.Commands
@@ -12,14 +14,14 @@ namespace Conbot.Commands
         public override ValueTask<TypeParserResult<T>> ParseAsync(Parameter parameter, string value,
             CommandContext context)
         {
-            var discordCommandContext = context as DiscordCommandContext;
+            var discordCommandContext = (DiscordCommandContext)context;
 
             if (discordCommandContext.Guild == null)
                 return TypeParserResult<T>.Unsuccessful("This command must be used in a server.");
 
-            IRole role = null;
+            IRole? role = null;
 
-            if (MentionUtils.TryParseRole(value, out var id))
+            if (MentionUtils.TryParseRole(value, out ulong id))
             {
                 role = discordCommandContext.Guild.GetRole(id);
             }

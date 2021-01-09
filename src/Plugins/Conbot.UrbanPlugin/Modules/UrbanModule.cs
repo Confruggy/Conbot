@@ -2,11 +2,16 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
+
+using Microsoft.AspNetCore.WebUtilities;
+
 using Conbot.Commands;
 using Conbot.Interactive;
+
 using Discord;
+
 using Humanizer;
-using Microsoft.AspNetCore.WebUtilities;
+
 using Qmmands;
 
 namespace Conbot.UrbanPlugin
@@ -15,7 +20,7 @@ namespace Conbot.UrbanPlugin
     [Description("Explore slang words and phrases from Urban Dictionary.")]
     [Group("urban", "u")]
     [RequireBotPermission(ChannelPermission.EmbedLinks | ChannelPermission.AddReactions)]
-    public class UrbanModule : DiscordModuleBase
+    internal class UrbanModule : DiscordModuleBase
     {
         private readonly UrbanService _service;
         private readonly InteractiveService _interactiveService;
@@ -29,7 +34,7 @@ namespace Conbot.UrbanPlugin
         [Command("search", "")]
         [Description("Searches a definition for a word.")]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task UrbanAsync([Remainder, Description("The word to search for.")] string word)
+        public async Task SearchAsync([Remainder, Description("The word to search for.")] string word)
         {
             var searchResult = await _service.SearchAsync(word);
             await UrbanAsync(searchResult);
@@ -63,7 +68,7 @@ namespace Conbot.UrbanPlugin
             await paginator.RunAsync(_interactiveService, Context);
         }
 
-        private Embed CreateUrbanEmbed(UrbanResult result, int currentPage, int totalPages)
+        private static Embed CreateUrbanEmbed(UrbanResult result, int currentPage, int totalPages)
         {
             var embed = new EmbedBuilder()
                 .WithColor(new Color(0x134fe6))
@@ -82,7 +87,7 @@ namespace Conbot.UrbanPlugin
             return embed.Build();
         }
 
-        private string FillHyperlinks(string text)
+        private static string FillHyperlinks(string text)
         {
             const string baseUrl = "https://www.urbandictionary.com/define.php?term=";
 

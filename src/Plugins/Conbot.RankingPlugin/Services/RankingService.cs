@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+
+using Discord;
+using Discord.WebSocket;
 
 namespace Conbot.RankingPlugin
 {
@@ -41,12 +43,12 @@ namespace Conbot.RankingPlugin
         {
             _ = Task.Run(async () =>
             {
-                if (!(message.Author is SocketGuildUser user))
+                if (message.Author is not SocketGuildUser user)
                     return;
 
                 var now = DateTime.UtcNow;
                 var guild = user.Guild;
-                List<IRole> roles = null;
+                List<IRole>? roles = null;
 
                 using var context = new RankingContext();
 
@@ -75,7 +77,7 @@ namespace Conbot.RankingPlugin
 
                 await context.SaveChangesAsync();
 
-                var config = await context.GetGuildConfigurationAsync(user.Guild);
+                var config = await context.GetGuildConfigurationAsync(guild);
 
                 if (roles != null)
                     await UpdateRolesAsync(user, roles, config?.RoleRewardsType ?? RoleRewardsType.Stack);
@@ -87,7 +89,7 @@ namespace Conbot.RankingPlugin
                         ? _client.GetChannel(config.LevelUpAnnouncementsChannelId.Value) as SocketTextChannel
                         : message.Channel as SocketTextChannel;
 
-                    if (channel != null && user.Guild.CurrentUser.GetPermissions(channel).SendMessages)
+                    if (channel != null && guild.CurrentUser.GetPermissions(channel).SendMessages)
                     {
                         string text = channel.Id == message.Channel.Id
                             ? $"{user.Mention}, you achieved level **{newLevel}**. Congratulations! 🎉"
@@ -120,9 +122,9 @@ namespace Conbot.RankingPlugin
             return Task.CompletedTask;
         }
 
-        public async Task<List<IRole>> GetRolesAsync(IGuildUser user, int level, RankingContext context)
+        public static async Task<List<IRole>> GetRolesAsync(IGuildUser user, int level, RankingContext context)
         {
-            List<IRole> roles = new List<IRole>();
+            List<IRole> roles = new();
 
             await foreach (var roleReward in context.GetRoleRewardsAsync(user.Guild))
             {
@@ -141,7 +143,7 @@ namespace Conbot.RankingPlugin
             return roles;
         }
 
-        public async Task UpdateRolesAsync(IGuildUser user, List<IRole> roles, RoleRewardsType type)
+        public static async Task UpdateRolesAsync(IGuildUser user, List<IRole> roles, RoleRewardsType type)
         {
             if (roles.Count == 0)
                 return;
@@ -176,13 +178,19 @@ namespace Conbot.RankingPlugin
         }
 
         public int GetTotalExperiencePoints(int level)
-            => level > _levels.Length
-                ? _levels.Max(x => x)
-                : level <= 0
-                    ? 0
-                    : _levels[level - 1];
+        {
+            if (level > _levels.Length)
+                return _levels.Max(x => x);
+
+            return level <= 0 ? 0 : _levels[level - 1];
+        }
 
         public int GetNextLevelExperiencePoints(int level)
-            => level + 1 > _levels.Length ? 0 : _levels[level] - (level == 0 ? 0 : _levels[level - 1]);
+        {
+            if (level + 1 > _levels.Length)
+                return 0;
+
+            return _levels[level] - (level == 0 ? 0 : _levels[level - 1]);
+        }
     }
 }

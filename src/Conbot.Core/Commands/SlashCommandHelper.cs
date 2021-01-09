@@ -1,7 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
+
 using Discord;
+
 using Humanizer;
+
 using Qmmands;
 
 namespace Conbot.Commands
@@ -27,9 +30,10 @@ namespace Conbot.Commands
                     type = ApplicationCommandOptionType.Channel;
                 else if (typeof(IRole).IsAssignableFrom(parameter.Type))
                     type = ApplicationCommandOptionType.Role;
-                else type = ApplicationCommandOptionType.String;
+                else
+                    type = ApplicationCommandOptionType.String;
 
-                List<ApplicationCommandOptionChoiceProperties> choices;
+                List<ApplicationCommandOptionChoiceProperties>? choices;
                 if (parameter.Checks.FirstOrDefault(x => x is ChoicesAttribute) is ChoicesAttribute choicesAttribute)
                 {
                     choices = new List<ApplicationCommandOptionChoiceProperties>();

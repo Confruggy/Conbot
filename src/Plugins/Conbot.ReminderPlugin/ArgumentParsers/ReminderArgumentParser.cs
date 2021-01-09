@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Conbot.Commands;
+
 using Microsoft.Extensions.DependencyInjection;
+
+using Conbot.Commands;
+
 using Qmmands;
 
 namespace Conbot.ReminderPlugin
@@ -11,7 +14,7 @@ namespace Conbot.ReminderPlugin
     {
         public async ValueTask<ArgumentParserResult> ParseAsync(CommandContext context)
         {
-            if (!(context is DiscordCommandContext discordCommandContext))
+            if (context is not DiscordCommandContext discordCommandContext)
                 return ConbotArgumentParserResult.Failed("Invalid context.");
 
             if (discordCommandContext.Interaction != null || string.IsNullOrEmpty(context.RawArguments))
@@ -20,7 +23,7 @@ namespace Conbot.ReminderPlugin
                 return await commandService.DefaultArgumentParser.ParseAsync(context);
             }
 
-            var remainder = context.RawArguments;
+            string? remainder = context.RawArguments;
 
             var dateRegex = new Regex("^ ?(?:(?:on(?: +the)? +)?(\\d+[\\/.-]\\d+(?:[\\/.-]\\d+)?|\\d+(?:[a-z]{2}|\\.)? +(?:jan(?:\\.|uary)?|feb(?:\\.|ruary)?|mar(?:\\.|ch)?|apr(?:\\.|il)?|may|jun(?:\\.|e)?|jul(?:\\.|y)?|aug(?:\\.|ust)?|sept(?:\\.|ember)?|oct(?:\\.|ober)?|nov(?:\\.|ember)?|dec(?:\\.|ember)?)(?: +(?!\\d+\\:)\\d+)?))|(?:(?:on +)?(?:(?:the +)?(next|last))? +)?(mon(?:\\.|day)?|tue(?:\\.|s(?:\\.|day)?)?|wed(?:\\.|day)?|thu(?:\\.|r(?:\\.|s(?:\\.|day)?)?)?|fri(?:\\.|day)?|sat(?:\\.|day)?|sun(?:\\.|day)?)");
             var timeRegex = new Regex("^ ?(?:(?:at +)?(?<time>\\d+\\:\\d+(?:\\:\\d+)?(?:(?: *[ap]m)?))|(?:at +)?(?<time>\\d+(?: *[ap]m))|(?:at +)(?<time>\\d+))");
@@ -59,7 +62,7 @@ namespace Conbot.ReminderPlugin
             if (remainder?.StartsWith(' ') == false)
                 return ConbotArgumentParserResult.Failed("There must be a space between the time and the message.");
 
-            var arguments = new Dictionary<Parameter, object>
+            var arguments = new Dictionary<Parameter, object?>
             {
                 [context.Command.Parameters[0]] = context.RawArguments[..^(remainder?.Length ?? 0)],
                 [context.Command.Parameters[1]] = remainder,

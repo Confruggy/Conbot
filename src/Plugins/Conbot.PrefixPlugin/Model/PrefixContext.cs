@@ -1,11 +1,13 @@
 using System.IO;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Conbot.PrefixPlugin
 {
     public class PrefixContext : DbContext
     {
-        public DbSet<Prefix> Prefixes { get; set; }
+        public DbSet<Prefix> Prefixes => Set<Prefix>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Prefix>()
@@ -16,7 +18,7 @@ namespace Conbot.PrefixPlugin
         {
             optionsBuilder
                 .UseSqlite(
-                    $"Data Source={Path.Combine(Path.GetDirectoryName(this.GetType().Assembly.Location), "prefix")}.db")
+                    $"Data Source={Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "prefix")}.db")
                 .UseLazyLoadingProxies();
         }
     }

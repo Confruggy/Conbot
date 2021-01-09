@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using McMaster.NETCore.Plugins;
+
 using Microsoft.Extensions.Hosting;
 
 namespace Conbot.Plugins
@@ -14,9 +14,9 @@ namespace Conbot.Plugins
         {
             var assemblies = new List<Assembly>();
 
-            foreach (var dir in Directory.EnumerateDirectories(path))
+            foreach (string? dir in Directory.EnumerateDirectories(path))
             {
-                var name = Path.GetFileName(dir);
+                string? name = Path.GetFileName(dir);
                 var assembly = Assembly.LoadFrom(Path.Combine(Path.GetFullPath(dir), $"{name}.dll"));
                 assemblies.Add(assembly);
             }
@@ -29,7 +29,9 @@ namespace Conbot.Plugins
             var types = assembly.GetTypes().Where(x => typeof(IPluginStartup).IsAssignableFrom(x));
             foreach (var type in types)
             {
-                var pluginStartup = Activator.CreateInstance(type) as IPluginStartup;
+                if (Activator.CreateInstance(type) is not IPluginStartup pluginStartup)
+                    continue;
+
                 host.ConfigureServices(pluginStartup.ConfigureServices);
                 host.ConfigureAppConfiguration(pluginStartup.BuildConfiguration);
             }

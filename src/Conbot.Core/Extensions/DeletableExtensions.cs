@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+
 using Discord;
 using Discord.Net;
 
@@ -10,7 +11,7 @@ namespace Conbot.Extensions
         {
             try
             {
-                await deletable.DeleteAsync().ConfigureAwait(false);
+                await deletable.DeleteAsync();
                 return true;
             }
             catch (HttpException)

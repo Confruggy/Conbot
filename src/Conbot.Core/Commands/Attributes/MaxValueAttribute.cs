@@ -1,7 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using Qmmands;
+
 using Humanizer;
+
+using Qmmands;
 
 namespace Conbot.Commands
 {

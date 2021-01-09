@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Configuration;
+
 using Conbot.Commands;
 using Conbot.Extensions;
 using Conbot.Interactive;
+
 using Discord;
 using Discord.Rest;
-using Microsoft.Extensions.Configuration;
+
 using Qmmands;
 
 namespace Conbot.HelpPlugin
@@ -26,14 +30,25 @@ namespace Conbot.HelpPlugin
             _config = config;
         }
 
-        public async Task ExecuteHelpMessageAsync(DiscordCommandContext context, Module startModule = null,
-            Command startCommand = null, IUserMessage message = null)
+        public Task ExecuteHelpMessageAsync(DiscordCommandContext context, IUserMessage? message = null)
+            => ExecuteHelpMessageAsync(context, null, null, message);
+
+        public Task ExecuteHelpMessageAsync(DiscordCommandContext context, Command startCommand,
+            IUserMessage? message = null)
+            => ExecuteHelpMessageAsync(context, null, startCommand, message: message);
+
+        public Task ExecuteHelpMessageAsync(DiscordCommandContext context, Module startModule,
+            IUserMessage? message = null)
+            => ExecuteHelpMessageAsync(context, startModule, null, message: message);
+
+        private async Task ExecuteHelpMessageAsync(DiscordCommandContext context, Module? startModule = null,
+            Command? startCommand = null, IUserMessage? message = null)
         {
             var moduleDictionary = new Dictionary<string, Module>();
             var commandDictionary = new Dictionary<string, Command>();
 
-            Module currentModule = null;
-            Command currentCommand = null;
+            Module? currentModule = null;
+            Command? currentCommand = null;
 
             Embed embed;
 
@@ -55,7 +70,7 @@ namespace Conbot.HelpPlugin
             if (message == null)
             {
                 message = context.Interaction != null
-                    ? await context.Interaction.RespondAsync(embed: embed) as RestUserMessage
+                    ? (RestUserMessage)await context.Interaction.RespondAsync(embed: embed)
                     : await context.Message.ReplyAsync(embed: embed, allowedMentions: AllowedMentions.None);
             }
             else
@@ -65,8 +80,7 @@ namespace Conbot.HelpPlugin
 
             var interactiveMessage = new InteractiveMessageBuilder()
                 .WithPrecondition(x => x.Id == context.User.Id)
-                .AddReactionCallback(x => x
-                    .WithEmote(_config.GetValue<string>("Emotes:First"))
+                .AddReactionCallback(_config.GetValue<string>("Emotes:First"), x => x
                     .WithCallback(async _ =>
                     {
                         if (currentModule != null || currentCommand != null)
@@ -77,8 +91,7 @@ namespace Conbot.HelpPlugin
                         }
                     })
                     .ShouldResumeAfterExecution(true))
-                .AddReactionCallback(x => x
-                    .WithEmote(_config.GetValue<string>("Emotes:Backward"))
+                .AddReactionCallback(_config.GetValue<string>("Emotes:Backward"), x => x
                     .WithCallback(async _ =>
                     {
                         if (currentCommand != null)
@@ -102,16 +115,13 @@ namespace Conbot.HelpPlugin
                         }
                     })
                     .ShouldResumeAfterExecution(true))
-                .AddReactionCallback(x => x
-                    .WithEmote(_config.GetValue<string>("Emotes:Stop"))
+                .AddReactionCallback(_config.GetValue<string>("Emotes:Stop"), x => x
                     .ShouldResumeAfterExecution(false))
                 .AddMessageCallback(x => x
                     .WithPrecondition(msg => int.TryParse(msg.Content, out int number))
                     .WithCallback(async msg =>
                     {
-                        var tasks = new List<Task>();
-
-                        var currentEmbed = message.Embeds.FirstOrDefault() as Embed;
+                        List<Task> tasks = new();
 
                         if (moduleDictionary.TryGetValue(msg.Content, out var moduleInfo))
                         {
@@ -145,7 +155,7 @@ namespace Conbot.HelpPlugin
         public Embed CreateStartEmbed(DiscordCommandContext context, out Dictionary<string, Module> moduleDictionary)
         {
             var embed = new EmbedBuilder()
-                .WithAuthor(context.Guild.CurrentUser.Username, context.Guild.CurrentUser.GetAvatarUrl())
+                .WithAuthor(context.Client.CurrentUser.Username, context.Client.CurrentUser.GetAvatarUrl())
                 .WithDescription(
                     "Below you see all available categories. " +
                     "Each category has one or several commands.")
@@ -183,7 +193,7 @@ namespace Conbot.HelpPlugin
                 .WithColor(_config.GetValue<uint>("DefaultEmbedColor"));
 
             var descriptionText = new StringBuilder()
-                    .AppendLine(module.Description ?? "No Description.");
+                .AppendLine(module.Description ?? "No Description.");
 
             if (!string.IsNullOrEmpty(module.Remarks))
             {
@@ -212,6 +222,7 @@ namespace Conbot.HelpPlugin
                     commandDictionary.Add(i.ToString(), command);
                     i++;
                 }
+
                 embed.AddField("Commands", commandsText);
             }
 
@@ -245,6 +256,7 @@ namespace Conbot.HelpPlugin
                     moduleDictionary.Add(i.ToString(), moduleInfo);
                     containsGroupedCommands = true;
                 }
+
                 i++;
             }
 
@@ -272,7 +284,7 @@ namespace Conbot.HelpPlugin
                 .WithColor(_config.GetValue<uint>("DefaultEmbedColor"));
 
             var descriptionText = new StringBuilder()
-                    .AppendLine(command.Description ?? "No Description.");
+                .AppendLine(command.Description ?? "No Description.");
 
             if (!string.IsNullOrEmpty(command.Remarks))
             {
@@ -336,7 +348,7 @@ namespace Conbot.HelpPlugin
                             .Append('.');
                     }
 
-                    if (parameter.DefaultValue != null && !(parameter.DefaultValue is Array))
+                    if (parameter.DefaultValue is not Array)
                     {
                         parameterText.Append(" Default value is ")
                             .Append(parameter.DefaultValue)
@@ -385,7 +397,7 @@ namespace Conbot.HelpPlugin
             {
                 var aliasesText = new StringBuilder();
 
-                foreach (var alias in command.FullAliases.Skip(1))
+                foreach (string? alias in command.FullAliases.Skip(1))
                 {
                     aliasesText
                         .Append(Format.Bold(alias))
@@ -407,17 +419,17 @@ namespace Conbot.HelpPlugin
             return embed.Build();
         }
 
-        private string GetShortCommand(Command command, int index) =>
-            $"`{index}.` **/{command.FullAliases[0]}** {FormatParameters(command)}\n" +
-            $"> {command.Description ?? "No Description."}";
+        private static string GetShortCommand(Command command, int index)
+            => $"`{index}.` **/{command.FullAliases[0]}** {FormatParameters(command)}\n" +
+                $"> {command.Description ?? "No Description."}";
 
-        private string GetShortModule(Module module, int index) =>
-            $"`{index}.` **{(module.Parent != null ? $"/{module.FullAliases[0]}*" : module.Name)}**\n" +
-            $"> {module.Description ?? "No Description."}";
+        private static string GetShortModule(Module module, int index)
+            => $"`{index}.` **{(module.Parent != null ? $"/{module.FullAliases[0]}*" : module.Name)}**\n" +
+                $"> {module.Description ?? "No Description."}";
 
-        private string GetPath(Module module)
+        private static string GetPath(Module module)
         {
-            string alias = module.FullAliases.FirstOrDefault();
+            string? alias = module.FullAliases.FirstOrDefault();
 
             if (string.IsNullOrEmpty(alias))
                 return module.Name;
@@ -430,7 +442,7 @@ namespace Conbot.HelpPlugin
             return $"{parent?.Name ?? module.Name} › {string.Join(" › ", alias.Split(' '))}";
         }
 
-        private string GetPath(Command command)
+        private static string GetPath(Command command)
         {
             var module = command.Module;
 
@@ -440,7 +452,7 @@ namespace Conbot.HelpPlugin
             return $"{module.Name} › {command.FullAliases[0].Replace(" ", " › ")}";
         }
 
-        private string ParameterToString(Parameter parameter, bool literal = false)
+        private static string ParameterToString(Parameter parameter, bool literal = false)
         {
             string name;
             if (parameter.Checks.FirstOrDefault(x => x is ChoicesAttribute)
@@ -487,7 +499,7 @@ namespace Conbot.HelpPlugin
             }
         }
 
-        private string FormatParameters(Command command)
+        private static string FormatParameters(Command command)
             => string.Join(" ", command.Parameters.Select(x => ParameterToString(x)));
     }
 }

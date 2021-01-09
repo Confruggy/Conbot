@@ -9,5 +9,11 @@ namespace Conbot.TimeZonePlugin
 
         [Required]
         public string TimeZoneId { get; set; }
+
+        public UserTimeZone(ulong userId, string timeZoneId)
+        {
+            UserId = userId;
+            TimeZoneId = timeZoneId;
+        }
     }
 }

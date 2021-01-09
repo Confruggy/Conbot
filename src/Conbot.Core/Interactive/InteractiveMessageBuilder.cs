@@ -1,15 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Discord;
 using System.Linq;
+using System.Threading.Tasks;
+
+using Discord;
 
 namespace Conbot.Interactive
 {
     public class InteractiveMessageBuilder
     {
-        public Func<IUser, Task<bool>> Precondition { get; set; }
+        public Func<IUser, Task<bool>>? Precondition { get; set; }
         public int Timeout { get; set; } = 60000;
+
         public Dictionary<string, ReactionCallbackBuilder> ReactionCallbacks { get; set; }
             = new Dictionary<string, ReactionCallbackBuilder>();
 
@@ -18,9 +20,9 @@ namespace Conbot.Interactive
 
         public bool AutoReactEmotes { get; set; } = true;
 
-        public InteractiveMessageBuilder WithAutoReactEmotes(bool @value = true)
+        public InteractiveMessageBuilder WithAutoReactEmotes(bool value = true)
         {
-            AutoReactEmotes = @value;
+            AutoReactEmotes = value;
             return this;
         }
 
@@ -44,15 +46,23 @@ namespace Conbot.Interactive
 
         public InteractiveMessageBuilder AddReactionCallback(ReactionCallbackBuilder reactionCallback)
         {
-            ReactionCallbacks.Add(reactionCallback.Emote.ToString(), reactionCallback);
+            ReactionCallbacks.Add(reactionCallback.Emote.ToString()!, reactionCallback);
             return this;
         }
 
-        public InteractiveMessageBuilder AddReactionCallback(
+        public InteractiveMessageBuilder AddReactionCallback(IEmote emote,
             Func<ReactionCallbackBuilder, ReactionCallbackBuilder> reactionCallbackFunc)
         {
-            var reactionCallback = reactionCallbackFunc(new ReactionCallbackBuilder());
-            ReactionCallbacks.Add(reactionCallback.Emote.ToString(), reactionCallback);
+            var reactionCallback = reactionCallbackFunc(new ReactionCallbackBuilder(emote));
+            ReactionCallbacks.Add(reactionCallback.Emote.ToString()!, reactionCallback);
+            return this;
+        }
+
+        public InteractiveMessageBuilder AddReactionCallback(string emote,
+            Func<ReactionCallbackBuilder, ReactionCallbackBuilder> reactionCallbackFunc)
+        {
+            var reactionCallback = reactionCallbackFunc(new ReactionCallbackBuilder(emote));
+            ReactionCallbacks.Add(reactionCallback.Emote.ToString()!, reactionCallback);
             return this;
         }
 
@@ -71,7 +81,7 @@ namespace Conbot.Interactive
         }
 
         public InteractiveMessage Build()
-            => new InteractiveMessage(Precondition, Timeout,
+            => new(Precondition, Timeout,
                 ReactionCallbacks.ToDictionary(k => k.Key, v => v.Value.Build()),
                 MessageCallbacks.ConvertAll(x => x.Build()), AutoReactEmotes);
     }

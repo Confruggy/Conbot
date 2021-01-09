@@ -1,13 +1,14 @@
 using System;
 using System.Threading.Tasks;
+
 using Discord;
 
 namespace Conbot.Interactive
 {
     public class MessageCallbackBuilder
     {
-        public Func<IUserMessage, Task<bool>> Precondition { get; set; }
-        public Func<IUserMessage, Task> Callback { get; set; }
+        public Func<IUserMessage, Task<bool>>? Precondition { get; set; }
+        public Func<IUserMessage, Task> Callback { get; set; } = (_) => Task.CompletedTask;
         public bool ResumeAfterExecution { get; set; }
 
         public MessageCallbackBuilder WithPrecondition(Func<IUserMessage, Task<bool>> preconditon)
@@ -30,7 +31,11 @@ namespace Conbot.Interactive
 
         public MessageCallbackBuilder WithCallback(Action<IUserMessage> callback)
         {
-            Callback = x => { callback(x); return Task.CompletedTask; };
+            Callback = x =>
+                {
+                    callback(x);
+                    return Task.CompletedTask;
+                };
             return this;
         }
 
@@ -40,6 +45,6 @@ namespace Conbot.Interactive
             return this;
         }
 
-        public MessageCallback Build() => new MessageCallback(Precondition, Callback, ResumeAfterExecution);
+        public MessageCallback Build() => new(Precondition, Callback, ResumeAfterExecution);
     }
 }

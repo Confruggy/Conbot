@@ -1,6 +1,8 @@
 using System.Threading.Tasks;
-using Qmmands;
+
 using Discord.WebSocket;
+
+using Qmmands;
 
 namespace Conbot.Commands
 {
@@ -10,9 +12,10 @@ namespace Conbot.Commands
         {
             var discordCommandContext = (DiscordCommandContext)context;
 
-            if (!(discordCommandContext.User is SocketGuildUser user))
+            if (discordCommandContext.Guild == null)
                 return CheckResult.Unsuccessful("This command must be used in a server.");
 
+            var user = (SocketGuildUser)discordCommandContext.User;
             var currentUser = discordCommandContext.Guild.CurrentUser;
 
             if ((argument is SocketRole role && user.Hierarchy > role.Position && currentUser.Hierarchy > role.Position) ||

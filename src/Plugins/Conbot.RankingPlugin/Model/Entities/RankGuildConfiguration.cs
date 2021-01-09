@@ -7,18 +7,17 @@ namespace Conbot.RankingPlugin
     {
         [Key]
         public ulong GuildId { get; set; }
+
         public bool? ShowLevelUpAnnouncements { get; set; }
         public ulong? LevelUpAnnouncementsChannelId { get; set; }
         public int? LevelUpAnnouncementsMinimumLevel { get; set; }
         public RoleRewardsType? RoleRewardsType { get; set; }
 
-        public virtual List<RankRoleReward> RoleRewards { get; set; }
+        public virtual List<RankRoleReward> RoleRewards { get; set; } = null!;
 
-        public static RankGuildConfiguration Default =>
-            new RankGuildConfiguration
-            {
-                ShowLevelUpAnnouncements = false,
-                RoleRewardsType = RankingPlugin.RoleRewardsType.Stack
-            };
+        public RankGuildConfiguration(ulong guildId)
+        {
+            GuildId = guildId;
+        }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using Discord;
 
 namespace Conbot.Extensions
@@ -9,7 +10,8 @@ namespace Conbot.Extensions
     {
         public static string ToRoundedString(this TimeSpan timeSpan) => ToApproximateString(timeSpan, false);
 
-        public static string ToApproximateFormattedString(this TimeSpan timeSpan) => ToApproximateString(timeSpan, true);
+        public static string ToApproximateFormattedString(this TimeSpan timeSpan)
+            => ToApproximateString(timeSpan, true);
 
         private static string ToApproximateString(this TimeSpan timeSpan, bool formatted = false)
         {
@@ -17,26 +19,31 @@ namespace Conbot.Extensions
             {
                 if ((int)timeSpan.TotalDays == 1)
                     return $"{(formatted ? Format.Bold("1") : "1")} day";
-                else return $"{(formatted ? Format.Bold(((int)timeSpan.TotalDays).ToString()) : ((int)timeSpan.TotalDays).ToString())} days";
+                else
+                    return $"{(formatted ? Format.Bold(((int)timeSpan.TotalDays).ToString()) : ((int)timeSpan.TotalDays).ToString())} days";
             }
+
             if (timeSpan.TotalHours >= 1)
             {
                 if ((int)timeSpan.TotalHours == 1)
                     return $"{(formatted ? Format.Bold("1") : "1")} hour";
-                else return $"{(formatted ? Format.Bold(((int)timeSpan.TotalHours).ToString()) : ((int)timeSpan.TotalHours).ToString())} hours";
+                else
+                    return $"{(formatted ? Format.Bold(((int)timeSpan.TotalHours).ToString()) : ((int)timeSpan.TotalHours).ToString())} hours";
             }
+
             if (timeSpan.TotalMinutes >= 1)
             {
                 if ((int)timeSpan.TotalMinutes == 1)
                     return $"{(formatted ? Format.Bold("1") : "1")} minute";
-                else return $"{(formatted ? Format.Bold(((int)timeSpan.TotalMinutes).ToString()) : ((int)timeSpan.TotalMinutes).ToString())} minutes";
+                else
+                    return $"{(formatted ? Format.Bold(((int)timeSpan.TotalMinutes).ToString()) : ((int)timeSpan.TotalMinutes).ToString())} minutes";
             }
+
             if ((int)timeSpan.TotalSeconds == 1)
                 return $"{(formatted ? Format.Bold("1") : "1")} second";
+
             return $"{(formatted ? Format.Bold(((int)timeSpan.TotalSeconds).ToString()) : ((int)timeSpan.TotalSeconds).ToString())} seconds";
         }
-
-        public static string ToLongString(this TimeSpan timeSpan) => ToLongString(timeSpan, false);
 
         public static string ToLongFormattedString(this TimeSpan timeSpan) => ToLongString(timeSpan, true);
 
@@ -51,6 +58,7 @@ namespace Conbot.Extensions
                 strings.Add($"{(formatted ? Format.Bold("1") : "1")} week");
             else if (weeks >= 1)
                 strings.Add($"{(formatted ? Format.Bold(weeks.ToString()) : weeks.ToString())} weeks");
+
             if (days == 1)
                 strings.Add($"{(formatted ? Format.Bold("1") : "1")} day");
             else if (days >= 1)

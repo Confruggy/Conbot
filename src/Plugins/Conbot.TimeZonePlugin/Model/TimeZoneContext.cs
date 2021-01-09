@@ -1,12 +1,13 @@
 ﻿using System.IO;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Conbot.TimeZonePlugin
 {
     public class TimeZoneContext : DbContext
     {
-        public DbSet<UserTimeZone> UserTimeZones { get; set; }
-        public DbSet<GuildTimeZone> GuildTimeZones { get; set; }
+        public DbSet<UserTimeZone> UserTimeZones => Set<UserTimeZone>();
+        public DbSet<GuildTimeZone> GuildTimeZones => Set<GuildTimeZone>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) { }
 
@@ -14,7 +15,7 @@ namespace Conbot.TimeZonePlugin
         {
             optionsBuilder
                 .UseSqlite(
-                    $"Data Source={Path.Combine(Path.GetDirectoryName(this.GetType().Assembly.Location), "timezone")}.db")
+                    $"Data Source={Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "timezone")}.db")
                 .UseLazyLoadingProxies();
         }
     }

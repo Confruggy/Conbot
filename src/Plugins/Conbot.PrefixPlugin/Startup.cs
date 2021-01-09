@@ -1,7 +1,8 @@
-﻿using Conbot.Plugins;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
+using Conbot.Plugins;
 
 namespace Conbot.PrefixPlugin
 {
@@ -9,8 +10,9 @@ namespace Conbot.PrefixPlugin
     {
         public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
         {
-            services.AddHostedService<PrefixPluginService>();
-            services.AddDbContext<PrefixContext>();
+            services
+                .AddHostedService<PrefixPluginService>()
+                .AddDbContext<PrefixContext>();
         }
 
         public void BuildConfiguration(IConfigurationBuilder builder) { }

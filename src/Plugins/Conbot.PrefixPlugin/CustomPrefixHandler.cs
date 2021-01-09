@@ -1,8 +1,11 @@
 using System.Linq;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.DependencyInjection;
+
 using Conbot.Commands;
 using Conbot.Extensions;
-using Microsoft.Extensions.DependencyInjection;
+
 using Qmmands;
 
 namespace Conbot.PrefixPlugin
@@ -13,11 +16,14 @@ namespace Conbot.PrefixPlugin
         {
             var db = context.ServiceProvider.GetRequiredService<PrefixContext>();
 
+            if (context.Guild == null || context.Message == null)
+                return PrefixResult.Unsuccessful;
+
             var prefixes = (await db.GetPrefixesAsync(context.Guild))
                 .OrderByDescending(x => x.Text.Length)
                 .ThenBy(x => x.Text);
 
-            string output;
+            string? output;
 
             foreach (var prefix in prefixes)
             {
@@ -26,7 +32,7 @@ namespace Conbot.PrefixPlugin
             }
 
             if (context.Message.HasMentionPrefix(context.Client.CurrentUser, out output))
-                return PrefixResult.Successful(output);
+                return PrefixResult.Successful(output!);
 
             return PrefixResult.Unsuccessful;
         }

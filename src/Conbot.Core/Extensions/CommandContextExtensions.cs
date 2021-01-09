@@ -1,22 +1,24 @@
 using System.Threading;
 using System.Threading.Tasks;
+
 using Conbot.Commands;
+
 using Discord.WebSocket;
 
 namespace Conbot.Extensions
 {
     public static class CommandContextExtensions
     {
-        public static async Task<SocketUserMessage> WaitForMessageAsync(this DiscordCommandContext context,
-            int timeout = 60000, CancellationTokenSource tokenSource = null)
+        public static async Task<SocketUserMessage?> WaitForMessageAsync(this DiscordCommandContext context,
+            int timeout = 60000, CancellationTokenSource? tokenSource = null)
         {
             tokenSource ??= new CancellationTokenSource();
 
             var client = context.Client;
 
-            SocketUserMessage message = null;
+            SocketUserMessage? message = null;
 
-            Task func(SocketMessage msg)
+            Task Func(SocketMessage msg)
             {
                 if (msg.Channel.Id == context.Channel.Id && msg.Author.Id == context.User.Id &&
                     msg is SocketUserMessage userMessage)
@@ -24,14 +26,15 @@ namespace Conbot.Extensions
                     message = userMessage;
                     tokenSource.Cancel(true);
                 }
+
                 return Task.CompletedTask;
             }
 
-            client.MessageReceived += func;
+            client.MessageReceived += Func;
 
             try
             {
-                await Task.Delay(timeout, tokenSource.Token).ConfigureAwait(false);
+                await Task.Delay(timeout, tokenSource.Token);
             }
             catch
             {
@@ -39,7 +42,7 @@ namespace Conbot.Extensions
             }
             finally
             {
-                client.MessageReceived -= func;
+                client.MessageReceived -= Func;
             }
 
             return null;

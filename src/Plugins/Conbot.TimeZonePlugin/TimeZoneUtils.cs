@@ -4,8 +4,8 @@ namespace Conbot.TimeZonePlugin
 {
     public static class TimeZoneUtils
     {
-        public static Dictionary<string, string> TzdbGmtMapping =>
-            new Dictionary<string, string>
+        public static Dictionary<string, string> TzdbGmtMapping
+            => new()
             {
                 ["Etc/GMT+12"] = "GMT-12",
                 ["Etc/GMT+11"] = "GMT-11",
@@ -36,8 +36,8 @@ namespace Conbot.TimeZonePlugin
                 ["Etc/GMT-14"] = "GMT+14"
             };
 
-        public static Dictionary<string, string> GmtTzdbMapping =>
-            new Dictionary<string, string>
+        public static Dictionary<string, string> GmtTzdbMapping
+            => new()
             {
                 ["GMT-12"] = "Etc/GMT+12",
                 ["GMT-11"] = "Etc/GMT+11",

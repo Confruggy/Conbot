@@ -4,12 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
 using Discord;
 using Discord.WebSocket;
+
 using Humanizer;
+
 using Qmmands;
 
 namespace Conbot.Commands
@@ -23,7 +27,8 @@ namespace Conbot.Commands
         private readonly ConcurrentDictionary<ulong, DateTimeOffset> _channelLocks;
         private readonly ConcurrentDictionary<ulong, DateTimeOffset> _userTimeouts;
         private readonly DefaultPrefixHandler _defaultPrefixHandler;
-        public IPrefixHandler CustomPrefixHandler { get; set; }
+
+        public IPrefixHandler? CustomPrefixHandler { get; set; }
 
         public CommandHandlingService(DiscordShardedClient client, CommandService service, IServiceProvider provider,
             ILogger<CommandHandlingService> logger)
@@ -37,7 +42,7 @@ namespace Conbot.Commands
             _defaultPrefixHandler = DefaultPrefixHandler.Instance;
         }
 
-        public async Task StartAsync(CancellationToken stoppingToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             await UnregisterAllCommandsAsync();
 
@@ -49,7 +54,7 @@ namespace Conbot.Commands
             _commandService.CommandExecuted += OnCommandExecutedAsync;
         }
 
-        public Task StopAsync(CancellationToken stoppingToken)
+        public Task StopAsync(CancellationToken cancellationToken)
         {
             _discordClient.MessageReceived -= OnMessageReceivedAsync;
             _commandService.CommandExecuted -= OnCommandExecutedAsync;
@@ -125,7 +130,8 @@ namespace Conbot.Commands
                 if (result.IsSuccessful)
                     return;
 
-                await context.ReplyAsync(GetErrorMessage(result as FailedResult), allowedMentions: AllowedMentions.None);
+                if (result is FailedResult failedResult)
+                    await context.ReplyAsync(GetErrorMessage(failedResult), allowedMentions: AllowedMentions.None);
             });
             return Task.CompletedTask;
         }
@@ -139,6 +145,7 @@ namespace Conbot.Commands
                     double ms = (date1 - DateTimeOffset.Now).TotalMilliseconds;
                     if (ms > 0)
                         return;
+
                     _userTimeouts[message.Author.Id] = DateTimeOffset.Now.AddSeconds(1.1);
                 }
                 else
@@ -152,7 +159,7 @@ namespace Conbot.Commands
                     if (ms > 0)
                     {
                         _channelLocks[message.Channel.Id] = DateTimeOffset.Now.AddSeconds(1.1).AddMilliseconds(ms);
-                        await Task.Delay((int)ms).ConfigureAwait(false);
+                        await Task.Delay((int)ms);
                     }
                 }
                 else
@@ -160,16 +167,14 @@ namespace Conbot.Commands
                     _channelLocks.TryAdd(message.Channel.Id, DateTimeOffset.Now.AddSeconds(1.1));
                 }
 
-                await HandleCommandAsync(message as SocketUserMessage);
+                if (message is SocketUserMessage socketUserMessage)
+                    await HandleCommandAsync(socketUserMessage);
             });
             return Task.CompletedTask;
         }
 
         public async Task HandleCommandAsync(SocketUserMessage msg)
         {
-            if (msg == null)
-                return;
-
             if (msg.Author.IsBot)
                 return;
 
@@ -188,7 +193,8 @@ namespace Conbot.Commands
             if (result.IsSuccessful)
                 return;
 
-            await context.ReplyAsync(GetErrorMessage(result as FailedResult), allowedMentions: AllowedMentions.None);
+            if (result is FailedResult failedResult)
+                await context.ReplyAsync(GetErrorMessage(failedResult), allowedMentions: AllowedMentions.None);
         }
 
         public string GetErrorMessage(FailedResult result)
@@ -221,7 +227,8 @@ namespace Conbot.Commands
                     {
                         var commandParameters = argumentParserFailedResult.Command.Parameters.Where(x => !x.IsOptional);
                         var parsedParameters = argumentParserFailedResult.ParserResult.Arguments
-                            .Select(x => x.Key).Where(x => !x.IsOptional);
+                            .Select(x => x.Key)
+                            .Where(x => !x.IsOptional);
 
                         if (commandParameters.Count() > parsedParameters.Count())
                         {
@@ -230,15 +237,15 @@ namespace Conbot.Commands
                             return new StringBuilder()
                                 .Append("Required ")
                                 .Append("parameter".ToQuantity(missingParameters.Count(), ShowQuantityAs.None))
-                                .Append(" ")
+                                .Append(' ')
                                 .Append(missingParameters.Humanize(x => Format.Bold(x.Name)))
-                                .Append(" ")
+                                .Append(' ')
                                 .Append("is".ToQuantity(missingParameters.Count(), ShowQuantityAs.None))
                                 .Append(" missing.")
                                 .ToString();
                         }
 
-                        goto default;
+                        break;
                     }
                 case ChecksFailedResult checksFailedResult:
                     {
@@ -284,17 +291,19 @@ namespace Conbot.Commands
 
                         return text.ToString();
                     }
-                default: return result.Reason;
             }
+
+            return result.Reason;
         }
 
         private Task OnCommandExecutedAsync(CommandExecutedEventArgs args)
         {
-            var discordCommandContext = args.Context as DiscordCommandContext;
+            if (args.Context is not DiscordCommandContext discordCommandContext)
+                return Task.CompletedTask;
 
-            string command = discordCommandContext.Command.FullAliases.FirstOrDefault();
+            string? command = discordCommandContext.Command.FullAliases.FirstOrDefault();
             string user = discordCommandContext.User.ToString();
-            string guild = discordCommandContext.Guild?.Name;
+            string? guild = discordCommandContext.Guild?.Name;
             string channel = discordCommandContext.Channel.Name;
 
             if (guild != null)

@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Discord;
+
 using Humanizer;
+
 using Qmmands;
 
 namespace Conbot.Commands
@@ -11,7 +14,7 @@ namespace Conbot.Commands
     {
         public async ValueTask<ArgumentParserResult> ParseAsync(CommandContext context)
         {
-            if (!(context is DiscordCommandContext discordCommandContext))
+            if (context is not DiscordCommandContext discordCommandContext)
                 return ConbotArgumentParserResult.Failed("Invalid context.");
 
             var interaction = discordCommandContext.Interaction;
@@ -19,7 +22,7 @@ namespace Conbot.Commands
             if (interaction == null)
                 return await DefaultArgumentParser.Instance.ParseAsync(context);
 
-            var arguments = new Dictionary<Parameter, object>();
+            var arguments = new Dictionary<Parameter, object?>();
 
             var options = interaction.Data.Options?.Cast<IApplicationCommandInteractionDataOption>();
 
@@ -36,10 +39,10 @@ namespace Conbot.Commands
                 if (parameter.IsMultiple)
                 {
                     string name = parameter.Name.Singularize().Kebaberize();
-                    var multipleArgs = new List<string>();
+                    var multipleArgs = new List<string?>();
                     int i = 1;
 
-                    IApplicationCommandInteractionDataOption option;
+                    IApplicationCommandInteractionDataOption? option;
                     while ((option = options?.FirstOrDefault(x => x.Name == $"{name}{i}")) != null)
                     {
                         multipleArgs.Add(option.Value.ToString());
@@ -57,7 +60,7 @@ namespace Conbot.Commands
                     {
                         if (parameter.IsOptional)
                         {
-                            arguments.Add(parameter, parameter.DefaultValue?.ToString());
+                            arguments.Add(parameter, parameter?.DefaultValue?.ToString());
                         }
                         else
                         {

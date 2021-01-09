@@ -1,12 +1,15 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
-using Humanizer;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
+using Discord;
+using Discord.WebSocket;
+
+using Humanizer;
 
 namespace Conbot
 {

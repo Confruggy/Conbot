@@ -3,15 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Configuration;
+
 using Conbot.Commands;
 using Conbot.Extensions;
 using Conbot.Interactive;
+using Conbot.TimeZonePlugin;
 using Conbot.TimeZonePlugin.Extensions;
+
 using Discord;
 using Discord.WebSocket;
+
 using Humanizer;
-using Microsoft.Extensions.Configuration;
+
 using NodaTime;
+
 using Qmmands;
 
 namespace Conbot.TagPlugin
@@ -46,9 +53,9 @@ namespace Conbot.TagPlugin
 
         private async Task ShowTagAsync(string name, bool raw = false)
         {
-            var tag = await _db.GetTagAsync(Context.Guild, name);
+            var tag = await _db.GetTagAsync(Context.Guild!, name);
 
-            TagAlias alias = null;
+            TagAlias? alias = null;
             if (tag == null)
             {
                 alias = await _db.GetTagAliasAsync(Context.Guild, name);
@@ -62,7 +69,8 @@ namespace Conbot.TagPlugin
 
             if (Context.Interaction != null)
                 await _db.AddTagUseAsync(tag, Context.Interaction, alias);
-            else await _db.AddTagUseAsync(tag, Context.Message, alias);
+            else
+                await _db.AddTagUseAsync(tag, (SocketTextChannel)Context.Channel, Context.Message!, alias);
 
             string content = raw ? Format.Sanitize(tag.Content) : tag.Content;
 
@@ -80,7 +88,7 @@ namespace Conbot.TagPlugin
         {
             name = name.TrimEnd();
 
-            if (await _db.GetTagAsync(Context.Guild, name) != null ||
+            if (await _db.GetTagAsync(Context.Guild!, name) != null ||
                 await _db.GetTagAliasAsync(Context.Guild, name) != null)
             {
                 await ReplyAsync($"Tag **{Format.Sanitize(name)}** already exists.");
@@ -89,7 +97,8 @@ namespace Conbot.TagPlugin
 
             if (Context.Interaction != null)
                 await _db.CreateTagAsync(Context.Interaction, name, content);
-            else await _db.CreateTagAsync(Context.Message, name, content);
+            else
+                await _db.CreateTagAsync((SocketTextChannel)Context.Channel, Context.Message!, name, content);
 
             await Task.WhenAll(
                 _db.SaveChangesAsync(),
@@ -105,8 +114,8 @@ namespace Conbot.TagPlugin
         {
             var user = (SocketGuildUser)Context.User;
 
-            TagAlias alias = null;
-            var tag = await _db.GetTagAsync(Context.Guild, name);
+            TagAlias? alias = null;
+            var tag = await _db.GetTagAsync(Context.Guild!, name);
 
             if (tag == null)
             {
@@ -131,23 +140,34 @@ namespace Conbot.TagPlugin
 
             var message = await ConfirmAsync("Do you really want to delete this tag?");
 
+            string text;
+            List<Task> tasks = new();
+
             if (message.Item2 == true)
             {
                 if (tag != null)
+                {
                     _db.RemoveTag(tag);
-                else _db.RemoveTagAlias(alias);
-
-                await Task.WhenAll(
-                    ReplyAsync($"Tag **{Format.Sanitize(tag.Name)}** has been deleted."),
-                    _db.SaveChangesAsync(),
-                    message.Item1.TryDeleteAsync());
+                    text = $"Tag **{Format.Sanitize(tag.Name)}** has been deleted.";
+                }
+                else
+                {
+                    _db.RemoveTagAlias(alias!);
+                    text = $"Tag **{Format.Sanitize(alias!.Name)}** has been deleted.";
+                }
             }
             else
             {
-                await Task.WhenAll(
-                    ReplyAsync($"Tag **{Format.Sanitize(tag.Name)}** hasn't been deleted."),
-                    message.Item1.TryDeleteAsync());
+                if (tag != null)
+                    text = $"Tag **{Format.Sanitize(tag.Name)}** hasn't been deleted.";
+                else
+                    text = $"Alias **{Format.Sanitize(alias!.Name)}** hasn't been deleted.";
             }
+
+            tasks.Add(ReplyAsync(text));
+            tasks.Add(message.Item1.TryDeleteAsync());
+
+            await Task.WhenAll(tasks);
         }
 
         [Command("edit", "modify")]
@@ -157,7 +177,7 @@ namespace Conbot.TagPlugin
             [Description("The name of the tag you want to edit.")] string name,
             [Remainder, Name("new content"), Description("The new content of the tag.")] string newContent)
         {
-            var tag = await _db.GetTagAsync(Context.Guild, name);
+            var tag = await _db.GetTagAsync(Context.Guild!, name);
             if (tag == null)
             {
                 await ReplyAsync($"Tag **{Format.Sanitize(name)}** hasn't been found.");
@@ -172,7 +192,8 @@ namespace Conbot.TagPlugin
 
             if (Context.Interaction != null)
                 await _db.ModifyTagAsync(tag, Context.Interaction, newContent);
-            else await _db.ModifyTagAsync(tag, Context.Message, newContent);
+            else
+                await _db.ModifyTagAsync(tag, (SocketTextChannel)Context.Channel, Context.Message!, newContent);
 
             await Task.WhenAll(
                 _db.SaveChangesAsync(),
@@ -201,8 +222,8 @@ namespace Conbot.TagPlugin
                 return;
             }
 
-            TagAlias alias = null;
-            var tag = await _db.GetTagAsync(Context.Guild, name);
+            TagAlias? alias = null;
+            var tag = await _db.GetTagAsync(Context.Guild!, name);
 
             if (tag == null)
             {
@@ -223,8 +244,14 @@ namespace Conbot.TagPlugin
             if (tag != null)
             {
                 if (Context.Interaction != null)
+                {
                     await _db.ChangeTagOwnerAsync(tag, Context.Interaction, member.Id, OwnerChangeType.Transfer);
-                else await _db.ChangeTagOwnerAsync(tag, Context.Message, member.Id, OwnerChangeType.Transfer);
+                }
+                else
+                {
+                    await _db.ChangeTagOwnerAsync(tag, (SocketTextChannel)Context.Channel, Context.Message!, member.Id,
+                        OwnerChangeType.Transfer);
+                }
 
                 await Task.WhenAll(
                     ReplyAsync(
@@ -232,11 +259,17 @@ namespace Conbot.TagPlugin
                         allowedMentions: AllowedMentions.None),
                     _db.SaveChangesAsync());
             }
-            else
+            else if (alias != null)
             {
                 if (Context.Interaction != null)
+                {
                     await _db.ChangeTagAliasOwnerAsync(alias, Context.Interaction, member.Id, OwnerChangeType.Transfer);
-                else await _db.ChangeTagAliasOwnerAsync(alias, Context.Message, member.Id, OwnerChangeType.Transfer);
+                }
+                else
+                {
+                    await _db.ChangeTagAliasOwnerAsync(alias, (SocketTextChannel)Context.Channel, Context.Message!,
+                        member.Id, OwnerChangeType.Transfer);
+                }
 
                 await Task.WhenAll(
                     ReplyAsync(
@@ -248,19 +281,20 @@ namespace Conbot.TagPlugin
 
         [Command("info")]
         [Description("Shows information about a tag or an alias.")]
+        [RequireTimeZone]
         [RequireBotPermission(ChannelPermission.EmbedLinks)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task InfoAsync([Remainder, Description("The name of the tag or alias.")] string name)
         {
-            var tags = await _db.GetTagsAsync(Context.Guild);
-            var tag = tags.Find(
-                x => x.GuildId == Context.Guild.Id && string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+            var tags = await _db.GetTagsAsync(Context.Guild).ToArrayAsync();
+            var tag = Array.Find(tags, x => x.GuildId == Context.Guild!.Id &&
+                string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
 
             var timeZone = await Context.GetUserTimeZoneAsync();
 
             if (tag == null)
             {
-                var alias = await _db.GetTagAliasAsync(Context.Guild, name);
+                var alias = await _db.GetTagAliasAsync(Context.Guild!, name);
 
                 if (alias == null)
                 {
@@ -268,20 +302,20 @@ namespace Conbot.TagPlugin
                     return;
                 }
 
-                await ReplyAsync("", embed: CreateTagAliasEmbed(alias, timeZone));
+                await ReplyAsync("", embed: CreateTagAliasEmbed(alias, timeZone!));
             }
             else
             {
-                int count = tags.Count;
+                int count = tags.Length;
                 int uses = tag.Uses.Count;
                 int rank = count - tags.Count(x => x.Uses.Count <= uses) + 1;
-                await ReplyAsync("", embed: CreateTagEmbed(tag, uses, rank, count, timeZone));
+                await ReplyAsync("", embed: CreateTagEmbed(tag, uses, rank, count, timeZone!));
             }
         }
 
         private Embed CreateTagEmbed(Tag tag, int uses, int rank, int count, DateTimeZone timeZone)
         {
-            var owner = Context.Guild.GetUser(tag.OwnerId);
+            var owner = Context.Guild!.GetUser(tag.OwnerId);
             double days = (DateTime.UtcNow - tag.CreatedAt).TotalDays;
             double average = days > 1 ? Math.Round(uses / days) : uses;
 
@@ -335,7 +369,7 @@ namespace Conbot.TagPlugin
 
         private Embed CreateTagAliasEmbed(TagAlias alias, DateTimeZone timeZone)
         {
-            var owner = Context.Guild.GetUser(alias.OwnerId);
+            var owner = Context.Guild!.GetUser(alias.OwnerId);
             double days = (DateTime.UtcNow - alias.CreatedAt).TotalDays;
             int uses = alias.TagUses.Count;
             double average = days > 1 ? Math.Round(uses / days) : uses;
@@ -377,7 +411,7 @@ namespace Conbot.TagPlugin
         {
             name = name.TrimEnd();
 
-            var tag = await _db.GetTagAsync(Context.Guild, tagName);
+            var tag = await _db.GetTagAsync(Context.Guild!, tagName);
             if (tag == null)
             {
                 await ReplyAsync($"Tag **{Format.Sanitize(tagName)}** hasn't been found.");
@@ -393,7 +427,8 @@ namespace Conbot.TagPlugin
 
             if (Context.Interaction != null)
                 await _db.CreateTagAliasAsync(tag, Context.Interaction, name);
-            else await _db.CreateTagAliasAsync(tag, Context.Message, name);
+            else
+                await _db.CreateTagAliasAsync(tag, (SocketTextChannel)Context.Channel, Context.Message!, name);
 
             await Task.WhenAll(
                 _db.SaveChangesAsync(),
@@ -413,25 +448,27 @@ namespace Conbot.TagPlugin
         [RequireBotPermission(ChannelPermission.EmbedLinks | ChannelPermission.AddReactions)]
         public Task AllAsync(
             [Description("The member to lists tags from. If no user is entered, it lists your tags instead.")]
-                IGuildUser user = null,
+                IGuildUser? user = null,
             [Description("The page to start with.")] int page = 1)
             => ListAsync(user ?? Context.User as IGuildUser, page);
 
-        public async Task ListAsync(IGuildUser user = null, int page = 1)
+        public async Task ListAsync(IGuildUser? user = null, int page = 1)
         {
-            var tags = (await _db.GetTagsAsync(Context.Guild, user)).OrderBy(x => x.Name);
+            var tags = await _db.GetTagsAsync(Context.Guild, user).OrderBy(x => x.Name).ToArrayAsync();
 
-            if (!tags.Any())
+            if (tags.Length == 0)
             {
                 if (user == null)
                     await ReplyAsync("There aren't any tags for this server.");
                 else if (user.Id == Context.User.Id)
                     await ReplyAsync("You don't have any tags.");
-                else await ReplyAsync($"**{user.Nickname ?? user.Username}** doesn't have any tags.");
+                else
+                    await ReplyAsync($"**{user.Nickname ?? user.Username}** doesn't have any tags.");
+
                 return;
             }
 
-            int count = tags.Count();
+            int count = tags.Length;
             int padding = count.ToString().Length;
             var pages = new List<string>();
 
@@ -440,7 +477,8 @@ namespace Conbot.TagPlugin
 
             foreach (var tag in tags)
             {
-                pageText.Append('`')
+                pageText
+                    .Append('`')
                     .Append(i.ToString().PadLeft(padding))
                     .Append(".` ")
                     .AppendLine(Format.Sanitize(tag.Name));
@@ -450,6 +488,7 @@ namespace Conbot.TagPlugin
                     pages.Add(pageText.ToString());
                     pageText.Clear();
                 }
+
                 i++;
             }
 
@@ -465,7 +504,7 @@ namespace Conbot.TagPlugin
             {
                 var embed = new EmbedBuilder()
                     .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
-                    .WithAuthor(user?.Username ?? Context.Guild.Name, user?.GetAvatarUrl() ?? Context.Guild.IconUrl)
+                    .WithAuthor(user?.Username ?? Context.Guild!.Name, user?.GetAvatarUrl() ?? Context.Guild!.IconUrl)
                     .WithTitle("Tags")
                     .WithDescription(pages[j])
                     .WithFooter($"Page {j + 1}/{pages.Count} ({"entry".ToQuantity(count)})")

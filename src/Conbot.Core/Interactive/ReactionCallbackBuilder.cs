@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+
 using Discord;
 
 namespace Conbot.Interactive
@@ -7,25 +8,20 @@ namespace Conbot.Interactive
     public class ReactionCallbackBuilder
     {
         public IEmote Emote { get; set; }
-        public Func<IReaction, Task> Callback { get; set; }
+        public Func<IReaction, Task> Callback { get; set; } = (_) => Task.CompletedTask;
         public bool ResumeAfterExecution { get; set; }
 
-        public ReactionCallbackBuilder WithEmote(IEmote emote)
+        public ReactionCallbackBuilder(IEmote emote)
         {
             Emote = emote;
-            return this;
         }
 
-        public ReactionCallbackBuilder WithEmote(string text)
+        public ReactionCallbackBuilder(string text)
         {
             if (Discord.Emote.TryParse(text, out var emote))
-            {
                 Emote = emote;
-                return this;
-            }
-
-            Emote = new Emoji(text);
-            return this;
+            else
+                Emote = new Emoji(text);
         }
 
         public ReactionCallbackBuilder WithCallback(Func<IReaction, Task> callback)
@@ -36,7 +32,11 @@ namespace Conbot.Interactive
 
         public ReactionCallbackBuilder WithCallback(Action<IReaction> callback)
         {
-            Callback = x => { callback(x); return Task.CompletedTask; };
+            Callback = x =>
+                {
+                    callback(x);
+                    return Task.CompletedTask;
+                };
             return this;
         }
 
@@ -46,6 +46,6 @@ namespace Conbot.Interactive
             return this;
         }
 
-        public ReactionCallback Build() => new ReactionCallback(Emote, Callback, ResumeAfterExecution);
+        public ReactionCallback Build() => new(Emote, Callback, ResumeAfterExecution);
     }
 }

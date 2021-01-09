@@ -9,26 +9,46 @@ namespace Conbot.TagPlugin
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Required]
         public int TagId { get; set; }
-        public virtual Tag Tag { get; set; }
+        public virtual Tag Tag { get; set; } = null!;
 
         public int? UsedAliasId { get; set; }
-        public virtual TagAlias UsedAlias { get; set; }
+        public virtual TagAlias UsedAlias { get; set; } = null!;
 
-        [Required]
         public ulong UserId { get; set; }
-        [Required]
         public DateTime UsedAt { get; set; }
-        [Required]
         public ulong GuildId { get; set; }
-        [Required]
         public ulong ChannelId { get; set; }
         public ulong? MessageId { get; set; }
         public ulong? InteractionId { get; set; }
 
         [NotMapped]
-        public string Url =>
-            $"https://discordapp.com/channels/{GuildId}/{ChannelId}/{MessageId ?? InteractionId}";
+        public string Url
+            => $"https://discordapp.com/channels/{GuildId}/{ChannelId}/{MessageId ?? InteractionId}";
+
+        public TagUse(int tagId, int? usedAliasId, ulong userId, DateTime usedAt, ulong guildId, ulong channelId,
+            ulong? messageId, ulong? interactionId)
+        {
+            TagId = tagId;
+            UsedAliasId = usedAliasId;
+            UserId = userId;
+            UsedAt = usedAt;
+            GuildId = guildId;
+            ChannelId = channelId;
+            MessageId = messageId;
+            InteractionId = interactionId;
+        }
+
+        public TagUse(Tag tag, int? usedAliasId, ulong userId, DateTime usedAt, ulong guildId, ulong channelId,
+            ulong? messageId, ulong? interactionId)
+            : this(tag.Id, usedAliasId, userId, usedAt, guildId, channelId, messageId, interactionId) { }
+
+        public TagUse(int tagId, TagAlias? usedAliasId, ulong userId, DateTime usedAt, ulong guildId, ulong channelId,
+            ulong? messageId, ulong? interactionId)
+            : this(tagId, usedAliasId?.Id, userId, usedAt, guildId, channelId, messageId, interactionId) { }
+
+        public TagUse(Tag tag, TagAlias? usedAliasId, ulong userId, DateTime usedAt, ulong guildId, ulong channelId,
+            ulong? messageId, ulong? interactionId)
+            : this(tag.Id, usedAliasId?.Id, userId, usedAt, guildId, channelId, messageId, interactionId) { }
     }
 }

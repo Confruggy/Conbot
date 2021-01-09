@@ -3,14 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Conbot.TimeZonePlugin;
-using Conbot.TimeZonePlugin.Extensions;
-using Discord;
-using Discord.WebSocket;
-using Humanizer;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
+using Conbot.TimeZonePlugin;
+using Conbot.TimeZonePlugin.Extensions;
+
+using Discord;
+using Discord.WebSocket;
+
+using Humanizer;
+
 using NodaTime;
 
 namespace Conbot.ReminderPlugin
@@ -21,7 +26,7 @@ namespace Conbot.ReminderPlugin
         private readonly DiscordShardedClient _client;
         private readonly IDateTimeZoneProvider _provider;
         private readonly IConfiguration _config;
-        private Task _task;
+        private Task? _task;
 
         public ReminderService(ILogger<ReminderService> logger, DiscordShardedClient client,
             IDateTimeZoneProvider provider, IConfiguration config)
@@ -40,7 +45,8 @@ namespace Conbot.ReminderPlugin
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            await _task;
+            if (_task != null)
+                await _task;
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
@@ -53,13 +59,13 @@ namespace Conbot.ReminderPlugin
                 {
                     reminders = await db.Reminders.ToAsyncEnumerable()
                         .Where(x => !x.Finished && x.EndsAt < DateTime.UtcNow)
-                        .ToArrayAsync();
+                        .ToArrayAsync(cancellationToken);
 
                     foreach (var reminder in reminders)
                         reminder.Finished = true;
 
                     if (reminders.Length > 0)
-                        await db.SaveChangesAsync();
+                        await db.SaveChangesAsync(cancellationToken);
                 }
 
                 var tasks = new List<Task>();
@@ -68,7 +74,7 @@ namespace Conbot.ReminderPlugin
                 {
                     var toSendChannel = _client.GetChannel(reminder.ChannelId) as IMessageChannel;
 
-                    if (toSendChannel != null && toSendChannel is ITextChannel textChannel)
+                    if (toSendChannel is ITextChannel textChannel)
                     {
                         var guild = (toSendChannel as IGuildChannel)?.Guild;
 
@@ -97,11 +103,9 @@ namespace Conbot.ReminderPlugin
                         {
                             var userTimeZone = await timeZoneContext.GetUserTimeZoneAsync(reminder.UserId);
                             timeZone = userTimeZone != null
-                                ? _provider.GetZoneOrNull(userTimeZone.TimeZoneId)
-                                : null;
+                                ? _provider.GetZoneOrNull(userTimeZone.TimeZoneId)!
+                                : _provider.GetSystemDefault();
                         }
-
-                        timeZone ??= _provider.GetSystemDefault();
 
                         string time = Instant.FromDateTimeUtc(reminder.EndsAt).InZone(timeZone)
                             .ToDurationString(
@@ -111,8 +115,8 @@ namespace Conbot.ReminderPlugin
                                 formatted: true);
 
                         string text;
-                        MessageReference reference = null;
-                        IMessage message = null;
+                        MessageReference? reference = null;
+                        IMessage? message = null;
 
                         if (toSendChannel.Id == reminder.ChannelId)
                         {
@@ -134,7 +138,7 @@ namespace Conbot.ReminderPlugin
                             text = $"You've set a reminder in {MentionUtils.MentionChannel(reminder.ChannelId)} {time}.";
                         }
 
-                        Embed embed;
+                        Embed? embed;
                         if (reference != null)
                         {
                             embed = !string.IsNullOrEmpty(reminder.Message)
@@ -161,12 +165,12 @@ namespace Conbot.ReminderPlugin
                         {
                             try { await toSendChannel.SendMessageAsync(text, embed: embed, messageReference: reference); }
                             catch (Exception e) { _logger.LogError(e, "Failed sending reminder message"); }
-                        }));
+                        }, cancellationToken));
                     }
                 }
 
                 await Task.WhenAll(tasks);
-                await Task.Delay(100);
+                await Task.Delay(100, cancellationToken);
             }
         }
     }

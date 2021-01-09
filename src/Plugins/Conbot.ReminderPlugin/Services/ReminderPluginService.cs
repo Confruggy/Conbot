@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Conbot.Commands;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
+using Conbot.Commands;
+
 using Qmmands;
 
 namespace Conbot.ReminderPlugin
@@ -41,8 +44,8 @@ namespace Conbot.ReminderPlugin
             using var serviceScope = _provider
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope();
-            using var context = serviceScope.ServiceProvider.GetService<ReminderContext>();
 
+            using var context = serviceScope.ServiceProvider.GetRequiredService<ReminderContext>();
             await context.Database.MigrateAsync();
         }
     }
