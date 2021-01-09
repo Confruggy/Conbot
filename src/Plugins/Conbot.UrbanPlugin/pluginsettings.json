@@ -1,0 +1,9 @@
+{
+  "UrbanPlugin": {
+    "UrbanDictionary":
+    {
+      "ApiBaseUrl": "http://api.urbandictionary.com/v0",
+      "WebsiteBaseUrl": "https://www.urbandictionary.com"
+    }
+  }
+}

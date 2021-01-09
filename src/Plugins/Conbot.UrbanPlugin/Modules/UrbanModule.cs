@@ -68,12 +68,12 @@ namespace Conbot.UrbanPlugin
             await paginator.RunAsync(_interactiveService, Context);
         }
 
-        private static Embed CreateUrbanEmbed(UrbanResult result, int currentPage, int totalPages)
+        private Embed CreateUrbanEmbed(UrbanResult result, int currentPage, int totalPages)
         {
             var embed = new EmbedBuilder()
                 .WithColor(new Color(0x134fe6))
                 .WithAuthor(result.Author, url:
-                    QueryHelpers.AddQueryString("http://www.urbandictionary.com/author.php", "author", result.Author))
+                    QueryHelpers.AddQueryString($"{_service.WebsiteBaseUrl}/author.php", "author", result.Author))
                 .WithTitle(result.Word)
                 .WithUrl(result.Permalink)
                 .WithDescription(Format.Sanitize(FillHyperlinks(result.Definition)).Truncate(2048))
@@ -87,15 +87,12 @@ namespace Conbot.UrbanPlugin
             return embed.Build();
         }
 
-        private static string FillHyperlinks(string text)
+        private string FillHyperlinks(string text)
         {
-            const string baseUrl = "https://www.urbandictionary.com/define.php?term=";
-
             foreach (Match match in Regex.Matches(text, "\\[[^\\]]*\\]"))
             {
-                string url = $"{baseUrl}{HttpUtility.UrlEncode(match.Value[1..^1])}";
-                text = text
-                    .Replace(match.Value, $"{match.Value}({url})");
+                string url = $"{_service.WebsiteBaseUrl}/define.php?term={HttpUtility.UrlEncode(match.Value[1..^1])}";
+                text = text.Replace(match.Value, $"{match.Value}({url})");
             }
 
             return text;

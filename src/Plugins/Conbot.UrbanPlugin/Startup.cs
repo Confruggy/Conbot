@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using Conbot.Plugins;
+using System.IO;
 
 namespace Conbot.UrbanPlugin
 {
@@ -15,6 +16,10 @@ namespace Conbot.UrbanPlugin
                 .AddSingleton<UrbanService>();
         }
 
-        public void BuildConfiguration(IConfigurationBuilder builder) { }
+        public void BuildConfiguration(IConfigurationBuilder builder)
+        {
+            builder
+                .AddJsonFile(Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "pluginsettings.json"));
+        }
     }
 }
