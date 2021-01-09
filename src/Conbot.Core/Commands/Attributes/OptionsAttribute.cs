@@ -1,10 +1,14 @@
 using System;
-using System.Threading.Tasks;
-using Qmmands;
-using Humanizer;
 using System.Linq;
+using System.Threading.Tasks;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Discord;
+
+using Humanizer;
+
+using Qmmands;
 
 namespace Conbot.Commands
 {
@@ -18,8 +22,8 @@ namespace Conbot.Commands
         {
             var commandService = context.ServiceProvider.GetRequiredService<CommandService>();
 
-            bool contains = argument.GetType() == typeof(string)
-                ? Choices.Any(x => x.ToString().Equals((string)argument, commandService.StringComparison))
+            bool contains = (argument is string argumentString)
+                ? Choices.Any(x => x.ToString()!.Equals(argumentString, commandService.StringComparison))
                 : Choices.Contains(argument);
 
             if (contains)

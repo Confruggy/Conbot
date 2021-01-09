@@ -1,6 +1,9 @@
 using System.Threading.Tasks;
+
 using Conbot.Commands;
+
 using Discord;
+
 using Qmmands;
 
 namespace Conbot.HelpPlugin
@@ -8,7 +11,7 @@ namespace Conbot.HelpPlugin
     [Name("Help")]
     [Group("help")]
     [Description("Gives information about commands.")]
-    [RequireBotPermission(ChannelPermission.EmbedLinks|ChannelPermission.AddReactions)]
+    [RequireBotPermission(ChannelPermission.EmbedLinks | ChannelPermission.AddReactions)]
     public class HelpModule : DiscordModuleBase
     {
         private readonly HelpService _service;
@@ -27,7 +30,7 @@ namespace Conbot.HelpPlugin
             [Remarks("Can be either the name of the command or any alias.")]
             [Remainder]
             Command command)
-            => _service.ExecuteHelpMessageAsync(Context, startCommand: command);
+            => _service.ExecuteHelpMessageAsync(Context, command);
 
         [Command("group", "")]
         [Description("Gives information about a specific group.")]
@@ -37,6 +40,6 @@ namespace Conbot.HelpPlugin
             [Remarks("Can be either the name of the group or the group's prefix.")]
             [Remainder]
             Module group)
-         => _service.ExecuteHelpMessageAsync(Context, startModule: group);
+         => _service.ExecuteHelpMessageAsync(Context, group);
     }
 }

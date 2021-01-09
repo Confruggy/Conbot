@@ -1,24 +1,22 @@
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using Discord;
+
 using Humanizer;
+
 using Qmmands;
 
 namespace Conbot.Commands
 {
     public static class RequirePermissionUtils
     {
-        public static ValueTask<CheckResult> CheckPermissionsAsync(IUser user, IMessageChannel channel,
+        public static ValueTask<CheckResult> CheckPermissionsAsync(IGuildUser user, IMessageChannel channel,
             GuildPermission[] guildPermissions, ChannelPermission[] channelPermissions)
         {
             if (guildPermissions.Length != 0)
-            {
-                if (!(user is IGuildUser guildUser))
-                    return CheckResult.Unsuccessful("This command must be used in a server.");
-
-                return CheckPermissionsAsync(guildUser, guildPermissions);
-            }
+                return CheckPermissionsAsync(user, guildPermissions);
 
             if (channelPermissions.Length != 0)
                 return CheckPermissionsAsync(user, channel, channelPermissions);
@@ -35,17 +33,15 @@ namespace Conbot.Commands
             return CheckResult.Unsuccessful(CreateRequirePermissionErrorReason(permissions, user.IsBot));
         }
 
-        public static ValueTask<CheckResult> CheckPermissionsAsync(IUser user, IMessageChannel channel,
+        public static ValueTask<CheckResult> CheckPermissionsAsync(IGuildUser user, IMessageChannel channel,
             ChannelPermission[] permissions)
         {
-            var guildUser = user as IGuildUser;
-
             ChannelPermissions channelPermissions;
 
             if (channel is IGuildChannel guildChannel)
-                channelPermissions = guildUser.GetPermissions(guildChannel);
+                channelPermissions = user.GetPermissions(guildChannel);
             else
-                channelPermissions = Discord.ChannelPermissions.All(channel);
+                channelPermissions = ChannelPermissions.All(channel);
 
             if (permissions.Any(x => channelPermissions.Has(x)))
                 return CheckResult.Successful;
@@ -55,10 +51,11 @@ namespace Conbot.Commands
 
         public static string CreateRequirePermissionErrorReason<TEnum>(TEnum[] permissions,
             bool isBot = false)
+            where TEnum : struct
         {
             string permissionsText = permissions
                 .Select(x =>
-                    x.ToString().Split(',').Humanize(s => Format.Bold(s.Titleize())).Replace("Guild", "Server"))
+                    x.ToString()!.Split(',').Humanize(s => Format.Bold(s.Titleize())).Replace("Guild", "Server"))
                 .Humanize("or");
 
             bool isPlural = permissions.Length > 1 || GetSetBitCount((ulong)(object)permissions[0]) > 1;
@@ -85,6 +82,7 @@ namespace Conbot.Commands
                 value &= value - 1;
                 i++;
             }
+
             return i;
         }
     }

@@ -2,11 +2,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Conbot.Interactive;
-using Discord;
-using Humanizer;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+
+using Conbot.Interactive;
+
+using Discord;
+
+using Humanizer;
+
 using Qmmands;
 
 namespace Conbot.Commands
@@ -15,7 +20,7 @@ namespace Conbot.Commands
     {
         public async ValueTask<ArgumentParserResult> ParseAsync(CommandContext context)
         {
-            if (!(context is DiscordCommandContext discordCommandContext))
+            if (context is not DiscordCommandContext discordCommandContext)
                 return ConbotArgumentParserResult.Failed("Invalid context.");
 
             if (discordCommandContext.Interaction != null || !string.IsNullOrEmpty(context.RawArguments))
@@ -27,7 +32,7 @@ namespace Conbot.Commands
             var config = context.ServiceProvider.GetRequiredService<IConfiguration>();
             var interactiveService = context.ServiceProvider.GetRequiredService<InteractiveService>();
 
-            var arguments = new Dictionary<Parameter, object>();
+            var arguments = new Dictionary<Parameter, object?>();
 
             foreach (var parameter in context.Command.Parameters)
             {
@@ -59,7 +64,7 @@ namespace Conbot.Commands
                         .Append('.');
                 }
 
-                string argument = null;
+                string? argument = null;
                 bool skipped = false;
 
                 var interactiveMessage =
@@ -73,15 +78,13 @@ namespace Conbot.Commands
                         .Append(config.GetValue<string>("Emotes:CheckMark"))
                         .Append(" to skip this parameter.");
 
-                    interactiveMessage.AddReactionCallback(x => x
-                        .WithEmote(config.GetValue<string>("Emotes:CheckMark"))
+                    interactiveMessage.AddReactionCallback(config.GetValue<string>("Emotes:CheckMark"), x => x
                         .ShouldResumeAfterExecution(false)
                         .WithCallback(_ => skipped = true));
                 }
 
                 interactiveMessage
-                    .AddReactionCallback(x => x
-                        .WithEmote(config.GetValue<string>("Emotes:CrossMark"))
+                    .AddReactionCallback(config.GetValue<string>("Emotes:CrossMark"), x => x
                         .ShouldResumeAfterExecution(false))
                     .AddMessageCallback(x => x
                         .WithCallback(message =>

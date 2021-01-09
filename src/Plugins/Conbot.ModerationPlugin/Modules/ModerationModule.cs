@@ -4,12 +4,16 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+
 using Conbot.Commands;
 using Conbot.Extensions;
+
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
+
 using Humanizer;
+
 using Qmmands;
 
 namespace Conbot.ModerationPlugin
@@ -22,7 +26,7 @@ namespace Conbot.ModerationPlugin
         [Description("Deletes messages in a channel.")]
         [Remarks("Only up to 100 of the latest 1.000 messages in the executing channel will be deleted.")]
         public async Task PruneAsync(
-            [Description("The member to delete messages from.")] IGuildUser member = null,
+            [Description("The member to delete messages from.")] IGuildUser? member = null,
             [Description("The maximal amount of messages to delete."), MinValue(1), MaxValue(100)] int limit = 10)
         {
             int count = await DeleteMessagesAsync(msg => member == null || msg.Author.Id == member.Id, limit);
@@ -64,12 +68,16 @@ namespace Conbot.ModerationPlugin
                     {
                         if (count >= limit || msg.Id <= minimum)
                             break;
+
                         if (!condition(msg))
                             continue;
+
                         messages.Add(msg);
                         count++;
+
                         if (count % 100 != 0)
                             continue;
+
                         tasks.Add(channel.DeleteMessagesAsync(messages));
                         messages = new List<IMessage>();
                     }
@@ -95,7 +103,7 @@ namespace Conbot.ModerationPlugin
             [Description("The reason for the ban.")]
             [Remarks("The reason will show up in the audit log.")]
             [Remainder]
-            string reason = null)
+            string? reason = null)
         {
             if (member.Id == Context.User.Id)
             {
@@ -103,7 +111,7 @@ namespace Conbot.ModerationPlugin
                 return;
             }
 
-            await Context.Guild.AddBanAsync(member, pruneDays, reason);
+            await Context.Guild!.AddBanAsync(member, pruneDays, reason);
             await ReplyAsync($"**{Format.Sanitize(member.ToString())}** has been banned.");
         }
 
@@ -123,7 +131,7 @@ namespace Conbot.ModerationPlugin
             [Description("The reason for the ban.")]
             [Remarks("The reason will show up in the audit log.")]
             [Remainder]
-            string reason = null)
+            string? reason = null)
         {
             if (id == Context.User.Id)
             {
@@ -133,7 +141,7 @@ namespace Conbot.ModerationPlugin
 
             try
             {
-                await Context.Guild.AddBanAsync(id, pruneDays, reason);
+                await Context.Guild!.AddBanAsync(id, pruneDays, reason);
                 await ReplyAsync($"User with ID **{id}** has been banned.");
             }
             catch (HttpException e)
@@ -143,6 +151,7 @@ namespace Conbot.ModerationPlugin
                     await ReplyAsync("User hasn't been found.");
                     return;
                 }
+
                 await ReplyAsync("The bot isn't able to ban this user.");
             }
         }
@@ -157,7 +166,7 @@ namespace Conbot.ModerationPlugin
         {
             try
             {
-                await Context.Guild.RemoveBanAsync(user);
+                await Context.Guild!.RemoveBanAsync(user);
                 await ReplyAsync($"**{Format.Sanitize(user.ToString())}** has been unbanned.");
             }
             catch (HttpException)
@@ -186,7 +195,7 @@ namespace Conbot.ModerationPlugin
             [Description("The reason for the soft ban.")]
             [Remarks("The reason will show up in the audit log.")]
             [Remainder]
-            string reason = null)
+            string? reason = null)
         {
             if (member.Id == Context.User.Id)
             {
@@ -194,7 +203,7 @@ namespace Conbot.ModerationPlugin
                 return;
             }
 
-            await Context.Guild.AddBanAsync(member, pruneDays, reason);
+            await Context.Guild!.AddBanAsync(member, pruneDays, reason);
             await Context.Guild.RemoveBanAsync(member);
 
             await ReplyAsync($"**{Format.Sanitize(member.ToString())}** has been soft banned.");
@@ -212,7 +221,7 @@ namespace Conbot.ModerationPlugin
             [Description("The reason for the kick.")]
             [Remarks("The reason will show up in the audit log.")]
             [Remainder]
-            string reason = null)
+            string? reason = null)
         {
             if (user.Id == Context.User.Id)
             {

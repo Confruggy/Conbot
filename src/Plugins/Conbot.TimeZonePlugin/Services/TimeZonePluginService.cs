@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Conbot.Commands;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
+using Conbot.Commands;
+
 using Qmmands;
 
 namespace Conbot.TimeZonePlugin
@@ -14,9 +17,9 @@ namespace Conbot.TimeZonePlugin
         private readonly IServiceProvider _services;
         private readonly CommandService _commandService;
         private readonly SlashCommandService _slashCommandService;
-        private TzdbZoneLocationsTypeParser _tzdbZoneLocationsTypeParser;
-        private GmtTimeZoneTypeParser _gmtTimeZoneTypeParser;
-        private ZonedDateTimeTypeParser _zonedDateTimeTypeParser;
+        private TzdbZoneLocationsTypeParser _tzdbZoneLocationsTypeParser = null!;
+        private GmtTimeZoneTypeParser _gmtTimeZoneTypeParser = null!;
+        private ZonedDateTimeTypeParser _zonedDateTimeTypeParser = null!;
 
         public TimeZonePluginService(IServiceProvider provider, CommandService commandService,
             SlashCommandService slashCommandService)
@@ -54,8 +57,8 @@ namespace Conbot.TimeZonePlugin
             using var serviceScope = _services
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope();
-            using var context = serviceScope.ServiceProvider.GetService<TimeZoneContext>();
 
+            using var context = serviceScope.ServiceProvider.GetRequiredService<TimeZoneContext>();
             await context.Database.MigrateAsync();
         }
     }

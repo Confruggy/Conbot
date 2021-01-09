@@ -3,10 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Conbot.Commands;
+
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
+
 using Qmmands;
 
 namespace Conbot.Commands
@@ -31,7 +32,7 @@ namespace Conbot.Commands
 
             var commands = new List<RestGlobalCommand>();
 
-            var alias = module.Aliases.FirstOrDefault();
+            string? alias = module.Aliases.FirstOrDefault();
 
             if (!string.IsNullOrEmpty(alias))
             {

@@ -2,11 +2,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Configuration;
+
 using Conbot.Commands;
 using Conbot.Interactive;
+
 using Discord;
+
 using Humanizer;
-using Microsoft.Extensions.Configuration;
+
 using Qmmands;
 
 namespace Conbot.PrefixPlugin
@@ -47,7 +52,7 @@ namespace Conbot.PrefixPlugin
                 return;
             }
 
-            var prefixes = await _db.GetPrefixesAsync(Context.Guild);
+            var prefixes = await _db.GetPrefixesAsync(Context.Guild!);
 
             if (prefixes.Count >= 10)
             {
@@ -76,7 +81,7 @@ namespace Conbot.PrefixPlugin
         {
             prefix = prefix.TrimStart();
 
-            var dbPrefix = await _db.GetPrefixAsync(Context.Guild, prefix);
+            var dbPrefix = await _db.GetPrefixAsync(Context.Guild!, prefix);
 
             if (dbPrefix == null)
             {
@@ -96,7 +101,7 @@ namespace Conbot.PrefixPlugin
         [Remarks("The order describes the priority of the prefixes. Prefixes at top will be checked first.")]
         public async Task ListAsync([Description("The page to start with")] int page = 1)
         {
-            var prefixes = (await _db.GetPrefixesAsync(Context.Guild))
+            var prefixes = (await _db.GetPrefixesAsync(Context.Guild!))
                 .OrderByDescending(x => x.Text.Length)
                 .ThenBy(x => x.Text);
 
@@ -125,6 +130,7 @@ namespace Conbot.PrefixPlugin
                     pages.Add(pageText.ToString());
                     pageText.Clear();
                 }
+
                 i++;
             }
 
@@ -140,7 +146,7 @@ namespace Conbot.PrefixPlugin
             {
                 var embed = new EmbedBuilder()
                     .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
-                    .WithAuthor( Context.Guild.Name, Context.Guild.IconUrl)
+                    .WithAuthor(Context.Guild.Name, Context.Guild.IconUrl)
                     .WithTitle("Prefixes")
                     .WithDescription(pages[j])
                     .WithFooter($"Page {j + 1}/{pages.Count} ({"entry".ToQuantity(count)})")

@@ -3,11 +3,17 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Configuration;
+
 using Conbot.Commands;
 using Conbot.Interactive;
+
 using Discord;
+using Discord.WebSocket;
+
 using Humanizer;
-using Microsoft.Extensions.Configuration;
+
 using Qmmands;
 
 namespace Conbot.RankingPlugin
@@ -41,15 +47,15 @@ namespace Conbot.RankingPlugin
 
         [Command("show", "")]
         [Description("Shows your or someone else's rank in the server.")]
-        public async Task RankAsync([Description("The member to show the rank of.")] IGuildUser member = null)
+        public async Task RankAsync([Description("The member to show the rank of.")] IGuildUser? member = null)
         {
-            member ??= Context.User as IGuildUser;
+            member ??= (SocketGuildUser)Context.User;
 
-            Rank foundRank = null;
+            Rank? foundRank = null;
             int index = 0;
             int total = 0;
 
-            await foreach (var rank in _db.GetRanksAsync(Context.Guild, includeBots: true))
+            await foreach (var rank in _db.GetRanksAsync(Context.Guild!, true))
             {
                 if (rank.UserId == member.Id)
                 {
@@ -65,7 +71,9 @@ namespace Conbot.RankingPlugin
             {
                 if (member.Id == Context.User.Id)
                     await ReplyAsync("You don't have a rank on this server yet.");
-                else await ReplyAsync("This member has no rank on this server.");
+                else
+                    await ReplyAsync("This member has no rank on this server.");
+
                 return;
             }
 
@@ -121,14 +129,14 @@ namespace Conbot.RankingPlugin
         [Description("Shows the leaderboard of the server.")]
         public async Task ListAsync([Description("The page to start with.")] int page = 1)
         {
-            var ranks = await _db.GetRanksAsync(Context.Guild).ToListAsync();
+            var ranks = await _db.GetRanksAsync(Context.Guild!).ToArrayAsync();
 
             var text = new StringBuilder();
             var pages = new List<string>();
 
-            int padding = ranks.Count.ToString().Length;
+            int padding = ranks.Length.ToString().Length;
 
-            for (int i = 0; i < ranks.Count; i++)
+            for (int i = 0; i < ranks.Length; i++)
             {
                 var rank = ranks[i];
 
@@ -141,7 +149,7 @@ namespace Conbot.RankingPlugin
                 int nextLevelExperiencePoints = _rankingService.GetNextLevelExperiencePoints(level);
                 double percentage = (double)levelExperiencePoints / nextLevelExperiencePoints;
 
-                text.Append("`")
+                text.Append('`')
                     .Append((i + 1).ToString().PadLeft(padding))
                     .Append(".`")
                     .Append(' ')
@@ -163,12 +171,13 @@ namespace Conbot.RankingPlugin
                     .AppendLine(")")
                     .Append("> ")
                     .Append(levelExperiencePoints.ToString("n0", CultureInfo.InvariantCulture))
-                    .Append("/")
+                    .Append('/')
                     .Append(nextLevelExperiencePoints.ToString("n0", CultureInfo.InvariantCulture))
-                    .Append(" XP │ ").Append(rank.ExperiencePoints.ToString("n0", CultureInfo.InvariantCulture))
+                    .Append(" XP │ ")
+                    .Append(rank.ExperiencePoints.ToString("n0", CultureInfo.InvariantCulture))
                     .AppendLine(" XP Total");
 
-                if ((i + 1) % 5 == 0 || i == ranks.Count - 1)
+                if ((i + 1) % 5 == 0 || i == ranks.Length - 1)
                 {
                     pages.Add(text.ToString());
                     text.Clear();
@@ -184,7 +193,7 @@ namespace Conbot.RankingPlugin
                     .WithAuthor(Context.Guild.Name, Context.Guild.IconUrl)
                     .WithTitle("Leaderboard")
                     .WithDescription(pages[i])
-                    .WithFooter($"Page {i + 1}/{pages.Count} ({"entry".ToQuantity(ranks.Count)})");
+                    .WithFooter($"Page {i + 1}/{pages.Count} ({"entry".ToQuantity(ranks.Length)})");
 
                 paginator.AddPage(embed.Build());
             }
@@ -213,9 +222,9 @@ namespace Conbot.RankingPlugin
                 [Choices("enable", "disable")]
                 string toggle)
             {
-                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild);
+                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild!);
 
-                string text = null;
+                string? text = null;
 
                 switch (toggle)
                 {
@@ -256,9 +265,9 @@ namespace Conbot.RankingPlugin
                 [Remarks(
                     "If you leave this blank, then the channel will be set to **Current Channel** which will send " +
                     "level up announcements to the channel where the member achieved the level up.")]
-                ITextChannel channel = null)
+                ITextChannel? channel = null)
             {
-                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild);
+                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild!);
                 config.LevelUpAnnouncementsChannelId = channel?.Id;
 
                 string text;
@@ -285,15 +294,12 @@ namespace Conbot.RankingPlugin
                 [MinValue(1), MaxValue(1000)]
                 int? level = null)
             {
-                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild);
+                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild!);
                 config.LevelUpAnnouncementsMinimumLevel = level;
 
-                string text;
-
-                if (level != null)
-                    text = $"Minimum level for level up announcements has been set to **{level}**.";
-                else
-                    text = "Minimum level for level up announcements has been set to **None**.";
+                string text = level != null
+                    ? $"Minimum level for level up announcements has been set to **{level}**."
+                    : "Minimum level for level up announcements has been set to **None**.";
 
                 await Task.WhenAll(
                     _db.SaveChangesAsync(),
@@ -306,7 +312,7 @@ namespace Conbot.RankingPlugin
             [RequireBotPermission(GuildPermission.EmbedLinks)]
             public async Task SettingsAsync()
             {
-                var config = await _db.GetGuildConfigurationAsync(Context.Guild);
+                var config = await _db.GetGuildConfigurationAsync(Context.Guild!);
 
                 string enabled = config?.ShowLevelUpAnnouncements == true
                     ? "Enabled"
@@ -315,7 +321,7 @@ namespace Conbot.RankingPlugin
                     ? MentionUtils.MentionChannel(config.LevelUpAnnouncementsChannelId.Value)
                     : "Current Channel";
                 string minimumlevel = config?.LevelUpAnnouncementsMinimumLevel != null
-                    ? config.LevelUpAnnouncementsMinimumLevel.ToString()
+                    ? config.LevelUpAnnouncementsMinimumLevel.ToString()!
                     : "None";
 
                 var embed = new EmbedBuilder()
@@ -355,7 +361,7 @@ namespace Conbot.RankingPlugin
             [Description("Lists all available role rewards.")]
             public async Task ListAsync([Description("The page to start with.")] int page = 1)
             {
-                var roleRewards = await _db.GetRoleRewardsAsync(Context.Guild).ToListAsync();
+                var roleRewards = await _db.GetRoleRewardsAsync(Context.Guild!).ToListAsync();
                 int count = roleRewards.Count;
 
                 if (count == 0)
@@ -414,7 +420,7 @@ namespace Conbot.RankingPlugin
                 [Description("The level when the role should be rewarded.")]
                 int level)
             {
-                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild);
+                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild!);
 
                 var roleReward = await _db.GetRoleRewardAsync(Context.Guild, level);
                 if (roleReward != null)
@@ -478,8 +484,8 @@ namespace Conbot.RankingPlugin
                     "By default the type is set to **stack**.")]
                 string type)
             {
-                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild);
-                string text = null;
+                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild!);
+                string? text = null;
 
                 switch (type)
                 {
@@ -517,7 +523,7 @@ namespace Conbot.RankingPlugin
             [RequireBotPermission(GuildPermission.ManageRoles, GuildPermission.EmbedLinks)]
             public async Task SettingsAsync()
             {
-                var config = await _db.GetGuildConfigurationAsync(Context.Guild);
+                var config = await _db.GetGuildConfigurationAsync(Context.Guild!);
 
                 var type = config?.RoleRewardsType ?? RoleRewardsType.Stack;
 
@@ -568,9 +574,9 @@ namespace Conbot.RankingPlugin
 #if DEBUG
         [Command("xphack")]
         [Description("Gives a member a certain amount of XP in debug mode.")]
-        public async Task XpHackAsync(int amount, IGuildUser member = null)
+        public async Task XpHackAsync(int amount, IGuildUser? member = null)
         {
-            member ??= Context.User as IGuildUser;
+            member ??= (SocketGuildUser)Context.User;
 
             var rank = await _db.GetRankAsync(member);
 
@@ -578,7 +584,9 @@ namespace Conbot.RankingPlugin
             {
                 if (member.Id == Context.User.Id)
                     await ReplyAsync("You don't have a rank on this server yet.");
-                else await ReplyAsync("This member has no rank on this server.");
+                else
+                    await ReplyAsync("This member has no rank on this server.");
+
                 return;
             }
 

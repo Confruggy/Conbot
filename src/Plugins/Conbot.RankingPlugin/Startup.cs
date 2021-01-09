@@ -1,8 +1,10 @@
 ﻿using System.IO;
-using Conbot.Plugins;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
+using Conbot.Plugins;
 
 namespace Conbot.RankingPlugin
 {
@@ -20,7 +22,7 @@ namespace Conbot.RankingPlugin
         public void BuildConfiguration(IConfigurationBuilder builder)
         {
             builder
-                .AddJsonFile(Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location), "pluginsettings.json"));
+                .AddJsonFile(Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "pluginsettings.json"));
         }
     }
 }

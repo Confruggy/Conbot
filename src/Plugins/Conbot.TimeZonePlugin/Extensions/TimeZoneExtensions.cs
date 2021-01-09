@@ -1,7 +1,9 @@
-using System.Threading.Tasks;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
 using Discord;
+
 using NodaTime;
 
 namespace Conbot.TimeZonePlugin
@@ -33,12 +35,7 @@ namespace Conbot.TimeZonePlugin
 
             if (userTimeZone == null)
             {
-                userTimeZone = new UserTimeZone
-                {
-                    UserId = userId,
-                    TimeZoneId = timeZone.Id
-                };
-
+                userTimeZone = new UserTimeZone(userId, timeZone.Id);
                 await context.UserTimeZones.AddAsync(userTimeZone);
             }
             else
@@ -60,12 +57,7 @@ namespace Conbot.TimeZonePlugin
 
             if (guildTimeZone == null)
             {
-                guildTimeZone = new GuildTimeZone
-                {
-                    GuildId = guildId,
-                    TimeZoneId = timeZone.Id
-                };
-
+                guildTimeZone = new GuildTimeZone(guildId, timeZone.Id);
                 await context.GuildTimeZones.AddAsync(guildTimeZone);
             }
             else

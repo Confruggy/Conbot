@@ -1,7 +1,8 @@
-using Conbot.Plugins;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
+using Conbot.Plugins;
 
 namespace Conbot.TagPlugin
 {
@@ -9,11 +10,11 @@ namespace Conbot.TagPlugin
     {
         public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
         {
-            services.AddHostedService<TagPluginService>();
-
-            services.AddDbContext<TagContext>();
+            services
+                .AddDbContext<TagContext>()
+                .AddHostedService<TagPluginService>();
         }
 
-        public void BuildConfiguration(IConfigurationBuilder builder){ }
+        public void BuildConfiguration(IConfigurationBuilder builder) { }
     }
 }

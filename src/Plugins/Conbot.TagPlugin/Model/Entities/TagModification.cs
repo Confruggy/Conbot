@@ -9,28 +9,42 @@ namespace Conbot.TagPlugin
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Required]
         public int TagId { get; set; }
-        public virtual Tag Tag { get; set; }
+        public virtual Tag Tag { get; set; } = null!;
 
         [Required]
         public string NewContent { get; set; }
+
         [Required]
         public string OldContent { get; set; }
 
-        [Required]
         public ulong UserId { get; set; }
-        [Required]
         public DateTime ModifiedAt { get; set; }
-        [Required]
         public ulong GuildId { get; set; }
-        [Required]
         public ulong ChannelId { get; set; }
         public ulong? MessageId { get; set; }
         public ulong? InteractionId { get; set; }
 
         [NotMapped]
-        public string Url =>
-            $"https://discordapp.com/channels/{GuildId}/{ChannelId}/{MessageId ?? InteractionId}";
+        public string Url
+            => $"https://discordapp.com/channels/{GuildId}/{ChannelId}/{MessageId ?? InteractionId}";
+
+        public TagModification(int tagId, string newContent, string oldContent, ulong userId, DateTime modifiedAt,
+            ulong guildId, ulong channelId, ulong? messageId, ulong? interactionId)
+        {
+            TagId = tagId;
+            NewContent = newContent;
+            OldContent = oldContent;
+            UserId = userId;
+            ModifiedAt = modifiedAt;
+            GuildId = guildId;
+            ChannelId = channelId;
+            MessageId = messageId;
+            InteractionId = interactionId;
+        }
+
+        public TagModification(Tag tag, string newContent, string oldContent, ulong userId, DateTime modifiedAt,
+            ulong guildId, ulong channelId, ulong? messageId, ulong? interactionId)
+            : this(tag.Id, newContent, oldContent, userId, modifiedAt, guildId, channelId, messageId, interactionId) { }
     }
 }

@@ -1,13 +1,14 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+
 using Newtonsoft.Json;
 
 namespace Conbot.UrbanPlugin
 {
-    public class UrbanService : IDisposable
+    internal sealed class UrbanService : IDisposable
     {
-        private const string _apiUrl = "http://api.urbandictionary.com/v0/define?term=";
+        private const string ApiUrl = "http://api.urbandictionary.com/v0/define?term=";
 
         private readonly HttpClient _client;
 
@@ -15,14 +16,17 @@ namespace Conbot.UrbanPlugin
 
         public async Task<UrbanSearchResult> SearchAsync(string query)
         {
-            var json = await _client.GetStringAsync($"{_apiUrl}{query}");
-            var result = JsonConvert.DeserializeObject<UrbanSearchResult>(json);
-            return result;
+            string? json = await _client.GetStringAsync($"{ApiUrl}{query}");
+            return JsonConvert.DeserializeObject<UrbanSearchResult>(json);
         }
 
         public async Task<UrbanSearchResult> GetRandomAsync()
         {
             var response = await _client.GetAsync("https://www.urbandictionary.com/random.php?page=1");
+
+            if (response?.RequestMessage?.RequestUri == null)
+                return new UrbanSearchResult();
+
             return await SearchAsync(response.RequestMessage.RequestUri.AbsoluteUri
                 .Replace("https://www.urbandictionary.com/define.php?term=", ""));
         }

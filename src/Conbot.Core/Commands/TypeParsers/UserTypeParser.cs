@@ -2,7 +2,9 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Discord;
+
 using Qmmands;
 
 namespace Conbot.Commands
@@ -12,11 +14,11 @@ namespace Conbot.Commands
         public override async ValueTask<TypeParserResult<T>> ParseAsync(Parameter parameter, string value,
             CommandContext context)
         {
-            var discordCommandContext = context as DiscordCommandContext;
+            var discordCommandContext = (DiscordCommandContext)context;
 
-            IUser user = null;
+            IUser? user = null;
 
-            if (MentionUtils.TryParseUser(value, out var id))
+            if (MentionUtils.TryParseUser(value, out ulong id))
             {
                 user = discordCommandContext.Guild?.GetUser(id)
                        ?? await discordCommandContext.Channel.GetUserAsync(id, CacheMode.CacheOnly);

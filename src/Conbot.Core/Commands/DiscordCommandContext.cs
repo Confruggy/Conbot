@@ -3,23 +3,28 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
 using Conbot.Interactive;
+
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+
 using Qmmands;
 
 namespace Conbot.Commands
 {
     public class DiscordCommandContext : CommandContext
     {
-        public DiscordShardedClient Client { get; }
-        public SocketGuild Guild { get; }
         private readonly List<IUserMessage> _messages;
-        public SocketUserMessage Message => (SocketUserMessage)_messages.FirstOrDefault();
-        public SocketInteraction Interaction { get; }
+
+        public DiscordShardedClient Client { get; }
+        public SocketGuild? Guild { get; }
+        public SocketUserMessage? Message => _messages.FirstOrDefault() as SocketUserMessage;
+        public SocketInteraction? Interaction { get; }
         public ReadOnlyCollection<IUserMessage> Messages => _messages.AsReadOnly();
         public ISocketMessageChannel Channel { get; set; }
         public SocketUser User { get; }
@@ -47,16 +52,17 @@ namespace Conbot.Commands
             _messages = new List<IUserMessage>();
         }
 
-        public async Task<RestUserMessage> SendMessageAsync(string text = null, bool isTTS = false, Embed embed = null,
-            RequestOptions options = null, AllowedMentions allowedMentions = null, MessageReference reference = null)
+        public async Task<RestUserMessage> SendMessageAsync(string? text = null, bool isTTS = false,
+            Embed? embed = null, RequestOptions? options = null, AllowedMentions? allowedMentions = null,
+            MessageReference? reference = null)
         {
             var message = await Channel.SendMessageAsync(text, isTTS, embed, options, allowedMentions, reference);
             _messages.Add(message);
             return message;
         }
 
-        public async Task<RestUserMessage> ReplyAsync(string text = null, bool isTTS = false, Embed embed = null,
-            AllowedMentions allowedMentions = null, RequestOptions options = null)
+        public async Task<RestUserMessage> ReplyAsync(string? text = null, bool isTTS = false, Embed? embed = null,
+            AllowedMentions? allowedMentions = null, RequestOptions? options = null)
         {
             if (Interaction != null)
             {
@@ -72,8 +78,8 @@ namespace Conbot.Commands
             }
         }
 
-        public async Task<(RestUserMessage, bool?)> ConfirmAsync(string text, bool isTTS = false,
-            Embed embed = null, AllowedMentions allowedMentions = null, RequestOptions options = null,
+        public async Task<(RestUserMessage, bool?)> ConfirmAsync(string? text, bool isTTS = false,
+            Embed? embed = null, AllowedMentions? allowedMentions = null, RequestOptions? options = null,
             int timeout = 60000)
         {
             var interactiveService = ServiceProvider.GetRequiredService<InteractiveService>();
@@ -86,11 +92,9 @@ namespace Conbot.Commands
             var interactiveMessage = new InteractiveMessageBuilder()
                 .WithPrecondition(x => x.Id == User.Id)
                 .WithTimeout(timeout)
-                .AddReactionCallback(x => x
-                    .WithEmote(config.GetValue<string>("Emotes:CheckMark"))
+                .AddReactionCallback(config.GetValue<string>("Emotes:CheckMark"), x => x
                     .WithCallback(_ => confirmed = true))
-                .AddReactionCallback(x => x
-                    .WithEmote(config.GetValue<string>("Emotes:CrossMark"))
+                .AddReactionCallback(config.GetValue<string>("Emotes:CrossMark"), x => x
                     .WithCallback(_ => confirmed = false))
                 .Build();
 

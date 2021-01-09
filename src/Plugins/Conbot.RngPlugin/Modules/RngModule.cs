@@ -1,6 +1,8 @@
 using System;
 using System.Threading.Tasks;
+
 using Conbot.Commands;
+
 using Qmmands;
 
 namespace Conbot.RngPlugin
@@ -32,9 +34,11 @@ namespace Conbot.RngPlugin
         [Command("8ball")]
         [Description("Asks the Magic 8 Ball a question.")]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
+#pragma warning disable IDE0060
         public Task EightBallAsync(
             [Description("The question to ask."), Remainder] string question)
         {
+#pragma warning restore IDE0060
             string[] answers =
             {
                 "It is certain.",

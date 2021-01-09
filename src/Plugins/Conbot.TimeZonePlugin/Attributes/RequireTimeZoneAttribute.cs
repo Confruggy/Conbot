@@ -1,7 +1,11 @@
 using System.Threading.Tasks;
-using Conbot.Commands;
+
 using Microsoft.Extensions.DependencyInjection;
+
+using Conbot.Commands;
+
 using NodaTime;
+
 using Qmmands;
 
 namespace Conbot.TimeZonePlugin
@@ -11,7 +15,7 @@ namespace Conbot.TimeZonePlugin
         public override async ValueTask<CheckResult> CheckAsync(CommandContext context)
         {
             var db = context.ServiceProvider.GetRequiredService<TimeZoneContext>();
-            var discordCommandContext = context as DiscordCommandContext;
+            var discordCommandContext = (DiscordCommandContext)context;
             var userTimeZone = await db.GetUserTimeZoneAsync(discordCommandContext.User);
 
             if (userTimeZone == null)

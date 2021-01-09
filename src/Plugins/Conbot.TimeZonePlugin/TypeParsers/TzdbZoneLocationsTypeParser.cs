@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using NodaTime.TimeZones;
+
 using Qmmands;
 
 namespace Conbot.TimeZonePlugin
@@ -14,7 +16,7 @@ namespace Conbot.TimeZonePlugin
         {
             var source = TzdbDateTimeZoneSource.Default;
 
-            var locations = TzdbDateTimeZoneSource.Default.ZoneLocations.Where(x =>
+            var locations = TzdbDateTimeZoneSource.Default.ZoneLocations!.Where(x =>
                 (string.Equals(x.CountryName, value, StringComparison.InvariantCultureIgnoreCase) ||
                     string.Equals(x.CountryCode, value, StringComparison.InvariantCultureIgnoreCase)) &&
                     source.CanonicalIdMap[x.ZoneId] == x.ZoneId);

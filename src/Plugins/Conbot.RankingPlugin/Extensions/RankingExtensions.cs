@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord;
+
 using Microsoft.EntityFrameworkCore;
+
+using Discord;
 
 namespace Conbot.RankingPlugin
 {
@@ -23,16 +25,7 @@ namespace Conbot.RankingPlugin
 
             if (rank == null)
             {
-                rank = new Rank
-                {
-                    GuildId = user.GuildId,
-                    UserId = user.Id,
-                    IsBot = user.IsBot,
-                    ExperiencePoints = 0,
-                    RankedMessages = 0,
-                    TotalMessages = 0
-                };
-
+                rank = new Rank(user.GuildId, user.Id, user.IsBot, 0, 0, 0);
                 await context.Ranks.AddAsync(rank);
             }
 
@@ -66,11 +59,7 @@ namespace Conbot.RankingPlugin
 
             if (config == null)
             {
-                config = new RankGuildConfiguration
-                {
-                    GuildId = guildId
-                };
-
+                config = new RankGuildConfiguration(guildId);
                 await context.GuildConfigurations.AddAsync(config);
             }
 
@@ -107,16 +96,8 @@ namespace Conbot.RankingPlugin
         public static async Task<RankRoleReward> AddRoleRewardAsync(this RankingContext context,
             RankGuildConfiguration config, int level, IRole role)
         {
-            var roleReward = new RankRoleReward
-            {
-                GuildConfiguration = config,
-                GuildId = config.GuildId,
-                Level = level,
-                RoleId = role.Id
-            };
-
+            var roleReward = new RankRoleReward(config, level, role.Id);
             await context.RoleRewards.AddAsync(roleReward);
-
             return roleReward;
         }
 

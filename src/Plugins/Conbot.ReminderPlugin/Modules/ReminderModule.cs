@@ -1,16 +1,22 @@
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Configuration;
+
 using Conbot.Commands;
 using Conbot.Extensions;
 using Conbot.Interactive;
 using Conbot.TimeZonePlugin;
 using Conbot.TimeZonePlugin.Extensions;
+
 using Discord;
+
 using Humanizer;
-using Microsoft.Extensions.Configuration;
+
 using NodaTime;
 using NodaTime.Extensions;
+
 using Qmmands;
 
 namespace Conbot.ReminderPlugin
@@ -56,9 +62,9 @@ namespace Conbot.ReminderPlugin
             ZonedDateTimeParseResult time,
             [Description("The message for the reminder.")]
             [Remainder]
-            string message = null)
+            string? message = null)
         {
-            if (time.Then.Value.LocalDateTime < time.Now.LocalDateTime)
+            if (time.Then!.Value.LocalDateTime < time.Now.LocalDateTime)
             {
                 await ReplyAsync("This time is in the past.");
                 return;
@@ -71,7 +77,7 @@ namespace Conbot.ReminderPlugin
                 .Append("⏰ Reminder has been set. You'll be reminded ")
                 .Append(time.Now.ToDurationString(time.Then.Value, DurationLevel.Seconds,
                     showDateAt: Duration.FromDays(1), formatted: true))
-                .Append(".");
+                .Append('.');
 
             await Task.WhenAll(
                 ReplyAsync(text.ToString()),
@@ -110,16 +116,16 @@ namespace Conbot.ReminderPlugin
         [Description("Clears all reminders you have set.")]
         public async Task ClearAsync()
         {
-            var reminders = await _db.GetRemindersAsync(Context.User);
+            var reminders = await _db.GetRemindersAsync(Context.User).ToArrayAsync();
 
-            if (reminders.Count == 0)
+            if (reminders.Length == 0)
             {
                 await ReplyAsync("You don't have any reminders.");
                 return;
             }
 
             var message = await ConfirmAsync(
-                $"Do you really want to delete {"reminder".ToQuantity(reminders.Count, Format.Bold("#"))}?");
+                $"Do you really want to delete {"reminder".ToQuantity(reminders.Length, Format.Bold("#"))}?");
 
             if (message.Item2 == true)
             {
@@ -152,17 +158,18 @@ namespace Conbot.ReminderPlugin
             var now = SystemClock.Instance.InZone(timeZone)
                 .GetCurrentZonedDateTime();
 
-            var reminders = (await _db.GetRemindersAsync(Context.User))
+            var reminders = await _db.GetRemindersAsync(Context.User)
                 .Where(x => x.EndsAt > now.ToDateTimeUtc())
-                .OrderBy(x => x.EndsAt);
+                .OrderBy(x => x.EndsAt)
+                .ToArrayAsync();
 
-            if (!reminders.Any())
+            if (reminders.Length == 0)
             {
                 await ReplyAsync("You don't have any upcoming reminders.");
                 return;
             }
 
-            int count = reminders.Count();
+            int count = reminders.Length;
 
             var paginator = new Paginator();
 
@@ -203,7 +210,7 @@ namespace Conbot.ReminderPlugin
             else
             {
                 for (int i = 0; i < count; i++)
-                    paginator.AddPage(CreateReminderEmbed(reminders.ElementAt(i), now, i, count));
+                    paginator.AddPage(CreateReminderEmbed(reminders[i], now, i, count));
             }
 
             await paginator.RunAsync(_interactiveService, Context);

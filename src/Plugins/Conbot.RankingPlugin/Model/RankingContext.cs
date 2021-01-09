@@ -1,13 +1,14 @@
 ﻿using System.IO;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Conbot.RankingPlugin
 {
     public class RankingContext : DbContext
     {
-        public DbSet<Rank> Ranks { get; set; }
-        public DbSet<RankGuildConfiguration> GuildConfigurations { get; set; }
-        public DbSet<RankRoleReward> RoleRewards { get; set; }
+        public DbSet<Rank> Ranks => Set<Rank>();
+        public DbSet<RankGuildConfiguration> GuildConfigurations => Set<RankGuildConfiguration>();
+        public DbSet<RankRoleReward> RoleRewards => Set<RankRoleReward>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -21,13 +22,10 @@ namespace Conbot.RankingPlugin
 
             modelBuilder.Entity<RankRoleReward>()
                 .HasAlternateKey(r => new { r.GuildId, r.RoleId });
-
             modelBuilder.Entity<RankRoleReward>()
                 .HasAlternateKey(r => new { r.GuildId, r.Level });
-
             modelBuilder.Entity<RankRoleReward>()
                 .HasAlternateKey(r => new { r.Level, r.RoleId });
-
             modelBuilder.Entity<RankRoleReward>()
                 .HasAlternateKey(r => new { r.GuildId, r.Level, r.RoleId });
         }
@@ -36,7 +34,7 @@ namespace Conbot.RankingPlugin
         {
             optionsBuilder
                 .UseSqlite(
-                    $"Data Source={Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location), "Ranking")}.db")
+                    $"Data Source={Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "Ranking")}.db")
                 .UseLazyLoadingProxies();
         }
     }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Discord;
 
 namespace Conbot.PrefixPlugin
@@ -24,13 +25,9 @@ namespace Conbot.PrefixPlugin
         public static ValueTask<Prefix> GetPrefixAsync(this PrefixContext context, IGuild guild, string text)
             => GetPrefixAsync(context, guild.Id, text);
 
-        public async static ValueTask<Prefix> AddPrefixAsync(this PrefixContext context, ulong guildId, string text)
+        public static async ValueTask<Prefix> AddPrefixAsync(this PrefixContext context, ulong guildId, string text)
         {
-            var prefix = new Prefix
-            {
-                GuildId = guildId,
-                Text = text
-            };
+            var prefix = new Prefix(guildId, text);
 
             await context.Prefixes.AddAsync(prefix);
             return prefix;

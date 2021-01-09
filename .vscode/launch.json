@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/Conbot/bin/Debug/netcoreapp3.1/Conbot.dll",
+            "program": "${workspaceFolder}/src/Conbot/bin/Debug/net5.0/Conbot.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/Conbot",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console

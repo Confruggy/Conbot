@@ -1,14 +1,17 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Qmmands;
 
 namespace Conbot.Commands
 {
     public class CommandTypeParser : TypeParser<Command>
     {
-        public override ValueTask<TypeParserResult<Command>> ParseAsync(Parameter parameter, string value, CommandContext context)
+        public override ValueTask<TypeParserResult<Command>> ParseAsync(Parameter parameter, string value,
+            CommandContext context)
         {
             var commandService = context.ServiceProvider.GetRequiredService<CommandService>();
 

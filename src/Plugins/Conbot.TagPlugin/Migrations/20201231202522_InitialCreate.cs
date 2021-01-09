@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Conbot.TagPlugin.Migrations

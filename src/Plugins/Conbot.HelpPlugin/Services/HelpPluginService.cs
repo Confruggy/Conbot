@@ -1,7 +1,9 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using Conbot.Commands;
+
 using Microsoft.Extensions.Hosting;
+
+using Conbot.Commands;
 
 namespace Conbot.HelpPlugin
 {

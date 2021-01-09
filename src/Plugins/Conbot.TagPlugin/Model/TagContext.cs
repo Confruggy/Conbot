@@ -1,17 +1,18 @@
 ﻿using System;
 using System.IO;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Conbot.TagPlugin
 {
     public class TagContext : DbContext
     {
-        public DbSet<Tag> Tags { get; set; }
-        public DbSet<TagAlias> TagAliases { get; set; }
-        public DbSet<TagModification> TagModifications { get; set; }
-        public DbSet<TagUse> TagUses { get; set; }
-        public DbSet<TagOwnerChange> TagOwnerChanges { get; set; }
-        public DbSet<TagAliasOwnerChange> TagAliasOwnerChanges { get; set; }
+        public DbSet<Tag> Tags => Set<Tag>();
+        public DbSet<TagAlias> TagAliases => Set<TagAlias>();
+        public DbSet<TagModification> TagModifications => Set<TagModification>();
+        public DbSet<TagUse> TagUses => Set<TagUse>();
+        public DbSet<TagOwnerChange> TagOwnerChanges => Set<TagOwnerChange>();
+        public DbSet<TagAliasOwnerChange> TagAliasOwnerChanges => Set<TagAliasOwnerChange>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -66,7 +67,7 @@ namespace Conbot.TagPlugin
         {
             optionsBuilder
                 .UseSqlite(
-                    $"Data Source={Path.Combine(Path.GetDirectoryName(this.GetType().Assembly.Location), "tag")}.db")
+                    $"Data Source={Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "tag")}.db")
                 .UseLazyLoadingProxies();
         }
     }

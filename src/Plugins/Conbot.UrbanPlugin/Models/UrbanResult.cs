@@ -8,19 +8,19 @@ namespace Conbot.UrbanPlugin
         public int Id { get; set; }
 
         [JsonProperty("word")]
-        public string Word { get; set; }
+        public string Word { get; set; } = string.Empty;
 
         [JsonProperty("author")]
-        public string Author { get; set; }
+        public string Author { get; set; } = string.Empty;
 
         [JsonProperty("permalink")]
-        public string Permalink { get; set; }
+        public string Permalink { get; set; } = string.Empty;
 
         [JsonProperty("definition")]
-        public string Definition { get; set; }
+        public string Definition { get; set; } = string.Empty;
 
         [JsonProperty("example")]
-        public string Example { get; set; }
+        public string Example { get; set; } = string.Empty;
 
         [JsonProperty("thumbs_up")]
         public int ThumbsUp { get; set; }

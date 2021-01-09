@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+
 using Discord;
+
 using Humanizer;
+
 using NodaTime;
 using NodaTime.Extensions;
 
@@ -24,7 +27,8 @@ namespace Conbot.TimeZonePlugin.Extensions
                 text.Append("Tomorrow");
             else if (dateTime.Date == now.Date.PlusDays(-1))
                 text.Append("Yesterday");
-            else text.Append(dateTime.Date.ToString("d MMM yyyy", CultureInfo.InvariantCulture));
+            else
+                text.Append(dateTime.Date.ToString("d MMM yyyy", CultureInfo.InvariantCulture));
 
             text.Append(" at ");
 
@@ -111,14 +115,19 @@ namespace Conbot.TimeZonePlugin.Extensions
 
             if ((accuracy == 0 || accuracy > strings.Count) && weeks > 0)
                 strings.Add("week".ToQuantity(weeks, formatted ? Format.Bold("#") : "#"));
+
             if ((accuracy == 0 || accuracy > strings.Count) && days > 0)
                 strings.Add("day".ToQuantity(days, formatted ? Format.Bold("#") : "#"));
+
             if ((accuracy == 0 || accuracy > strings.Count) && hours > 0)
                 strings.Add("hour".ToQuantity(hours, formatted ? Format.Bold("#") : "#"));
+
             if ((accuracy == 0 || accuracy > strings.Count) && minutes > 0)
                 strings.Add("minute".ToQuantity(minutes, formatted ? Format.Bold("#") : "#"));
+
             if ((accuracy == 0 || accuracy > strings.Count) && seconds > 0)
                 strings.Add("second".ToQuantity(seconds, formatted ? Format.Bold("#") : "#"));
+
             if ((accuracy == 0 || accuracy > strings.Count) && milliseconds > 0)
                 strings.Add("milliseconds".ToQuantity(weeks, formatted ? Format.Bold("#") : "#"));
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿#pragma warning disable
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Conbot.PrefixPlugin.Migrations
 {
