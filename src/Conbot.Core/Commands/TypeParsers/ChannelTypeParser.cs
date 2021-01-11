@@ -5,13 +5,16 @@ using System.Threading.Tasks;
 
 using Discord;
 
+using Humanizer;
+
 using Qmmands;
 
 namespace Conbot.Commands
 {
     public class ChannelTypeParser<T> : TypeParser<T> where T : class, IChannel
     {
-        public override ValueTask<TypeParserResult<T>> ParseAsync(Parameter parameter, string value, CommandContext context)
+        public override ValueTask<TypeParserResult<T>> ParseAsync(Parameter parameter, string value,
+            CommandContext context)
         {
             var discordCommandContext = (DiscordCommandContext)context;
 
@@ -20,7 +23,7 @@ namespace Conbot.Commands
 
             IChannel? channel = null;
 
-            if (MentionUtils.TryParseRole(value, out ulong id))
+            if (MentionUtils.TryParseChannel(value, out ulong id))
             {
                 channel = discordCommandContext.Guild.GetChannel(id);
             }
@@ -31,20 +34,34 @@ namespace Conbot.Commands
             else
             {
                 var channels = discordCommandContext.Guild.Channels;
-                var foundChannels = channels.Where(x => string.Equals(value, x.Name, StringComparison.OrdinalIgnoreCase));
+                var foundChannels = channels.Where(x => string.Equals(value, x.Name,
+                    StringComparison.OrdinalIgnoreCase));
 
                 if (foundChannels.Count() > 1)
                 {
                     return TypeParserResult<T>.Unsuccessful(
-                        "Channel name is ambiguous. Try mentioning the channel or enter the id.");
+                        "Channel name is ambiguous. Try mentioning the channel or enter the ID.");
                 }
 
                 channel = foundChannels.FirstOrDefault();
             }
 
-            return channel is T tChannel
-                ? TypeParserResult<T>.Successful(tChannel)
-                : TypeParserResult<T>.Unsuccessful("Channel hasn't been found.");
+            if (channel is T tChannel)
+                return TypeParserResult<T>.Successful(tChannel);
+
+            if (channel != null)
+            {
+                if (typeof(ITextChannel).IsAssignableFrom(typeof(T)))
+                    return TypeParserResult<T>.Unsuccessful($"{parameter.Name.Humanize()} must be a text channel.");
+
+                if (typeof(IVoiceChannel).IsAssignableFrom(typeof(T)))
+                    return TypeParserResult<T>.Unsuccessful($"{parameter.Name.Humanize()} must be a voice channel.");
+
+                if (typeof(ICategoryChannel).IsAssignableFrom(typeof(T)))
+                    return TypeParserResult<T>.Unsuccessful($"{parameter.Name.Humanize()} must be a category.");
+            }
+
+            return TypeParserResult<T>.Unsuccessful("Channel wasn't found.");
         }
     }
 }
