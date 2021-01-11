@@ -45,11 +45,15 @@ namespace Conbot.RankingPlugin
             bool includeBots = false)
             => GetRanksAsync(context, guild.Id, includeBots);
 
-        public static Task<RankGuildConfiguration> GetGuildConfigurationAsync(this RankingContext context,
+        public static async Task<RankGuildConfiguration?> GetGuildConfigurationAsync(this RankingContext context,
             ulong guildId)
-            => context.GuildConfigurations.AsQueryable().FirstOrDefaultAsync(x => x.GuildId == guildId);
+            => await context
+                .GuildConfigurations
+                .Include(x => x.RoleRewards)
+                .Include(x => x.IgnoredChannels)
+                .FirstOrDefaultAsync(x => x.GuildId == guildId);
 
-        public static Task<RankGuildConfiguration> GetGuildConfigurationAsync(this RankingContext context, IGuild guild)
+        public static Task<RankGuildConfiguration?> GetGuildConfigurationAsync(this RankingContext context, IGuild guild)
             => GetGuildConfigurationAsync(context, guild.Id);
 
         public static async Task<RankGuildConfiguration> GetOrCreateGuildConfigurationAsync(this RankingContext context,
@@ -103,5 +107,35 @@ namespace Conbot.RankingPlugin
 
         public static void RemoveRoleReward(this RankingContext context, RankRoleReward roleReward)
             => context.RoleRewards.Remove(roleReward);
+
+        public static async Task<IgnoredChannel?> GetIgnoredChannelAsync(this RankingContext context,
+            ulong channelId)
+            => await context.IgnoredChannels.AsNoTracking().FirstOrDefaultAsync(x => x.ChannelId == channelId);
+
+        public static Task<IgnoredChannel?> GetIgnoredChannelAsync(this RankingContext context,
+            ITextChannel channel)
+            => GetIgnoredChannelAsync(context, channel.Id);
+
+        public static IAsyncEnumerable<IgnoredChannel> GetIgnoredChannelsAsync(this RankingContext context,
+            ulong guildId)
+            => context.IgnoredChannels.AsNoTracking().Where(x => x.GuildId == guildId).AsAsyncEnumerable();
+
+        public static IAsyncEnumerable<IgnoredChannel> GetIgnoredChannelsAsync(this RankingContext context,
+            IGuild guild)
+            => GetIgnoredChannelsAsync(context, guild.Id);
+
+        public static void AddIgnoredChannel(this RankingContext context, ulong channelId,
+            RankGuildConfiguration guildConfiguration)
+        {
+            var ignoredChannel = new IgnoredChannel(channelId, guildConfiguration);
+            context.IgnoredChannels.Add(ignoredChannel);
+        }
+
+        public static void AddIgnoredChannel(this RankingContext context, ITextChannel channel,
+            RankGuildConfiguration guildConfiguration)
+            => AddIgnoredChannel(context, channel.Id, guildConfiguration);
+
+        public static void RemoveIgnoredChannel(this RankingContext context, IgnoredChannel channel)
+            => context.IgnoredChannels.Remove(channel);
     }
 }

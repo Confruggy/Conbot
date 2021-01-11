@@ -541,33 +541,124 @@ namespace Conbot.RankingPlugin
             }
         }
 
-        [Group("ignoredchannels")]
+        [Group("ignore")]
         [Description("Configures channels to ignore from gaining experience points.")]
         [Remarks(
             "Ignored channels are useful to avoid gaining experience points from channels where usually no " +
             "actual discussion is held, e.g., bot channels.")]
         public class IgnoredChannelsCommands : DiscordModuleBase
         {
-            [Command("add")]
+            private readonly RankingContext _db;
+            private readonly InteractiveService _interactiveService;
+            private readonly IConfiguration _config;
+
+            public IgnoredChannelsCommands(RankingContext context, InteractiveService interactiveService,
+                IConfiguration config)
+            {
+                _db = context;
+                _interactiveService = interactiveService;
+                _config = config;
+            }
+
+            [Command("add", "")]
             [Description("Adds a channel to ignore.")]
+            [RequireUserPermission(GuildPermission.ManageGuild)]
+            [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
             public async Task AddAsync([Description("The text channel to ignore.")] ITextChannel channel)
             {
-                //TODO
+                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild!);
+
+                var ignoredChannel = await _db.GetIgnoredChannelAsync(channel);
+                if (ignoredChannel != null)
+                {
+                    await ReplyAsync("This channel is already ignored.");
+                    return;
+                }
+
+                _db.AddIgnoredChannel(channel, config);
+
+                await Task.WhenAll(
+                    _db.SaveChangesAsync(),
+                    ReplyAsync($"Channel {channel.Mention} is now ignored from gaining experience points.")
+                );
             }
 
             [Command("remove")]
             [Description("Removes a channel from being ignored.")]
+            [RequireUserPermission(GuildPermission.ManageGuild)]
+            [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
             public async Task RemoveAsync(
                 [Description("The text channel to remove from being ignored.")] ITextChannel channel)
             {
-                //TODO
+                var ignoredChannel = await _db.GetIgnoredChannelAsync(channel);
+
+                if (ignoredChannel == null)
+                {
+                    await ReplyAsync("This channel isn't ignored.");
+                    return;
+                }
+
+                _db.RemoveIgnoredChannel(ignoredChannel);
+
+                await Task.WhenAll(
+                    _db.SaveChangesAsync(),
+                    ReplyAsync($"Channel {channel.Mention} is now no longer ignored from gaining experience points.")
+                );
             }
 
-            [Command("list", "all", "")]
+            [Command("list", "all")]
             [Description("Lists all ignored channels.")]
-            public async Task ListAsync(int page = 1)
+            [RequireBotPermission(GuildPermission.EmbedLinks)]
+            public async Task ListAsync([Description("The page to start with.")] int page = 1)
             {
-                //TODO
+                var ignoredChannels = await _db.GetIgnoredChannelsAsync(Context.Guild!).ToArrayAsync();
+                int count = ignoredChannels.Length;
+
+                if (count == 0)
+                {
+                    await ReplyAsync("There are no channels ignored from gaining experience points.");
+                    return;
+                }
+
+                List<string> pages = new();
+
+                int i = 1;
+                var pageText = new StringBuilder();
+
+                foreach (var ignoredChannel in ignoredChannels)
+                {
+                    pageText.AppendLine(MentionUtils.MentionChannel(ignoredChannel.ChannelId));
+
+                    if (i % 15 == 0 || i == count)
+                    {
+                        pages.Add(pageText.ToString());
+                        pageText.Clear();
+                    }
+
+                    i++;
+                }
+
+                if (page > pages.Count || page < 1)
+                {
+                    await ReplyAsync("This page doesn't exist.");
+                    return;
+                }
+
+                var paginator = new Paginator();
+
+                for (int j = 0; j < pages.Count; j++)
+                {
+                    var embed = new EmbedBuilder()
+                        .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
+                        .WithAuthor(Context.Guild!.Name, Context.Guild!.IconUrl)
+                        .WithTitle("Ignored Channels")
+                        .WithDescription(pages[j])
+                        .WithFooter($"Page {j + 1}/{pages.Count} ({"entry".ToQuantity(count)})")
+                        .Build();
+                    paginator.AddPage(embed);
+                }
+
+                await paginator.RunAsync(_interactiveService, Context, page - 1);
             }
         }
 

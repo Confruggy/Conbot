@@ -9,6 +9,7 @@ namespace Conbot.RankingPlugin
         public DbSet<Rank> Ranks => Set<Rank>();
         public DbSet<RankGuildConfiguration> GuildConfigurations => Set<RankGuildConfiguration>();
         public DbSet<RankRoleReward> RoleRewards => Set<RankRoleReward>();
+        public DbSet<IgnoredChannel> IgnoredChannels => Set<IgnoredChannel>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -17,6 +18,10 @@ namespace Conbot.RankingPlugin
 
             modelBuilder.Entity<RankGuildConfiguration>()
                 .HasMany(r => r.RoleRewards)
+                .WithOne(r => r.GuildConfiguration)
+                .HasForeignKey(r => r.GuildId);
+            modelBuilder.Entity<RankGuildConfiguration>()
+                .HasMany(r => r.IgnoredChannels)
                 .WithOne(r => r.GuildConfiguration)
                 .HasForeignKey(r => r.GuildId);
 

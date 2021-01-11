@@ -14,7 +14,23 @@ namespace Conbot.RankingPlugin.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.9");
+                .HasAnnotation("ProductVersion", "5.0.1");
+
+            modelBuilder.Entity("Conbot.RankingPlugin.IgnoredChannel", b =>
+                {
+                    b.Property<ulong>("ChannelId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("GuildId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ChannelId");
+
+                    b.HasIndex("GuildId");
+
+                    b.ToTable("IgnoredChannels");
+                });
 
             modelBuilder.Entity("Conbot.RankingPlugin.Rank", b =>
                 {
@@ -62,10 +78,10 @@ namespace Conbot.RankingPlugin.Migrations
                     b.Property<int?>("LevelUpAnnouncementsMinimumLevel")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("RoleRewardsType")
+                    b.Property<int?>("RoleRewardsType")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("ShowLevelUpAnnouncements")
+                    b.Property<bool?>("ShowLevelUpAnnouncements")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("GuildId");
@@ -101,13 +117,33 @@ namespace Conbot.RankingPlugin.Migrations
                     b.ToTable("RoleRewards");
                 });
 
-            modelBuilder.Entity("Conbot.RankingPlugin.RankRoleReward", b =>
+            modelBuilder.Entity("Conbot.RankingPlugin.IgnoredChannel", b =>
                 {
                     b.HasOne("Conbot.RankingPlugin.RankGuildConfiguration", "GuildConfiguration")
-                        .WithMany()
+                        .WithMany("IgnoredChannels")
                         .HasForeignKey("GuildId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("GuildConfiguration");
+                });
+
+            modelBuilder.Entity("Conbot.RankingPlugin.RankRoleReward", b =>
+                {
+                    b.HasOne("Conbot.RankingPlugin.RankGuildConfiguration", "GuildConfiguration")
+                        .WithMany("RoleRewards")
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GuildConfiguration");
+                });
+
+            modelBuilder.Entity("Conbot.RankingPlugin.RankGuildConfiguration", b =>
+                {
+                    b.Navigation("IgnoredChannels");
+
+                    b.Navigation("RoleRewards");
                 });
 #pragma warning restore 612, 618
         }

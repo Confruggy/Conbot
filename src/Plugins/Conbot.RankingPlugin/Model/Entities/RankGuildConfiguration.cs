@@ -14,6 +14,7 @@ namespace Conbot.RankingPlugin
         public RoleRewardsType? RoleRewardsType { get; set; }
 
         public virtual List<RankRoleReward> RoleRewards { get; set; } = null!;
+        public virtual List<IgnoredChannel> IgnoredChannels { get; set; } = null!;
 
         public RankGuildConfiguration(ulong guildId)
         {
