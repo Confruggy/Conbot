@@ -416,7 +416,8 @@ namespace Conbot.RankingPlugin
                     "Make sure the role is *below* the bots highest role. Otherwise the bot won't be able " +
                     "to give this role to members.")]
                 [LowerHierarchy]
-                IRole role, //TODO prevent to add managed roles
+                [Assignable]
+                IRole role,
                 [Description("The level when the role should be rewarded.")]
                 int level)
             {

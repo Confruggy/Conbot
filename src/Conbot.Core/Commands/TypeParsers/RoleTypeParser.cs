@@ -37,15 +37,18 @@ namespace Conbot.Commands
                 if (foundRoles.Count() > 1)
                 {
                     return TypeParserResult<T>.Unsuccessful(
-                        "Role name is ambiguous. Try mentioning the role or enter the id.");
+                        "Role name is ambiguous. Try mentioning the role or enter the ID.");
                 }
 
                 role = foundRoles.FirstOrDefault();
             }
 
+            if (role?.Id == discordCommandContext.Guild.Id)
+                return TypeParserResult<T>.Unsuccessful("You can't enter the **@\u200beveryone** role.");
+
             return role is T tRole
                 ? TypeParserResult<T>.Successful(tRole)
-                : TypeParserResult<T>.Unsuccessful("Role hasn't been found.");
+                : TypeParserResult<T>.Unsuccessful("Role wasn't found.");
         }
     }
 }
