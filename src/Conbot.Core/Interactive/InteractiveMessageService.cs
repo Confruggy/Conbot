@@ -71,7 +71,7 @@ namespace Conbot.Interactive
                     if (token.IsCancellationRequested)
                         break;
 
-                    await message.TryAddReactionAsync(new Emoji(emote));
+                    await message.TryAddReactionAsync(new Emoji(emote), new RequestOptions { UseSystemClock = false });
                 }
             }
 
