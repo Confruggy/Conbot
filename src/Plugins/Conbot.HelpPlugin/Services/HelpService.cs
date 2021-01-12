@@ -348,7 +348,7 @@ namespace Conbot.HelpPlugin
                             .Append('.');
                     }
 
-                    if (parameter.DefaultValue is not Array)
+                    if (parameter.DefaultValue is not null && parameter.DefaultValue is not Array)
                     {
                         parameterText.Append(" Default value is ")
                             .Append(parameter.DefaultValue)
