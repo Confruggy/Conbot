@@ -194,7 +194,7 @@ namespace Conbot.TimeZonePlugin
 
                 var interactiveMessage = new InteractiveMessageBuilder()
                     .WithPrecondition(x => x.Id == context.User.Id)
-                    .AddReactionCallback("stop:654781462385655849", x => x
+                    .AddReactionCallback(config.GetValue<string>("Emotes:Stop"), x => x
                         .ShouldResumeAfterExecution(false))
                     .AddMessageCallback(x => x
                         .WithPrecondition(msg => int.TryParse(msg.Content, out number) && number <= count && number > 0)
