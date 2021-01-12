@@ -9,20 +9,24 @@ using Microsoft.Extensions.Hosting;
 
 using Discord;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 
 namespace Conbot.RankingPlugin
 {
     public class RankingService : IHostedService
     {
+        private readonly ILogger<RankingService> _logger;
         private readonly DiscordShardedClient _client;
         private readonly Random _random;
         private readonly int[] _levels;
 
-        public RankingService(DiscordShardedClient client, Random random, IConfiguration config)
+        public RankingService(DiscordShardedClient client, Random random, IConfiguration config,
+            ILogger<RankingService> logger)
         {
             _client = client;
             _random = random;
             _levels = config.GetSection("RankingPlugin:Levels").Get<int[]>();
+            _logger = logger;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -102,7 +106,16 @@ namespace Conbot.RankingPlugin
                             ? $"{user.Mention}, you achieved level **{newLevel}**. Congratulations! 🎉"
                             : $"{user.Mention} achieved level **{newLevel}**. Congratulations! 🎉";
 
-                        try { await channel.SendMessageAsync(text); } catch { }
+                        try
+                        {
+                            await channel.SendMessageAsync(text);
+                        }
+                        catch (Exception exception)
+                        {
+                            _logger.LogWarning(exception,
+                                "Sending level up message for {User} failed in {Guild}/{Channel}", user, guild,
+                                channel);
+                        }
                     }
                 }
             });
@@ -150,26 +163,53 @@ namespace Conbot.RankingPlugin
             }
         }
 
-        public static async Task UpdateRolesAsync(IGuildUser user, IEnumerable<IRole> roles, RoleRewardsType type)
+        public async Task UpdateRolesAsync(IGuildUser user, IEnumerable<IRole> roles, RoleRewardsType type)
         {
             if (roles.Any())
                 return;
+
+            var guild = user.Guild;
 
             if (type == RoleRewardsType.Stack)
             {
                 foreach (var role in roles)
                 {
-                    try { await user.AddRoleAsync(role); } catch { }
+                    try
+                    {
+                        await user.AddRoleAsync(role);
+                    }
+                    catch (Exception exception)
+                    {
+                        _logger.LogWarning(exception, "Adding role {Role} to {User} failed in {Guild}", role, user,
+                            guild);
+                    }
                 }
             }
             else
             {
                 foreach (var role in roles.SkipLast(1))
                 {
-                    try { await user.RemoveRoleAsync(role); } catch { }
+                    try
+                    {
+                        await user.RemoveRoleAsync(role);
+                    }
+                    catch (Exception exception)
+                    {
+                        _logger.LogWarning(exception, "Removing role {Role} from {User} failed in {Guild}", role, user,
+                            user.Guild);
+                    }
                 }
 
-                try { await user.AddRoleAsync(roles.Last()); } catch { }
+                var last = roles.Last();
+                try
+                {
+                    await user.AddRoleAsync(last);
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogWarning(exception, "Adding role {Role} to {User} failed in {Guild}", last, user,
+                        user.Guild);
+                }
             }
         }
 
