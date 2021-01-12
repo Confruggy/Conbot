@@ -25,6 +25,8 @@ namespace Conbot.ModerationPlugin
         [Command("prune", "purge", "clean", "clear")]
         [Description("Deletes messages in a channel.")]
         [Remarks("Only up to 100 of the latest 1.000 messages in the executing channel will be deleted.")]
+        [RequireUserPermission(ChannelPermission.ManageMessages)]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
         public async Task PruneAsync(
             [Description("The member to delete messages from.")] IGuildUser? member = null,
             [Description("The maximal amount of messages to delete."), MinValue(1), MaxValue(100)] int limit = 10)

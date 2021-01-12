@@ -114,6 +114,7 @@ namespace Conbot.ReminderPlugin
 
         [Command("clear")]
         [Description("Clears all reminders you have set.")]
+        [RequireBotPermission(ChannelPermission.AddReactions | ChannelPermission.UseExternalEmojis)]
         public async Task ClearAsync()
         {
             var reminders = await _db.GetRemindersAsync(Context.User).ToArrayAsync();
@@ -148,6 +149,10 @@ namespace Conbot.ReminderPlugin
 
         [Command("list", "all")]
         [Description("Lists all your upcoming reminders.")]
+        [RequireBotPermission(
+            ChannelPermission.AddReactions |
+            ChannelPermission.EmbedLinks |
+            ChannelPermission.UseExternalEmojis)]
         public async Task ListAsync(
             [Description("Wether reminders should be displayed in a compact or detailed view.")]
             [Choices("compact", "detailed")]

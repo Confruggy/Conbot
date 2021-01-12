@@ -19,7 +19,10 @@ namespace Conbot.UrbanPlugin
     [Name("Urban Dictionary")]
     [Description("Explore slang words and phrases from Urban Dictionary.")]
     [Group("urban", "u")]
-    [RequireBotPermission(ChannelPermission.EmbedLinks | ChannelPermission.AddReactions)]
+    [RequireBotPermission(
+        ChannelPermission.AddReactions |
+        ChannelPermission.EmbedLinks |
+        ChannelPermission.UseExternalEmojis)]
     internal class UrbanModule : DiscordModuleBase
     {
         private readonly UrbanService _service;

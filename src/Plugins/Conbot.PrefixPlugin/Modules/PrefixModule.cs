@@ -99,6 +99,10 @@ namespace Conbot.PrefixPlugin
         [Command("list", "all")]
         [Description("Lists all available prefixes for this server.")]
         [Remarks("The order describes the priority of the prefixes. Prefixes at top will be checked first.")]
+        [RequireBotPermission(
+            ChannelPermission.AddReactions |
+            ChannelPermission.EmbedLinks |
+            ChannelPermission.UseExternalEmojis)]
         public async Task ListAsync([Description("The page to start with")] int page = 1)
         {
             var prefixes = (await _db.GetPrefixesAsync(Context.Guild!))

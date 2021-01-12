@@ -62,8 +62,6 @@ namespace Conbot.TimeZonePlugin
 
         [Group("set")]
         [Description("Sets your time zone.")]
-        [RequireBotPermission(GuildPermission.EmbedLinks)]
-        [RequireBotPermission(GuildPermission.AddReactions)]
         public class SetCommands : DiscordModuleBase
         {
             private readonly TimeZoneContext _db;
@@ -87,6 +85,10 @@ namespace Conbot.TimeZonePlugin
                 "In order to use those commands it's best to set your time zone using a time zone location. " +
                 "However, if you don't want to provide your location, you can set a GMT offset instead. " +
                 "Refer to the overload for more information.")]
+            [RequireBotPermission(
+                ChannelPermission.AddReactions |
+                ChannelPermission.EmbedLinks |
+                ChannelPermission.UseExternalEmojis)]
             public async Task TimeZoneAsync(
             [Description("The country to set the time zone from.")]
             [Remarks(

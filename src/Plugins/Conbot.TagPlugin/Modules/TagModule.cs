@@ -108,7 +108,7 @@ namespace Conbot.TagPlugin
         [Command("delete", "remove")]
         [Description("Deletes a tag or an alias.")]
         [Remarks("Only the owner of a tag or a member with **Manage Server** permission can delete the tag.")]
-        [RequireBotPermission(ChannelPermission.AddReactions)]
+        [RequireBotPermission(ChannelPermission.AddReactions | ChannelPermission.UseExternalEmojis)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task DeleteAsync([Remainder, Description("The name of the tag to delete.")] string name)
         {
@@ -439,13 +439,19 @@ namespace Conbot.TagPlugin
 
         [Command("all")]
         [Description("Lists all tags in this server.")]
-        [RequireBotPermission(ChannelPermission.EmbedLinks | ChannelPermission.AddReactions)]
+        [RequireBotPermission(
+            ChannelPermission.AddReactions |
+            ChannelPermission.EmbedLinks |
+            ChannelPermission.UseExternalEmojis)]
         public Task AllAsync([Description("The page to start with")] int page = 1)
             => ListAsync(page: page);
 
         [Command("list")]
         [Description("Lists all your or someone else's tags in this server.")]
-        [RequireBotPermission(ChannelPermission.EmbedLinks | ChannelPermission.AddReactions)]
+        [RequireBotPermission(
+            ChannelPermission.AddReactions |
+            ChannelPermission.EmbedLinks |
+            ChannelPermission.UseExternalEmojis)]
         public Task AllAsync(
             [Description("The member to lists tags from. If no user is entered, it lists your tags instead.")]
                 IGuildUser? user = null,

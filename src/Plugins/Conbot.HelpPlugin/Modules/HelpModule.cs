@@ -11,7 +11,10 @@ namespace Conbot.HelpPlugin
     [Name("Help")]
     [Group("help")]
     [Description("Gives information about commands.")]
-    [RequireBotPermission(ChannelPermission.EmbedLinks | ChannelPermission.AddReactions)]
+    [RequireBotPermission(
+        ChannelPermission.AddReactions |
+        ChannelPermission.EmbedLinks |
+        ChannelPermission.UseExternalEmojis)]
     public class HelpModule : DiscordModuleBase
     {
         private readonly HelpService _service;

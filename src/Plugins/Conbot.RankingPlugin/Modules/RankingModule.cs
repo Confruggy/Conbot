@@ -47,6 +47,7 @@ namespace Conbot.RankingPlugin
 
         [Command("show", "")]
         [Description("Shows your or someone else's rank in the server.")]
+        [RequireBotPermission(ChannelPermission.EmbedLinks)]
         public async Task RankAsync([Description("The member to show the rank of.")] IGuildUser? member = null)
         {
             member ??= (SocketGuildUser)Context.User;
@@ -127,6 +128,10 @@ namespace Conbot.RankingPlugin
 
         [Command("leaderboard", "list", "all")]
         [Description("Shows the leaderboard of the server.")]
+        [RequireBotPermission(
+            ChannelPermission.AddReactions |
+            ChannelPermission.EmbedLinks |
+            ChannelPermission.UseExternalEmojis)]
         public async Task ListAsync([Description("The page to start with.")] int page = 1)
         {
             var ranks = await _db.GetRanksAsync(Context.Guild!).ToArrayAsync();
@@ -359,6 +364,10 @@ namespace Conbot.RankingPlugin
 
             [Command("list", "all", "")]
             [Description("Lists all available role rewards.")]
+            [RequireBotPermission(
+                ChannelPermission.AddReactions |
+                ChannelPermission.EmbedLinks |
+                ChannelPermission.UseExternalEmojis)]
             public async Task ListAsync([Description("The page to start with.")] int page = 1)
             {
                 var roleRewards = await _db.GetRoleRewardsAsync(Context.Guild!).ToListAsync();
@@ -521,7 +530,7 @@ namespace Conbot.RankingPlugin
             [Command("settings")]
             [Description("Shows the current settings for role rewards.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
-            [RequireBotPermission(GuildPermission.ManageRoles, GuildPermission.EmbedLinks)]
+            [RequireBotPermission(GuildPermission.EmbedLinks)]
             public async Task SettingsAsync()
             {
                 var config = await _db.GetGuildConfigurationAsync(Context.Guild!);
@@ -609,7 +618,10 @@ namespace Conbot.RankingPlugin
 
             [Command("list", "all")]
             [Description("Lists all ignored channels.")]
-            [RequireBotPermission(GuildPermission.EmbedLinks)]
+            [RequireBotPermission(
+                ChannelPermission.AddReactions |
+                ChannelPermission.EmbedLinks |
+                ChannelPermission.UseExternalEmojis)]
             public async Task ListAsync([Description("The page to start with.")] int page = 1)
             {
                 var ignoredChannels = await _db.GetIgnoredChannelsAsync(Context.Guild!).ToArrayAsync();
