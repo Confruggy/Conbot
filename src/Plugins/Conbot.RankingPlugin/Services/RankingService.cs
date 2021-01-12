@@ -165,7 +165,7 @@ namespace Conbot.RankingPlugin
 
         public async Task UpdateRolesAsync(IGuildUser user, IEnumerable<IRole> roles, RoleRewardsType type)
         {
-            if (roles.Any())
+            if (!roles.Any())
                 return;
 
             var guild = user.Guild;
