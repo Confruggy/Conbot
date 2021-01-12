@@ -181,6 +181,20 @@ namespace Conbot.HelpPlugin
 
             embed.AddField("Categories", modulesText.ToString());
 
+            string? botInviteUrl = _config.GetValue<string?>("BotInviteUrl", null);
+            string? serverInviteUrl = _config.GetValue<string?>("ServerInviteUrl", null);
+
+            string? botInviteText = !string.IsNullOrEmpty(botInviteUrl)
+                ? Format.Url($"Invite {context.Client.CurrentUser.Username}", botInviteUrl)
+                : null;
+            string? serverInviteText = !string.IsNullOrEmpty(serverInviteUrl)
+                ? Format.Url("Discord Server", serverInviteUrl)
+                : null;
+
+            string linksText = string.Join("｜", new[] { botInviteText, serverInviteText }.Where(x => x is not null));
+            if (!string.IsNullOrEmpty(linksText))
+                embed.AddField("Links", linksText);
+
             return embed.Build();
         }
 
