@@ -76,9 +76,12 @@ namespace Conbot.RankingPlugin
 
                     newLevel = GetLevel(rank.ExperiencePoints);
 
-                    roles = GetRoles(user, newLevel, config);
-                    foreach (var roleReward in config.RoleRewards.Where(x => !roles.Any(r => r.Id == x.RoleId)))
-                        context.RemoveRoleReward(roleReward);
+                    if (config is not null)
+                    {
+                        roles = GetRoles(user, newLevel, config);
+                        foreach (var roleReward in config.RoleRewards.Where(x => !roles.Any(r => r.Id == x.RoleId)))
+                            context.RemoveRoleReward(roleReward);
+                    }
                 }
 
                 await context.SaveChangesAsync();
