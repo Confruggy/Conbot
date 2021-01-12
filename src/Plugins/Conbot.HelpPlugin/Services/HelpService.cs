@@ -382,6 +382,10 @@ namespace Conbot.HelpPlugin
                 embed.AddField("Parameters", parameterText);
             }
 
+            string permissionsText = GetPermissionsText(command);
+            if (!string.IsNullOrEmpty(permissionsText))
+                embed.AddField("Permissions", permissionsText);
+
             var overloads = command.Module.Commands
                 .Where(x => x.FullAliases[0] == command.FullAliases[0] && x != command)
                 .ToArray();
@@ -515,5 +519,64 @@ namespace Conbot.HelpPlugin
 
         private static string FormatParameters(Command command)
             => string.Join(" ", command.Parameters.Select(x => ParameterToString(x)));
+
+        private static string GetPermissionsText(Command command)
+        {
+            List<RequireUserPermissionAttribute> userPermissions = new();
+            List<RequireBotPermissionAttribute> botPermissions = new();
+
+            var module = command.Module;
+            while (module is not null)
+            {
+                userPermissions.AddRange(module.Checks.OfType<RequireUserPermissionAttribute>());
+                botPermissions.AddRange(module.Checks.OfType<RequireBotPermissionAttribute>());
+                module = module.Parent;
+            }
+
+            userPermissions.AddRange(command.Checks.OfType<RequireUserPermissionAttribute>());
+            botPermissions.AddRange(command.Checks.OfType<RequireBotPermissionAttribute>());
+
+            var userGuildPermissions = userPermissions
+                .Where(x => x.GuildPermissions.Length != 0)
+                .Select(x => x.GuildPermissions);
+            var userChannelPermissions = userPermissions
+                .Where(x => x.ChannelPermissions.Length != 0)
+                .Select(x => x.ChannelPermissions);
+
+            var botGuildPermissions = botPermissions
+                .Where(x => x.GuildPermissions.Length != 0)
+                .Select(x => x.GuildPermissions);
+            var botChannelPermissions = botPermissions
+                .Where(x => x.ChannelPermissions.Length != 0)
+                .Select(x => x.ChannelPermissions);
+
+            var permissionsText = new StringBuilder();
+
+            foreach (var userGuildPermission in userGuildPermissions)
+            {
+                permissionsText
+                    .AppendLine(RequirePermissionUtils.CreateRequirePermissionErrorReason(userGuildPermission));
+            }
+
+            foreach (var userChannelPermission in userChannelPermissions)
+            {
+                permissionsText
+                    .AppendLine(RequirePermissionUtils.CreateRequirePermissionErrorReason(userChannelPermission));
+            }
+
+            foreach (var botGuildPermission in botGuildPermissions)
+            {
+                permissionsText
+                    .AppendLine(RequirePermissionUtils.CreateRequirePermissionErrorReason(botGuildPermission, true));
+            }
+
+            foreach (var botChannelPermission in botChannelPermissions)
+            {
+                permissionsText
+                    .AppendLine(RequirePermissionUtils.CreateRequirePermissionErrorReason(botChannelPermission, true));
+            }
+
+            return permissionsText.ToString();
+        }
     }
 }
