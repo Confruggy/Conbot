@@ -167,15 +167,15 @@ namespace Conbot.HelpPlugin
                 .OrderBy(x => x.Name)
                 .ToArray();
 
-            moduleDictionary = new Dictionary<string, Module>();
-
+            int padding = modules.Length.ToString().Length;
             var modulesText = new StringBuilder();
+            moduleDictionary = new Dictionary<string, Module>();
 
             for (int i = 0; i < modules.Length; i++)
             {
                 var module = modules[i];
 
-                modulesText.AppendLine(GetShortModule(module, i + 1));
+                modulesText.AppendLine(GetShortModule(module, i + 1, padding));
                 moduleDictionary.Add((i + 1).ToString(), module);
             }
 
@@ -219,29 +219,14 @@ namespace Conbot.HelpPlugin
 
             embed.WithDescription(descriptionText.ToString());
 
-            int i = 1;
-
             commandDictionary = new Dictionary<string, Command>();
 
             var commands = module.Commands
                 .Where(x => x.FullAliases[0] == module.FullAliases.FirstOrDefault())
                 .OrderBy(x => x.Name);
 
-            var commandsText = new StringBuilder();
-            if (commands.Any())
-            {
-                foreach (var command in commands)
-                {
-                    commandsText.AppendLine(GetShortCommand(command, i));
-                    commandDictionary.Add(i.ToString(), command);
-                    i++;
-                }
-
-                embed.AddField("Commands", commandsText);
-            }
-
+            int commandsCount = commands.Count();
             var subcommandsAndSubmodules = new Dictionary<string, object>();
-
             var subcommands = module.Commands
                 .Where(x => x.FullAliases[0] != module.FullAliases.FirstOrDefault());
 
@@ -251,22 +236,36 @@ namespace Conbot.HelpPlugin
             foreach (var submodule in module.Submodules)
                 subcommandsAndSubmodules.Add(submodule.Aliases[0], submodule);
 
-            moduleDictionary = new Dictionary<string, Module>();
+            int padding = (commandsCount + subcommandsAndSubmodules.Count).ToString().Length;
+            var commandsText = new StringBuilder();
+            int i = 1;
+
+            if (commandsCount != 0)
+            {
+                foreach (var command in commands)
+                {
+                    commandsText.AppendLine(GetShortCommand(command, i, padding));
+                    commandDictionary.Add(i.ToString(), command);
+                    i++;
+                }
+
+                embed.AddField("Commands", commandsText);
+            }
 
             var subcommandText = new StringBuilder();
-
             bool containsGroupedCommands = false;
+            moduleDictionary = new Dictionary<string, Module>();
 
             foreach (var keyValuePair in subcommandsAndSubmodules.OrderBy(x => x.Key))
             {
                 if (keyValuePair.Value is Command commandInfo)
                 {
-                    subcommandText.AppendLine(GetShortCommand(commandInfo, i));
+                    subcommandText.AppendLine(GetShortCommand(commandInfo, i, padding));
                     commandDictionary.Add(i.ToString(), commandInfo);
                 }
                 else if (keyValuePair.Value is Module moduleInfo)
                 {
-                    subcommandText.AppendLine(GetShortModule(moduleInfo, i));
+                    subcommandText.AppendLine(GetShortModule(moduleInfo, i, padding));
                     moduleDictionary.Add(i.ToString(), moduleInfo);
                     containsGroupedCommands = true;
                 }
@@ -395,11 +394,13 @@ namespace Conbot.HelpPlugin
             var overloadsText = new StringBuilder();
             if (overloads.Length > 0)
             {
+                int padding = overloads.Length.ToString().Length;
+
                 for (int i = 0; i < overloads.Length; i++)
                 {
                     var subcommand = overloads[i];
 
-                    overloadsText.AppendLine(GetShortCommand(subcommand, i + 1));
+                    overloadsText.AppendLine(GetShortCommand(subcommand, i + 1, padding));
                     commandDictionary.Add((i + 1).ToString(), subcommand);
                 }
 
@@ -437,12 +438,12 @@ namespace Conbot.HelpPlugin
             return embed.Build();
         }
 
-        private static string GetShortCommand(Command command, int index)
-            => $"`{index}.` **/{command.FullAliases[0]}** {FormatParameters(command)}\n" +
+        private static string GetShortCommand(Command command, int index, int padding)
+            => $"`{index.ToString().PadLeft(padding)}.` **/{command.FullAliases[0]}** {FormatParameters(command)}\n" +
                 $"> {command.Description ?? "No Description."}";
 
-        private static string GetShortModule(Module module, int index)
-            => $"`{index}.` **{(module.Parent != null ? $"/{module.FullAliases[0]}*" : module.Name)}**\n" +
+        private static string GetShortModule(Module module, int index, int padding)
+            => $"`{index.ToString().PadLeft(padding)}.` **{(module.Parent != null ? $"/{module.FullAliases[0]}*" : module.Name)}**\n" +
                 $"> {module.Description ?? "No Description."}";
 
         private static string GetPath(Module module)
