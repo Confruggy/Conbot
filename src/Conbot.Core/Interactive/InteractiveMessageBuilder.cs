@@ -10,7 +10,7 @@ namespace Conbot.Interactive
     public class InteractiveMessageBuilder
     {
         public Func<IUser, Task<bool>>? Precondition { get; set; }
-        public int Timeout { get; set; } = 60000;
+        public int Timeout { get; set; } = 600000;
 
         public Dictionary<string, ReactionCallbackBuilder> ReactionCallbacks { get; set; }
             = new Dictionary<string, ReactionCallbackBuilder>();
