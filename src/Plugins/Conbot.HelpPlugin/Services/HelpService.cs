@@ -80,7 +80,7 @@ namespace Conbot.HelpPlugin
 
             var interactiveMessage = new InteractiveMessageBuilder()
                 .WithPrecondition(x => x.Id == context.User.Id)
-                .AddReactionCallback(_config.GetValue<string>("Emotes:First"), x => x
+                .AddReactionCallback(_config.GetValue<string>("Emotes:Home"), x => x
                     .WithCallback(async _ =>
                     {
                         if (currentModule != null || currentCommand != null)
