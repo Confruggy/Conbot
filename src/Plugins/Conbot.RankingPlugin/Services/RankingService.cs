@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 using Discord;
 using Discord.WebSocket;
-using Microsoft.Extensions.Logging;
 
 namespace Conbot.RankingPlugin
 {
@@ -33,6 +33,8 @@ namespace Conbot.RankingPlugin
         {
             _client.MessageReceived += OnMessageReceivedAsync;
             _client.UserJoined += OnUserJoinedAsync;
+            _client.RoleDeleted += OnRoleDeletedAsync;
+            _client.GuildAvailable += GuildAvailableAsync;
             return Task.CompletedTask;
         }
 
@@ -40,6 +42,8 @@ namespace Conbot.RankingPlugin
         {
             _client.MessageReceived -= OnMessageReceivedAsync;
             _client.UserJoined -= OnUserJoinedAsync;
+            _client.RoleDeleted -= OnRoleDeletedAsync;
+            _client.GuildAvailable -= GuildAvailableAsync;
             return Task.CompletedTask;
         }
 
@@ -52,7 +56,6 @@ namespace Conbot.RankingPlugin
 
                 var now = DateTime.UtcNow;
                 var guild = user.Guild;
-                IEnumerable<IRole>? roles = null;
 
                 using var context = new RankingContext();
 
@@ -64,34 +67,25 @@ namespace Conbot.RankingPlugin
                 rank.TotalMessages++;
 
                 int oldLevel = GetLevel(rank.ExperiencePoints);
-                int newLevel = oldLevel;
 
                 if (rank.LastMessage == null || now >= rank.LastMessage?.AddMinutes(1))
                 {
                     rank.ExperiencePoints += rank.ExperiencePoints == 0 ? 10 : _random.Next(5, 15);
                     rank.RankedMessages++;
                     rank.LastMessage = now;
-
-                    if (user.IsBot)
-                    {
-                        await context.SaveChangesAsync();
-                        return;
-                    }
-
-                    newLevel = GetLevel(rank.ExperiencePoints);
-
-                    if (config is not null)
-                    {
-                        roles = GetRoles(user, newLevel, config);
-                        foreach (var roleReward in config.RoleRewards.Where(x => !roles.Any(r => r.Id == x.RoleId)))
-                            context.RemoveRoleReward(roleReward);
-                    }
                 }
 
                 await context.SaveChangesAsync();
 
-                if (roles != null)
-                    await UpdateRolesAsync(user, roles, config?.RoleRewardsType ?? RoleRewardsType.Stack);
+                int newLevel = GetLevel(rank.ExperiencePoints);
+
+                if (config is not null)
+                {
+                    var roles = GetRolesForLevel(user.Guild.Roles, newLevel, config);
+
+                    if (roles != null)
+                        await UpdateRolesAsync(user, roles, config?.RoleRewardsType ?? RoleRewardsType.Stack);
+                }
 
                 if (newLevel > oldLevel && config?.ShowLevelUpAnnouncements == true &&
                     newLevel >= (config.LevelUpAnnouncementsMinimumLevel ?? 0))
@@ -129,32 +123,83 @@ namespace Conbot.RankingPlugin
             {
                 using var context = new RankingContext();
 
-                var rank = await context.GetOrCreateRankAsync(user);
-                int level = GetLevel(rank.ExperiencePoints);
+                var rank = await context.GetRankAsync(user);
+                int level = rank is null ? 0 : GetLevel(rank.ExperiencePoints);
                 var config = await context.GetGuildConfigurationAsync(user.Guild);
 
                 if (config != null)
                 {
-                    var roles = GetRoles(user, level, config);
-                    foreach (var roleReward in config.RoleRewards.Where(x => !roles.Any(r => r.Id == x.RoleId)))
-                        context.RemoveRoleReward(roleReward);
-
-                    await context.SaveChangesAsync();
+                    var roles = GetRolesForLevel(user.Guild.Roles, level, config);
                     await UpdateRolesAsync(user, roles, config?.RoleRewardsType ?? RoleRewardsType.Stack);
-                    return;
                 }
+            });
 
+            return Task.CompletedTask;
+        }
+
+        public static Task OnRoleDeletedAsync(SocketRole role)
+        {
+            _ = Task.Run(async () =>
+            {
+                using var context = new RankingContext();
+
+                var config = await context.GetGuildConfigurationAsync(role.Guild);
+                if (config is null)
+                    return;
+
+                var roleReward = config.RoleRewards.Find(x => x.RoleId == role.Id);
+                if (roleReward is null)
+                    return;
+
+                context.Remove(roleReward);
                 await context.SaveChangesAsync();
             });
 
             return Task.CompletedTask;
         }
 
-        public static IEnumerable<IRole> GetRoles(IGuildUser user, int level, RankGuildConfiguration configuration)
+        public Task GuildAvailableAsync(SocketGuild guild)
         {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    _logger.LogDebug("Checking role rewards for {Guild}", guild);
+
+                    var roles = (await _client.Rest.GetGuildAsync(guild.Id))?.Roles;
+                    if (roles is null)
+                        return;
+
+                    using var context = new RankingContext();
+
+                    var config = await context.GetGuildConfigurationAsync(guild);
+                    if (config is null)
+                        return;
+
+                    if (config.RoleRewards.Count == 0)
+                        return;
+
+                    foreach (var roleReward in config.RoleRewards.Where(x => !roles.Any(r => r.Id == x.RoleId)))
+                        context.RemoveRoleReward(roleReward);
+
+                    await context.SaveChangesAsync();
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogDebug(exception, "Checking role rewards for {Guild} failed", guild);
+                }
+            });
+
+            return Task.CompletedTask;
+        }
+
+        public static IEnumerable<IRole> GetRolesForLevel(IEnumerable<IRole> roles, int level,
+            RankGuildConfiguration configuration)
+        {
+
             foreach (var roleReward in configuration.RoleRewards)
             {
-                var role = user.Guild.GetRole(roleReward.RoleId);
+                var role = roles.FirstOrDefault(x => x.Id == roleReward.RoleId);
                 if (role == null)
                     continue;
 
