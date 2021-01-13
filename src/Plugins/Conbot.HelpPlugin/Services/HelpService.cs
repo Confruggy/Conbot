@@ -486,8 +486,26 @@ namespace Conbot.HelpPlugin
 
             if (literal)
             {
+                string type;
+
+                if (parameter.Type == typeof(bool))
+                    type = "Boolean";
+                else if (parameter.Type == typeof(int))
+                    type = "Integer";
+                else if (typeof(IUser).IsAssignableFrom(parameter.Type))
+                    type = "User";
+                else if (typeof(IChannel).IsAssignableFrom(parameter.Type))
+                    type = "Channel";
+                else if (typeof(IRole).IsAssignableFrom(parameter.Type))
+                    type = "Role";
+                else
+                    type = "Text";
+
                 var text = new StringBuilder()
+                    .Append("**")
                     .Append(name)
+                    .Append("** : ")
+                    .Append(type)
                     .Append(" (*");
 
                 if (parameter.IsMultiple)
