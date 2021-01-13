@@ -76,7 +76,7 @@ namespace Conbot.TagPlugin
 
             await Task.WhenAll(
                 _db.SaveChangesAsync(),
-                SendMessageAsync(content));
+                SendMessageAsync(content, allowedMentions: AllowedMentions.None));
         }
 
         [Command("create", "add")]
