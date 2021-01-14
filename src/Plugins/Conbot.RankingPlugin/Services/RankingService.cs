@@ -87,27 +87,53 @@ namespace Conbot.RankingPlugin
                         await UpdateRolesAsync(user, roles, config?.RoleRewardsType ?? RoleRewardsType.Stack);
                 }
 
-                if (newLevel > oldLevel && config?.ShowLevelUpAnnouncements == true &&
-                    newLevel >= (config.LevelUpAnnouncementsMinimumLevel ?? 0))
+                if (newLevel > oldLevel)
                 {
-                    var channel = config.LevelUpAnnouncementsChannelId.HasValue
-                        ? _client.GetChannel(config.LevelUpAnnouncementsChannelId.Value) as SocketTextChannel
-                        : message.Channel as SocketTextChannel;
+                    var userConfig = await context.GetUserConfigurationAsync(user);
+                    IMessageChannel? channel = null;
+                    string? text = null;
+                    AllowedMentions? allowedMentions = null;
 
-                    if (channel != null && guild.CurrentUser.GetPermissions(channel).SendMessages)
+                    if (config?.ShowLevelUpAnnouncements == true &&
+                        newLevel >= (config.LevelUpAnnouncementsMinimumLevel ?? 0))
                     {
-                        string text = channel.Id == message.Channel.Id
-                            ? $"{user.Mention}, you achieved level **{newLevel}**. Congratulations! 🎉"
-                            : $"{user.Mention} achieved level **{newLevel}**. Congratulations! 🎉";
+                        channel = config.LevelUpAnnouncementsChannelId.HasValue
+                            ? _client.GetChannel(config.LevelUpAnnouncementsChannelId.Value) as IMessageChannel
+                            : message.Channel;
 
+                        if (channel is SocketTextChannel textChannel &&
+                            guild.CurrentUser.GetPermissions(textChannel).SendMessages)
+                        {
+                            text = channel.Id == message.Channel.Id
+                                ? $"{user.Mention}, you achieved level **{newLevel}**. Congratulations! 🎉"
+                                : $"{user.Mention} achieved level **{newLevel}**. Congratulations! 🎉";
+
+                            allowedMentions = userConfig?.AnnouncementsAllowMentions ?? false
+                                ? AllowedMentions.All
+                                : AllowedMentions.None;
+                        }
+                        else
+                        {
+                            channel = null;
+                        }
+                    }
+
+                    if (channel is null && userConfig?.AnnouncementsSendDirectMessages == true)
+                    {
+                        channel = await user.GetOrCreateDMChannelAsync();
+                        text = $"You achieved level **{newLevel}** on **{guild.Name}**. Congratulations! 🎉";
+                    }
+
+                    if (channel is not null)
+                    {
                         try
                         {
-                            await channel.SendMessageAsync(text);
+                            await channel.SendMessageAsync(text, allowedMentions: allowedMentions);
                         }
                         catch (Exception exception)
                         {
                             _logger.LogWarning(exception,
-                                "Sending level up message for {User} failed in {Guild}/{Channel}", user, guild,
+                                "Sending level up message for {User} failed on {Guild}/{Channel}", user, guild,
                                 channel);
                         }
                     }

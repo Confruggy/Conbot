@@ -28,7 +28,6 @@ namespace Conbot.RankingPlugin
         "With gaining experience points, you increase your level. The higher your level is, the more experience " +
         "points you need to achieve a level up. The formula to determine the total amount of experience points " +
         "needed for a specific level is `(n^2.5) * 10` where n is the level.")]
-    [RequireContext(ContextType.Guild)]
     public class RankingModule : DiscordModuleBase
     {
         private readonly RankingContext _db;
@@ -47,6 +46,7 @@ namespace Conbot.RankingPlugin
 
         [Command("show", "")]
         [Description("Shows your or someone else's rank in the server.")]
+        [RequireContext(ContextType.Guild)]
         [RequireBotPermission(ChannelPermission.EmbedLinks)]
         public async Task RankAsync([Description("The member to show the rank of.")] IGuildUser? member = null)
         {
@@ -128,6 +128,7 @@ namespace Conbot.RankingPlugin
 
         [Command("leaderboard", "list", "all")]
         [Description("Shows the leaderboard of the server.")]
+        [RequireContext(ContextType.Guild)]
         [RequireBotPermission(
             ChannelPermission.AddReactions |
             ChannelPermission.EmbedLinks |
@@ -208,7 +209,6 @@ namespace Conbot.RankingPlugin
 
         [Group("announcements")]
         [Description("Configures level up announcements.")]
-        [RequireUserPermission(GuildPermission.ManageGuild)]
         public class Announcements : DiscordModuleBase
         {
             private readonly RankingContext _db;
@@ -222,6 +222,8 @@ namespace Conbot.RankingPlugin
 
             [Command("toggle", "")]
             [Description("Toggles level up announcements.")]
+            [RequireContext(ContextType.Guild)]
+            [RequireUserPermission(GuildPermission.ManageGuild)]
             public async Task ToggleAsync(
                 [Description("Wether to enable or disable level up announcements.")]
                 [Choices("enable", "disable")]
@@ -265,6 +267,8 @@ namespace Conbot.RankingPlugin
 
             [Command("channel")]
             [Description("Sets a channel for level up announcements.")]
+            [RequireContext(ContextType.Guild)]
+            [RequireUserPermission(GuildPermission.ManageGuild)]
             public async Task ChannelAsync(
                 [Description("The text channel for level up announcements.")]
                 [Remarks(
@@ -291,6 +295,8 @@ namespace Conbot.RankingPlugin
             [Command("minimumlevel", "minlevel")]
             [Description("Sets a minimum level for level up announcements.")]
             [Remarks("This is useful to avoid spamming with lower levels where it's faster to achieve a level up.")]
+            [RequireContext(ContextType.Guild)]
+            [RequireUserPermission(GuildPermission.ManageGuild)]
             public async Task MinimumLevelAsync(
                 [Description("The minimum level.")]
                 [Remarks(
@@ -314,30 +320,179 @@ namespace Conbot.RankingPlugin
 
             [Command("settings")]
             [Description("Shows the current settings for level up announcements.")]
-            [RequireBotPermission(GuildPermission.EmbedLinks)]
-            public async Task SettingsAsync()
+            [RequireBotPermission(ChannelPermission.EmbedLinks)]
+            public async Task SettingsAsync(
+                [Description("Wether you want to show the server's or your personal settings.")]
+                [Remarks("You can only view the server settings if you have the **Manage Server** permission.")]
+                [Choices("server", "user")]
+                string type = "server")
             {
-                var config = await _db.GetGuildConfigurationAsync(Context.Guild!);
+                Embed embed;
 
-                string enabled = config?.ShowLevelUpAnnouncements == true
-                    ? "Enabled"
-                    : "Disabled";
-                string channel = config?.LevelUpAnnouncementsChannelId != null
-                    ? MentionUtils.MentionChannel(config.LevelUpAnnouncementsChannelId.Value)
-                    : "Current Channel";
-                string minimumlevel = config?.LevelUpAnnouncementsMinimumLevel != null
-                    ? config.LevelUpAnnouncementsMinimumLevel.ToString()!
-                    : "None";
+                if (type == "server")
+                {
+                    if (Context.User is not SocketGuildUser user)
+                    {
+                        await ReplyAsync(
+                            "You can only view the server's settings for level up announcements on a server.");
+                        return;
+                    }
 
-                var embed = new EmbedBuilder()
-                    .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
-                    .WithTitle("Level Up Announcements Settings")
-                    .AddField("Level Up Announcements", enabled)
-                    .AddField("Announcements Channel", channel)
-                    .AddField("Minimum Level", minimumlevel)
-                    .Build();
+                    if (!user.GuildPermissions.Has(GuildPermission.ManageGuild))
+                    {
+                        await ReplyAsync(
+                            "You require the **Manage Server** permission to view the server's settings for level up " +
+                            "announcements.");
+                        return;
+                    }
+
+                    var config = await _db.GetGuildConfigurationAsync(Context.Guild!);
+
+                    string enabled = config?.ShowLevelUpAnnouncements == true
+                        ? "Enabled"
+                        : "Disabled";
+                    string channel = config?.LevelUpAnnouncementsChannelId != null
+                        ? MentionUtils.MentionChannel(config.LevelUpAnnouncementsChannelId.Value)
+                        : "Current Channel";
+                    string minimumlevel = config?.LevelUpAnnouncementsMinimumLevel != null
+                        ? config.LevelUpAnnouncementsMinimumLevel.ToString()!
+                        : "None";
+
+                    embed = new EmbedBuilder()
+                        .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
+                        .WithTitle("Level Up Announcements Server Settings")
+                        .AddField("Level Up Announcements", enabled)
+                        .AddField("Announcements Channel", channel)
+                        .AddField("Minimum Level", minimumlevel)
+                        .WithFooter(Context.Guild.ToString(), Context.Guild.IconUrl)
+                        .Build();
+                }
+                else
+                {
+                    var config = await _db.GetUserConfigurationAsync(Context.User);
+
+                    string allowMentions = config?.AnnouncementsAllowMentions == true
+                        ? "Enabled"
+                        : "Disabled";
+                    string directMessages = config?.AnnouncementsSendDirectMessages != null
+                        ? "Enabled"
+                        : "Disabled";
+
+                    embed = new EmbedBuilder()
+                        .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
+                        .WithTitle("Level Up Announcements User Settings")
+                        .AddField("Mention Notifications", allowMentions)
+                        .AddField("Direct Messages", directMessages)
+                        .WithFooter(Context.User.ToString(), Context.User.GetAvatarUrl())
+                        .Build();
+                }
 
                 await ReplyAsync(embed: embed);
+            }
+
+            [Command("mentions", "notifications")]
+            [Description("Toggles notifications for mentions in level up announcements.")]
+            [Remarks(
+                "This setting is per user and global. If you enable this setting, you'll receive a notification when " +
+                "you get mentioned in level up announcements. Disabling this setting will still send level up " +
+                "announcements if the server has them enabled; however, you won't get a notification that you got " +
+                "mentioned.")]
+            public async Task MentionAsync(
+                [Description("Wether to enable or disable notifications for mentions in level up announcements.")]
+                [Choices("enable", "disable")]
+                string toggle)
+            {
+                var config = await _db.GetOrCreateUserConfigurationAsync(Context.User);
+
+                string? text = null;
+
+                switch (toggle)
+                {
+                    case "enable":
+                        if (config.AnnouncementsAllowMentions ?? false)
+                        {
+                            await ReplyAsync(
+                                "You already receive notifications when you get mentioned in level up announcements.");
+                            return;
+                        }
+
+                        config.AnnouncementsAllowMentions = true;
+                        text =
+                            "You'll now receive notifications when you get mentioned in level up announcements.";
+
+                        break;
+                    case "disable":
+                        if (!(config.AnnouncementsAllowMentions ?? false))
+                        {
+                            await ReplyAsync(
+                                "You already don't receive notifications when you get mentioned in level up announcements.");
+                            return;
+                        }
+
+                        config.AnnouncementsAllowMentions = false;
+                        text =
+                            "You'll no longer receive notifications when you get mentioned in level up announcements.";
+
+                        break;
+                }
+
+                await Task.WhenAll(
+                    _db.SaveChangesAsync(),
+                    ReplyAsync(text)
+                );
+            }
+
+            [Command("directmessages")]
+            [Description("Toggles direct messages for level up announcements.")]
+            [Remarks(
+                "This setting is per user and global. If you enable this setting, you'll receive a direct message " +
+                "whenever you achieved a level up on any server. However, it will only send a direct message if " +
+                "level up announcements are *not* enabled on the server or you don't meet the minimum level " +
+                "specified by the server. If a server has level up announcements enabled and you meet the minimum " +
+                "level, then they will be sent on the server instead.")]
+            public async Task DirectMessagesAsync(
+                [Description("Wether to enable or disable direct messages for level up announcements.")]
+                [Choices("enable", "disable")]
+                string toggle)
+            {
+                var config = await _db.GetOrCreateUserConfigurationAsync(Context.User);
+
+                string? text = null;
+
+                switch (toggle)
+                {
+                    case "enable":
+                        if (config.AnnouncementsSendDirectMessages ?? false)
+                        {
+                            await ReplyAsync(
+                                "You already receive direct messages for level up announcements.");
+                            return;
+                        }
+
+                        config.AnnouncementsSendDirectMessages = true;
+                        text =
+                            "You'll now receive direct messages for level up announcements if a server has them disabled.";
+
+                        break;
+                    case "disable":
+                        if (!(config.AnnouncementsSendDirectMessages ?? false))
+                        {
+                            await ReplyAsync(
+                                "You already don't receive direct messages for level up announcements.");
+                            return;
+                        }
+
+                        config.AnnouncementsSendDirectMessages = false;
+                        text =
+                            "You'll no longer receive direct messages for level up announcements.";
+
+                        break;
+                }
+
+                await Task.WhenAll(
+                    _db.SaveChangesAsync(),
+                    ReplyAsync(text)
+                );
             }
         }
 
@@ -346,6 +501,7 @@ namespace Conbot.RankingPlugin
         [Remarks(
             "You can set roles which will be automatically given to a member when they reach a specific " +
             "level. Roles of a member will only update after they gained XP.")]
+        [RequireContext(ContextType.Guild)]
         public class RoleRewardsCommands : DiscordModuleBase
         {
             private readonly RankingContext _db;

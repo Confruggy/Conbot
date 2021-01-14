@@ -10,6 +10,7 @@ namespace Conbot.RankingPlugin
         public DbSet<RankGuildConfiguration> GuildConfigurations => Set<RankGuildConfiguration>();
         public DbSet<RankRoleReward> RoleRewards => Set<RankRoleReward>();
         public DbSet<IgnoredChannel> IgnoredChannels => Set<IgnoredChannel>();
+        public DbSet<RankUserConfiguration> UserConfigurations => Set<RankUserConfiguration>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

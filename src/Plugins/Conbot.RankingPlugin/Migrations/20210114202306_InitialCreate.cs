@@ -45,6 +45,20 @@ namespace Conbot.RankingPlugin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "UserConfigurations",
+                columns: table => new
+                {
+                    UserId = table.Column<ulong>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    AnnouncementsAllowMentions = table.Column<bool>(type: "INTEGER", nullable: true),
+                    AnnouncementsSendDirectMessages = table.Column<bool>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserConfigurations", x => x.UserId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "IgnoredChannels",
                 columns: table => new
                 {
@@ -104,6 +118,9 @@ namespace Conbot.RankingPlugin.Migrations
 
             migrationBuilder.DropTable(
                 name: "RoleRewards");
+
+            migrationBuilder.DropTable(
+                name: "UserConfigurations");
 
             migrationBuilder.DropTable(
                 name: "GuildConfigurations");

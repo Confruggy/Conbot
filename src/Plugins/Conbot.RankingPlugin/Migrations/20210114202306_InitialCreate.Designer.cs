@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Conbot.RankingPlugin.Migrations
 {
     [DbContext(typeof(RankingContext))]
-    [Migration("20210111092426_InitialCreate")]
+    [Migration("20210114202306_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -117,6 +117,23 @@ namespace Conbot.RankingPlugin.Migrations
                     b.HasAlternateKey("GuildId", "Level", "RoleId");
 
                     b.ToTable("RoleRewards");
+                });
+
+            modelBuilder.Entity("Conbot.RankingPlugin.RankUserConfiguration", b =>
+                {
+                    b.Property<ulong>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool?>("AnnouncementsAllowMentions")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool?>("AnnouncementsSendDirectMessages")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserConfigurations");
                 });
 
             modelBuilder.Entity("Conbot.RankingPlugin.IgnoredChannel", b =>

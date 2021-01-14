@@ -137,5 +137,30 @@ namespace Conbot.RankingPlugin
 
         public static void RemoveIgnoredChannel(this RankingContext context, IgnoredChannel channel)
             => context.IgnoredChannels.Remove(channel);
+
+        public static async Task<RankUserConfiguration?> GetUserConfigurationAsync(this RankingContext context,
+            ulong userId)
+            => await context.UserConfigurations.AsQueryable().FirstOrDefaultAsync(x => x.UserId == userId);
+
+        public static Task<RankUserConfiguration?> GetUserConfigurationAsync(this RankingContext context, IUser user)
+            => GetUserConfigurationAsync(context, user.Id);
+
+        public static async Task<RankUserConfiguration> GetOrCreateUserConfigurationAsync(this RankingContext context,
+            ulong userId)
+        {
+            var config = await GetUserConfigurationAsync(context, userId);
+
+            if (config == null)
+            {
+                config = new RankUserConfiguration(userId);
+                await context.UserConfigurations.AddAsync(config);
+            }
+
+            return config;
+        }
+
+        public static Task<RankUserConfiguration> GetOrCreateUserConfigurationAsync(this RankingContext context,
+            IUser user)
+            => GetOrCreateUserConfigurationAsync(context, user.Id);
     }
 }

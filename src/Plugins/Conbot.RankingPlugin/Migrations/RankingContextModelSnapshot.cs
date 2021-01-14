@@ -117,6 +117,23 @@ namespace Conbot.RankingPlugin.Migrations
                     b.ToTable("RoleRewards");
                 });
 
+            modelBuilder.Entity("Conbot.RankingPlugin.RankUserConfiguration", b =>
+                {
+                    b.Property<ulong>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool?>("AnnouncementsAllowMentions")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool?>("AnnouncementsSendDirectMessages")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserConfigurations");
+                });
+
             modelBuilder.Entity("Conbot.RankingPlugin.IgnoredChannel", b =>
                 {
                     b.HasOne("Conbot.RankingPlugin.RankGuildConfiguration", "GuildConfiguration")
