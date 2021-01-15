@@ -74,13 +74,22 @@ namespace Conbot.Commands
                 if (parameter.IsOptional)
                 {
                     text
-                        .Append(" Click on ")
-                        .Append(config.GetValue<string>("Emotes:CheckMark"))
-                        .Append(" to skip this parameter.");
+                        .Append(" Click on <:")
+                        .Append(config.GetValue<string>("Emotes:MediumSkip"))
+                        .Append("> to skip this parameter or on <:")
+                        .Append(config.GetValue<string>("Emotes:MediumCrossMark"))
+                        .Append("> to cancel the command.");
 
-                    interactiveMessage.AddReactionCallback(config.GetValue<string>("Emotes:CheckMark"), x => x
+                    interactiveMessage.AddReactionCallback(config.GetValue<string>("Emotes:Skip"), x => x
                         .ShouldResumeAfterExecution(false)
                         .WithCallback(_ => skipped = true));
+                }
+                else
+                {
+                    text
+                        .Append(" Click on <:")
+                        .Append(config.GetValue<string>("Emotes:MediumCrossMark"))
+                        .Append("> to cancel the command.");
                 }
 
                 interactiveMessage
