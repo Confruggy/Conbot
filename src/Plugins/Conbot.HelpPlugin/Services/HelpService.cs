@@ -293,7 +293,7 @@ namespace Conbot.HelpPlugin
         {
             var embed = new EmbedBuilder()
                 .WithAuthor(GetPath(command))
-                .WithTitle($"/{command.FullAliases[0]} {FormatParameters(command)}")
+                .WithTitle($"{command.FullAliases[0]} {FormatParameters(command)}")
                 .WithColor(_config.GetValue<uint>("DefaultEmbedColor"));
 
             var descriptionText = new StringBuilder()
@@ -439,11 +439,11 @@ namespace Conbot.HelpPlugin
         }
 
         private static string GetShortCommand(Command command, int index, int padding)
-            => $"`{index.ToString().PadLeft(padding)}.` **/{command.FullAliases[0]}** {FormatParameters(command)}\n" +
+            => $"`{index.ToString().PadLeft(padding)}.` **{command.FullAliases[0]}** {FormatParameters(command)}\n" +
                 $"> {command.Description ?? "No Description."}";
 
         private static string GetShortModule(Module module, int index, int padding)
-            => $"`{index.ToString().PadLeft(padding)}.` **{(module.Parent != null ? $"/{module.FullAliases[0]}*" : module.Name)}**\n" +
+            => $"`{index.ToString().PadLeft(padding)}.` **{(module.Parent != null ? $"{module.FullAliases[0]}*" : module.Name)}**\n" +
                 $"> {module.Description ?? "No Description."}";
 
         private static string GetPath(Module module)

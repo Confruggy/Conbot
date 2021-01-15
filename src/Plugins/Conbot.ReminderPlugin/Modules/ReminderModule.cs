@@ -89,7 +89,7 @@ namespace Conbot.ReminderPlugin
         [Description("Deletes a reminder you created.")]
         public async Task DeleteAsync(
             [Description("The ID of the reminder.")]
-            [Remarks("You can find the ID by using the **/reminder list** command.")] int id)
+            [Remarks("You can find the ID by using the **reminder list** command.")] int id)
         {
             var reminder = await _db.GetReminderAsync(id);
 
