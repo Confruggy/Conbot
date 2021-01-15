@@ -348,9 +348,7 @@ namespace Conbot.RankingPlugin
 
                     var config = await _db.GetGuildConfigurationAsync(Context.Guild!);
 
-                    string enabled = config?.ShowLevelUpAnnouncements == true
-                        ? "Enabled"
-                        : "Disabled";
+                    bool enabled = config?.ShowLevelUpAnnouncements ?? false;
                     string channel = config?.LevelUpAnnouncementsChannelId != null
                         ? MentionUtils.MentionChannel(config.LevelUpAnnouncementsChannelId.Value)
                         : "Current Channel";
@@ -358,32 +356,26 @@ namespace Conbot.RankingPlugin
                         ? config.LevelUpAnnouncementsMinimumLevel.ToString()!
                         : "None";
 
-                    embed = new EmbedBuilder()
-                        .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
+                    embed = new SettingsEmbedBuilder(Context)
                         .WithTitle("Level Up Announcements Server Settings")
-                        .AddField("Level Up Announcements", enabled)
-                        .AddField("Announcements Channel", channel)
-                        .AddField("Minimum Level", minimumlevel)
-                        .WithFooter(Context.Guild.ToString(), Context.Guild.IconUrl)
+                        .WithGuild(Context.Guild!)
+                        .AddSetting("Show Level Up Announcements", enabled, "toggle")
+                        .AddSetting("Announcements Channel", channel, "channel")
+                        .AddSetting("Minimum Level", minimumlevel, "minimumlevel")
                         .Build();
                 }
                 else
                 {
                     var config = await _db.GetUserConfigurationAsync(Context.User);
 
-                    string allowMentions = config?.AnnouncementsAllowMentions == true
-                        ? "Enabled"
-                        : "Disabled";
-                    string directMessages = config?.AnnouncementsSendDirectMessages != null
-                        ? "Enabled"
-                        : "Disabled";
+                    bool allowMentions = config?.AnnouncementsAllowMentions ?? false;
+                    bool directMessages = config?.AnnouncementsSendDirectMessages ?? false;
 
-                    embed = new EmbedBuilder()
-                        .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
+                    embed = new SettingsEmbedBuilder(Context)
                         .WithTitle("Level Up Announcements User Settings")
-                        .AddField("Mention Notifications", allowMentions)
-                        .AddField("Direct Messages", directMessages)
-                        .WithFooter(Context.User.ToString(), Context.User.GetAvatarUrl())
+                        .WithUser(Context.User)
+                        .AddSetting("Mention Notifications", allowMentions, "mentions")
+                        .AddSetting("Send Direct Messages", directMessages, "directmessages")
                         .Build();
                 }
 
@@ -697,10 +689,10 @@ namespace Conbot.RankingPlugin
                     ? "Stack (members will keep all previous rewards)"
                     : "Remove (members will only keep the highest reward)";
 
-                var embed = new EmbedBuilder()
-                    .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
+                var embed = new SettingsEmbedBuilder(Context)
                     .WithTitle("Role Rewards Settings")
-                    .AddField("Type", typeText)
+                    .WithGuild(Context.Guild!)
+                    .AddSetting("Type", typeText, "type")
                     .Build();
 
                 await ReplyAsync(embed: embed);
