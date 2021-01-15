@@ -208,7 +208,7 @@ namespace Conbot.Commands
                         if (failedOverloads.Count == 1)
                             return GetErrorMessage(failedOverloads.First().Value);
 
-                        var text = new StringBuilder().AppendLine("Several possible errors occured:");
+                        var text = new StringBuilder().AppendLine("Several possible errors occurred:");
 
                         for (int i = 0; i < failedOverloads.Count; i++)
                         {
