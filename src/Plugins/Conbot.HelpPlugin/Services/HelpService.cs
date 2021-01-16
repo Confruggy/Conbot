@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 using Conbot.Commands;
 using Conbot.Extensions;
@@ -17,17 +19,32 @@ using Qmmands;
 
 namespace Conbot.HelpPlugin
 {
-    public class HelpService
+    public class HelpService : IHostedService
     {
+        private readonly CommandHandlingService _commandHandlingService;
         private readonly CommandService _commandService;
         private readonly InteractiveService _interactiveService;
         private readonly IConfiguration _config;
 
-        public HelpService(CommandService commandService, InteractiveService interactiveService, IConfiguration config)
+        public HelpService(CommandHandlingService commandHandlingService,
+            CommandService commandService, InteractiveService interactiveService, IConfiguration config)
         {
+            _commandHandlingService = commandHandlingService;
             _commandService = commandService;
             _interactiveService = interactiveService;
             _config = config;
+        }
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            _commandHandlingService.CommandErrorMessageSent += OnCommandErrorMessageSent;
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            _commandHandlingService.CommandErrorMessageSent -= OnCommandErrorMessageSent;
+            return Task.CompletedTask;
         }
 
         public Task ExecuteHelpMessageAsync(DiscordCommandContext context, IUserMessage? message = null)
@@ -596,6 +613,60 @@ namespace Conbot.HelpPlugin
             }
 
             return permissionsText.ToString();
+        }
+
+        private async Task OnCommandErrorMessageSent(CommandErrorMessageSentEventArgs e)
+        {
+            if (e.Message.Channel is ITextChannel textChannel && e.Context.Guild is not null)
+            {
+                var user = e.Context.Guild.CurrentUser;
+
+                if (!user.GetPermissions(textChannel).Has(ChannelPermission.AddReactions))
+                    return;
+            }
+
+            var command = e.Result switch
+            {
+                ArgumentParseFailedResult argumentParseFailedResult => argumentParseFailedResult.Command,
+                TypeParseFailedResult typeParseFailedResult => typeParseFailedResult.Parameter.Command,
+                ChecksFailedResult checksFailedResult => checksFailedResult.Command,
+                ParameterChecksFailedResult parameterChecksFailedResult => parameterChecksFailedResult.Parameter.Command,
+                _ => null
+            };
+
+            Module? module = null;
+
+            if (command is null)
+            {
+                if (e.Result is OverloadsFailedResult overloadsFailedResult)
+                {
+                    if (overloadsFailedResult.FailedOverloads.Count == 1)
+                        command = overloadsFailedResult.FailedOverloads.First().Key;
+                    else
+                        module = overloadsFailedResult.FailedOverloads.First().Key.Module;
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            bool executeHelpCommand = false;
+
+            var interactiveMessage = new InteractiveMessageBuilder()
+                .WithPrecondition(x => x.Id == e.Context.User.Id)
+                .AddReactionCallback(_config.GetValue<string>("Emotes:Info"), x => x
+                    .WithCallback(_ => executeHelpCommand = true)
+                    .ShouldResumeAfterExecution(false))
+                .Build();
+
+            await _interactiveService.ExecuteInteractiveMessageAsync(interactiveMessage, e.Message, e.Context.User);
+
+            if (executeHelpCommand)
+            {
+                await ExecuteHelpMessageAsync(e.Context, module, command, e.Message);
+                await e.Message.ModifyAsync(x => x.Embed = null);
+            }
         }
     }
 }

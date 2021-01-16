@@ -18,7 +18,7 @@ using Qmmands;
 
 namespace Conbot.Commands
 {
-    public class CommandHandlingService : IHostedService
+    public partial class CommandHandlingService : IHostedService
     {
         private readonly DiscordShardedClient _discordClient;
         private readonly CommandService _commandService;
@@ -131,7 +131,13 @@ namespace Conbot.Commands
                     return;
 
                 if (result is FailedResult failedResult)
-                    await context.ReplyAsync(GetErrorMessage(failedResult), allowedMentions: AllowedMentions.None);
+                {
+                    var message = await context
+                        .ReplyAsync(GetErrorMessage(failedResult), allowedMentions: AllowedMentions.None);
+
+                    await _errorMessageSent.InvokeAsync(
+                        new CommandErrorMessageSentEventArgs(message, context, failedResult));
+                }
             });
             return Task.CompletedTask;
         }
@@ -194,7 +200,12 @@ namespace Conbot.Commands
                 return;
 
             if (result is FailedResult failedResult)
-                await context.ReplyAsync(GetErrorMessage(failedResult), allowedMentions: AllowedMentions.None);
+            {
+                var message = await context
+                    .ReplyAsync(GetErrorMessage(failedResult), allowedMentions: AllowedMentions.None);
+
+                await _errorMessageSent.InvokeAsync(new CommandErrorMessageSentEventArgs(message, context, failedResult));
+            }
         }
 
         public string GetErrorMessage(FailedResult result)
