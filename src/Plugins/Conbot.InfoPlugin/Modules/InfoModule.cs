@@ -13,7 +13,7 @@ namespace Conbot.InfoPlugin
     public class InfoModule : DiscordModuleBase
     {
         [Command("ping")]
-        [Description("Sents a message and shows the time difference between the command message and the bots response.")]
+        [Description("Sends a message and shows the time difference between the command message and the bots response.")]
         [Remarks("This has nothing to do with your own ping.")]
         public async Task PingAsync()
         {
