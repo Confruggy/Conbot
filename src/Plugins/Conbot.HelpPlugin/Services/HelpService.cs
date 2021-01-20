@@ -505,9 +505,9 @@ namespace Conbot.HelpPlugin
             {
                 string type;
 
-                if (parameter.Type == typeof(bool))
+                if (parameter.Type.IsAssignableFrom(typeof(bool)))
                     type = "Boolean";
-                else if (parameter.Type == typeof(int))
+                else if (parameter.Type.IsAssignableFrom(typeof(int)))
                     type = "Integer";
                 else if (typeof(IUser).IsAssignableFrom(parameter.Type))
                     type = "User";
