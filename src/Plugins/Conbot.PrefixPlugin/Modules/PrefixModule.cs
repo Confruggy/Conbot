@@ -30,9 +30,9 @@ namespace Conbot.PrefixPlugin
         private readonly PrefixContext _db;
         private readonly IConfiguration _config;
 
-        public PrefixModule(InteractiveService interactiveSerivce, PrefixContext db, IConfiguration config)
+        public PrefixModule(InteractiveService interactiveService, PrefixContext db, IConfiguration config)
         {
-            _interactiveService = interactiveSerivce;
+            _interactiveService = interactiveService;
             _db = db;
             _config = config;
         }
