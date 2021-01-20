@@ -42,7 +42,7 @@ namespace Conbot.PrefixPlugin
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task AddAsync(
-            [Description("The prefix to add."), NotEmpty, MaxLength(20)] string prefix)
+            [Description("The prefix to add."), NotEmpty, MaxLength(20), Inline] string prefix)
         {
             prefix = prefix.TrimStart();
 

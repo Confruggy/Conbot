@@ -83,7 +83,7 @@ namespace Conbot.TagPlugin
         [Description("Creates a tag.")]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task CreateAsync(
-            [Description("The name of the tag."), NotEmpty, MaxLength(50)] string name,
+            [Description("The name of the tag."), NotEmpty, MaxLength(50), Inline] string name,
             [Remainder, Description("The content of the tag.")] string content)
         {
             name = name.TrimEnd();
@@ -406,7 +406,7 @@ namespace Conbot.TagPlugin
         [Remarks("When the original tag gets deleted, the alias gets deleted as well.")]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task AliasAsync(
-            [Description("The name of the alias."), NotEmpty, MaxLength(50)] string name,
+            [Description("The name of the alias."), NotEmpty, MaxLength(50), Inline] string name,
             [Remainder, Name("tag name"), Description("The name of the tag the alias points to.")] string tagName)
         {
             name = name.TrimEnd();
