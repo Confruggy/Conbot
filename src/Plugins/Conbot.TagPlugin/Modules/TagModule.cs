@@ -30,9 +30,9 @@ namespace Conbot.TagPlugin
         private readonly TagContext _db;
         private readonly IConfiguration _config;
 
-        public TagModule(InteractiveService interactiveSerivce, TagContext db, IConfiguration config)
+        public TagModule(InteractiveService interactiveService, TagContext db, IConfiguration config)
         {
-            _interactiveService = interactiveSerivce;
+            _interactiveService = interactiveService;
             _db = db;
             _config = config;
         }
