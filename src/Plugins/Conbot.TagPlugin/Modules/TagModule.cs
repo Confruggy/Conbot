@@ -437,28 +437,17 @@ namespace Conbot.TagPlugin
                     $"to **{Format.Sanitize(tag.Name)}** has been created."));
         }
 
-        [Command("all")]
-        [Description("Lists all tags in this server.")]
+        [Command("list", "all")]
+        [Description("Lists all or someone's tags for a server.")]
         [RequireBotPermission(
             ChannelPermission.AddReactions |
             ChannelPermission.EmbedLinks |
             ChannelPermission.UseExternalEmojis)]
-        public Task AllAsync([Description("The page to start with")] int page = 1)
-            => ListAsync(page: page);
-
-        [Command("list")]
-        [Description("Lists all your or someone else's tags in this server.")]
-        [RequireBotPermission(
-            ChannelPermission.AddReactions |
-            ChannelPermission.EmbedLinks |
-            ChannelPermission.UseExternalEmojis)]
-        public Task AllAsync(
-            [Description("The member to lists tags from. If no user is entered, it lists your tags instead.")]
-                IGuildUser? user = null,
+        public async Task ListAsync(
+            [Description(
+                "The member to lists tags from. If no user is entered, it lists all tags for the server instead.")]
+            IGuildUser? user = null,
             [Description("The page to start with.")] int page = 1)
-            => ListAsync(user ?? Context.User as IGuildUser, page);
-
-        public async Task ListAsync(IGuildUser? user = null, int page = 1)
         {
             var tags = await _db.GetTagsAsync(Context.Guild, user).OrderBy(x => x.Name).ToArrayAsync();
 
