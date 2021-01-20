@@ -77,6 +77,9 @@ namespace Conbot.RankingPlugin
 
                 await context.SaveChangesAsync();
 
+                if (user.IsBot)
+                    return;
+
                 int newLevel = GetLevel(rank.ExperiencePoints);
 
                 if (config is not null)
