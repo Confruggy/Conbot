@@ -279,6 +279,86 @@ namespace Conbot.TagPlugin
             }
         }
 
+        [Command("claim", "yoink")]
+        [Description("Claims a tag or alias from someone who isn't in the server anymore.")]
+        [Remarks(
+            "If a member created tags or aliases and left the server, you can claim them by using this command. This " +
+            "will make you the new owner of the tag or alias.")]
+        [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
+        public async Task ClaimAsync(
+            [Description("The name of the tag or alias you want to claim."), Remainder] string name)
+        {
+            var tag = await _db.GetTagAsync(Context.Guild!, name);
+            if (tag is not null)
+            {
+                if (tag.OwnerId == Context.User.Id)
+                {
+                    await ReplyAsync("You already own this tag.");
+                    return;
+                }
+
+                var user = await Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, tag.OwnerId);
+
+                if (user is not null)
+                {
+                    await ReplyAsync("The owner of this tag is still in the server.");
+                    return;
+                }
+
+                if (Context.Interaction != null)
+                {
+                    await _db.ChangeTagOwnerAsync(tag, Context.Interaction, Context.User.Id, OwnerChangeType.Transfer);
+                }
+                else
+                {
+                    await _db.ChangeTagOwnerAsync(tag, (SocketTextChannel)Context.Channel, Context.Message!,
+                        Context.User.Id, OwnerChangeType.Claim);
+                }
+
+                await Task.WhenAll(
+                    ReplyAsync($"You claimed the tag **{Format.Sanitize(tag.Name)}**."),
+                    _db.SaveChangesAsync());
+            }
+            else
+            {
+                var alias = await _db.GetTagAliasAsync(Context.Guild, name);
+                if (alias is null)
+                {
+                    await ReplyAsync($"Tag or alias **{Format.Sanitize(name)}** wasn't found.");
+                    return;
+                }
+
+                if (alias.OwnerId == Context.User.Id)
+                {
+                    await ReplyAsync("You already own this alias.");
+                    return;
+                }
+
+                var user = await Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, alias.OwnerId);
+
+                if (user is not null)
+                {
+                    await ReplyAsync("The owner of this alias is still in the server.");
+                    return;
+                }
+
+                if (Context.Interaction != null)
+                {
+                    await _db.ChangeTagAliasOwnerAsync(alias, Context.Interaction, Context.User.Id,
+                        OwnerChangeType.Claim);
+                }
+                else
+                {
+                    await _db.ChangeTagAliasOwnerAsync(alias, (SocketTextChannel)Context.Channel, Context.Message!,
+                        Context.User.Id, OwnerChangeType.Transfer);
+                }
+
+                await Task.WhenAll(
+                    ReplyAsync($"You claimed the alias **{Format.Sanitize(alias.Name)}**."),
+                    _db.SaveChangesAsync());
+            }
+        }
+
         [Command("info")]
         [Description("Shows information about a tag or an alias.")]
         [RequireTimeZone]
