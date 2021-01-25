@@ -92,6 +92,8 @@ namespace Conbot.Commands
             _commandService.AddTypeParser(new ChannelTypeParser<SocketGuildChannel>());
             _commandService.AddTypeParser(new ChannelTypeParser<IVoiceChannel>());
             _commandService.AddTypeParser(new ChannelTypeParser<SocketVoiceChannel>());
+
+            _commandService.AddTypeParser(new TimeSpanTypeParser());
         }
 
         private Task OnInteractionCreatedAsync(SocketInteraction interaction)
