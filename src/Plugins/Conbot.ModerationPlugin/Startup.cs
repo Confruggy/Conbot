@@ -10,7 +10,10 @@ namespace Conbot.ModerationPlugin
     {
         public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
         {
-            services.AddHostedService<ModerationPluginService>();
+            services
+                .AddDbContext<ModerationContext>()
+                .AddHostedService<ModerationPluginService>()
+                .AddHostedService<MuteService>();
         }
 
         public void BuildConfiguration(IConfigurationBuilder builder) { }

@@ -45,9 +45,11 @@ namespace Conbot.Extensions
             return $"{(formatted ? Format.Bold(((int)timeSpan.TotalSeconds).ToString()) : ((int)timeSpan.TotalSeconds).ToString())} seconds";
         }
 
-        public static string ToLongFormattedString(this TimeSpan timeSpan) => ToLongString(timeSpan, true);
+        public static string ToLongFormattedString(this TimeSpan timeSpan) => ToLongStringInternal(timeSpan, true);
 
-        private static string ToLongString(TimeSpan timeSpan, bool formatted = false)
+        public static string ToLongString(this TimeSpan timeSpan) => ToLongStringInternal(timeSpan, false);
+
+        private static string ToLongStringInternal(TimeSpan timeSpan, bool formatted)
         {
             var strings = new List<string>();
 
