@@ -9,6 +9,8 @@ namespace Conbot.Commands
 {
     public class DiscordModuleBase : ModuleBase<DiscordCommandContext>
     {
+        public static RuntimeResult Successful => RuntimeResult.Successful;
+
         public Task<RestUserMessage> SendMessageAsync(string? text = null, bool isTTS = false, Embed? embed = null,
             RequestOptions? options = null, AllowedMentions? allowedMentions = null, MessageReference? reference = null)
             => Context.SendMessageAsync(text, isTTS, embed, options, allowedMentions, reference);
@@ -21,5 +23,9 @@ namespace Conbot.Commands
             Embed? embed = null, AllowedMentions? allowedMentions = null, RequestOptions? options = null,
             int timeout = 60000)
             => Context.ConfirmAsync(text, isTTS, embed, allowedMentions, options, timeout);
+
+        public static RuntimeResult Unsuccessful(string errorReason) => RuntimeResult.Unsuccessful(errorReason);
+
+        public static RuntimeResult Unsuccessful(IUserMessage message) => RuntimeResult.Unsuccessful(message);
     }
 }

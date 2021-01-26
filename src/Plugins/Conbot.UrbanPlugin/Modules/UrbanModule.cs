@@ -37,31 +37,28 @@ namespace Conbot.UrbanPlugin
         [Command("search", "")]
         [Description("Searches a definition for a word.")]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task SearchAsync([Remainder, Description("The word to search for.")] string word)
+        public async Task<CommandResult> SearchAsync([Remainder, Description("The word to search for.")] string word)
         {
             var searchResult = await _service.SearchAsync(word);
-            await UrbanAsync(searchResult);
+            return await UrbanAsync(searchResult);
         }
 
         [Command("random")]
         [Description("Searches a definition for a random word.")]
-        public async Task RandomAsync()
+        public async Task<CommandResult> RandomAsync()
         {
             var searchResult = await _service.GetRandomAsync();
-            await UrbanAsync(searchResult);
+            return await UrbanAsync(searchResult);
         }
 
-        public async Task UrbanAsync(UrbanSearchResult searchResult)
+        public async Task<CommandResult> UrbanAsync(UrbanSearchResult searchResult)
         {
             int count = searchResult.Results.Count();
 
             var result = searchResult.Results.FirstOrDefault();
 
             if (result == null)
-            {
-                await ReplyAsync("No definition has been found for this word.");
-                return;
-            }
+                return Unsuccessful("No definition has been found for this word.");
 
             var paginator = new Paginator();
 
@@ -69,6 +66,7 @@ namespace Conbot.UrbanPlugin
                 paginator.AddPage(CreateUrbanEmbed(searchResult.Results.ElementAt(i), i + 1, count));
 
             await paginator.RunAsync(_interactiveService, Context);
+            return Successful;
         }
 
         private Embed CreateUrbanEmbed(UrbanResult result, int currentPage, int totalPages)

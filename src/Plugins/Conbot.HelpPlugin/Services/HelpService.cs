@@ -631,6 +631,7 @@ namespace Conbot.HelpPlugin
                 TypeParseFailedResult typeParseFailedResult => typeParseFailedResult.Parameter.Command,
                 ChecksFailedResult checksFailedResult => checksFailedResult.Command,
                 ParameterChecksFailedResult parameterChecksFailedResult => parameterChecksFailedResult.Parameter.Command,
+                RuntimeFailedResult runtimeFailedResult => runtimeFailedResult.Command,
                 _ => null
             };
 

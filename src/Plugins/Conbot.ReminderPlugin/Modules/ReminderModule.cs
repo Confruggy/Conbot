@@ -52,7 +52,7 @@ namespace Conbot.ReminderPlugin
             "• \"in 5 hours 30 min do laundry\"\n" +
             "• \"2h unmute someone\"")]
         [OverrideArgumentParser(typeof(ReminderArgumentParser))]
-        public async Task ReminderAsync(
+        public async Task<CommandResult> ReminderAsync(
             [Description("The time when you want to be reminded.")]
             [Remarks(
                 "It can be either a human readable time and/or date or a duration. " +
@@ -65,10 +65,7 @@ namespace Conbot.ReminderPlugin
             string? message = null)
         {
             if (time.Then!.Value.LocalDateTime < time.Now.LocalDateTime)
-            {
-                await ReplyAsync("This time is in the past.");
-                return;
-            }
+                return Unsuccessful("This time is in the past.");
 
             await _db.AddReminderAsync(Context, time.Now.ToDateTimeUtc(), time.Then.Value.ToDateTimeUtc(),
                 message?.Trim());
@@ -83,47 +80,43 @@ namespace Conbot.ReminderPlugin
                 ReplyAsync(text.ToString()),
                 _db.SaveChangesAsync()
             );
+
+            return Successful;
         }
 
         [Command("delete", "remove", "cancel")]
         [Description("Deletes a reminder you created.")]
-        public async Task DeleteAsync(
+        public async Task<CommandResult> DeleteAsync(
             [Description("The ID of the reminder.")]
             [Remarks("You can find the ID by using the **reminder list** command.")] int id)
         {
             var reminder = await _db.GetReminderAsync(id);
 
             if (reminder == null)
-            {
-                await ReplyAsync("This reminder doesn't exist.");
-                return;
-            }
+                return Unsuccessful("This reminder doesn't exist.");
 
             if (reminder.UserId != Context.User.Id)
-            {
-                await ReplyAsync("You can only delete reminders you created.");
-                return;
-            }
+                return Unsuccessful("You can only delete reminders you created.");
 
             _db.RemoveReminder(reminder);
 
             await Task.WhenAll(
                 ReplyAsync($"Reminder with ID **{id}** has been deleted."),
-                _db.SaveChangesAsync());
+                _db.SaveChangesAsync()
+            );
+
+            return Successful;
         }
 
         [Command("clear")]
         [Description("Clears all reminders you have set.")]
         [RequireBotPermission(ChannelPermission.AddReactions | ChannelPermission.UseExternalEmojis)]
-        public async Task ClearAsync()
+        public async Task<CommandResult> ClearAsync()
         {
             var reminders = await _db.GetRemindersAsync(Context.User).ToArrayAsync();
 
             if (reminders.Length == 0)
-            {
-                await ReplyAsync("You don't have any reminders.");
-                return;
-            }
+                return Unsuccessful("You don't have any reminders.");
 
             var message = await ConfirmAsync(
                 $"Do you really want to delete {"reminder".ToQuantity(reminders.Length, Format.Bold("#"))}?");
@@ -145,6 +138,8 @@ namespace Conbot.ReminderPlugin
                     message.Item1.TryDeleteAsync()
                 );
             }
+
+            return Successful;
         }
 
         [Command("list", "all")]
@@ -153,7 +148,7 @@ namespace Conbot.ReminderPlugin
             ChannelPermission.AddReactions |
             ChannelPermission.EmbedLinks |
             ChannelPermission.UseExternalEmojis)]
-        public async Task ListAsync(
+        public async Task<CommandResult> ListAsync(
             [Description("Wether reminders should be displayed in a compact or detailed view.")]
             [Choices("compact", "detailed")]
             [Remainder]
@@ -171,7 +166,7 @@ namespace Conbot.ReminderPlugin
             if (reminders.Length == 0)
             {
                 await ReplyAsync("You don't have any upcoming reminders.");
-                return;
+                return Successful;
             }
 
             int count = reminders.Length;
@@ -219,6 +214,7 @@ namespace Conbot.ReminderPlugin
             }
 
             await paginator.RunAsync(_interactiveService, Context);
+            return Successful;
         }
 
         private Embed CreateReminderEmbed(Reminder reminder, ZonedDateTime now, int? index, int? total)

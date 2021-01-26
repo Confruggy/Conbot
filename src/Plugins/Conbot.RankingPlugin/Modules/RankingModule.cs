@@ -48,7 +48,8 @@ namespace Conbot.RankingPlugin
         [Description("Shows your or someone else's rank in the server.")]
         [RequireContext(ContextType.Guild)]
         [RequireBotPermission(ChannelPermission.EmbedLinks)]
-        public async Task RankAsync([Description("The member to show the rank of.")] IGuildUser? member = null)
+        public async Task RankAsync(
+            [Description("The member to show the rank of.")] IGuildUser? member = null)
         {
             member ??= (SocketGuildUser)Context.User;
 
@@ -224,7 +225,7 @@ namespace Conbot.RankingPlugin
             [Description("Toggles level up announcements.")]
             [RequireContext(ContextType.Guild)]
             [RequireUserPermission(GuildPermission.ManageGuild)]
-            public async Task ToggleAsync(
+            public async Task<CommandResult> ToggleAsync(
                 [Description("Wether to enable or disable level up announcements.")]
                 [Choices("enable", "disable")]
                 string toggle)
@@ -237,10 +238,7 @@ namespace Conbot.RankingPlugin
                 {
                     case "enable":
                         if (config.ShowLevelUpAnnouncements == true)
-                        {
-                            await ReplyAsync("Level up announcements are already enabled.");
-                            return;
-                        }
+                            return Unsuccessful("Level up announcements are already enabled.");
 
                         config.ShowLevelUpAnnouncements = true;
                         text = "Level up announcements have been enabled.";
@@ -248,10 +246,7 @@ namespace Conbot.RankingPlugin
                         break;
                     case "disable":
                         if (config.ShowLevelUpAnnouncements == false)
-                        {
-                            await ReplyAsync("Level up announcements are already disabled.");
-                            return;
-                        }
+                            return Unsuccessful("Level up announcements are already disabled.");
 
                         config.ShowLevelUpAnnouncements = false;
                         text = "Level up announcements have been disabled.";
@@ -263,6 +258,8 @@ namespace Conbot.RankingPlugin
                     _db.SaveChangesAsync(),
                     ReplyAsync(text)
                 );
+
+                return Successful;
             }
 
             [Command("channel")]
@@ -321,7 +318,7 @@ namespace Conbot.RankingPlugin
             [Command("settings")]
             [Description("Shows the current settings for level up announcements.")]
             [RequireBotPermission(ChannelPermission.EmbedLinks)]
-            public async Task SettingsAsync(
+            public async Task<CommandResult> SettingsAsync(
                 [Description("Wether you want to show the server's or your personal settings.")]
                 [Remarks("You can only view the server settings if you have the **Manage Server** permission.")]
                 [Choices("server", "user")]
@@ -333,17 +330,15 @@ namespace Conbot.RankingPlugin
                 {
                     if (Context.User is not SocketGuildUser user)
                     {
-                        await ReplyAsync(
+                        return Unsuccessful(
                             "You can only view the server's settings for level up announcements on a server.");
-                        return;
                     }
 
                     if (!user.GuildPermissions.Has(GuildPermission.ManageGuild))
                     {
-                        await ReplyAsync(
+                        return Unsuccessful(
                             "You require the **Manage Server** permission to view the server's settings for level up " +
                             "announcements.");
-                        return;
                     }
 
                     var config = await _db.GetGuildConfigurationAsync(Context.Guild!);
@@ -380,6 +375,7 @@ namespace Conbot.RankingPlugin
                 }
 
                 await ReplyAsync(embed: embed);
+                return Successful;
             }
 
             [Command("mentions", "notifications")]
@@ -389,7 +385,7 @@ namespace Conbot.RankingPlugin
                 "you get mentioned in level up announcements. Disabling this setting will still send level up " +
                 "announcements if the server has them enabled; however, you won't get a notification that you got " +
                 "mentioned.")]
-            public async Task MentionAsync(
+            public async Task<CommandResult> MentionAsync(
                 [Description("Wether to enable or disable notifications for mentions in level up announcements.")]
                 [Choices("enable", "disable")]
                 string toggle)
@@ -403,9 +399,8 @@ namespace Conbot.RankingPlugin
                     case "enable":
                         if (config.AnnouncementsAllowMentions ?? false)
                         {
-                            await ReplyAsync(
+                            return Unsuccessful(
                                 "You already receive notifications when you get mentioned in level up announcements.");
-                            return;
                         }
 
                         config.AnnouncementsAllowMentions = true;
@@ -416,9 +411,8 @@ namespace Conbot.RankingPlugin
                     case "disable":
                         if (!(config.AnnouncementsAllowMentions ?? false))
                         {
-                            await ReplyAsync(
+                            return Unsuccessful(
                                 "You already don't receive notifications when you get mentioned in level up announcements.");
-                            return;
                         }
 
                         config.AnnouncementsAllowMentions = false;
@@ -432,6 +426,8 @@ namespace Conbot.RankingPlugin
                     _db.SaveChangesAsync(),
                     ReplyAsync(text)
                 );
+
+                return Successful;
             }
 
             [Command("directmessages")]
@@ -442,7 +438,7 @@ namespace Conbot.RankingPlugin
                 "level up announcements are *not* enabled on the server or you don't meet the minimum level " +
                 "specified by the server. If a server has level up announcements enabled and you meet the minimum " +
                 "level, then they will be sent on the server instead.")]
-            public async Task DirectMessagesAsync(
+            public async Task<CommandResult> DirectMessagesAsync(
                 [Description("Wether to enable or disable direct messages for level up announcements.")]
                 [Choices("enable", "disable")]
                 string toggle)
@@ -456,9 +452,8 @@ namespace Conbot.RankingPlugin
                     case "enable":
                         if (config.AnnouncementsSendDirectMessages ?? false)
                         {
-                            await ReplyAsync(
+                            return Unsuccessful(
                                 "You already receive direct messages for level up announcements.");
-                            return;
                         }
 
                         config.AnnouncementsSendDirectMessages = true;
@@ -469,9 +464,8 @@ namespace Conbot.RankingPlugin
                     case "disable":
                         if (!(config.AnnouncementsSendDirectMessages ?? false))
                         {
-                            await ReplyAsync(
+                            return Unsuccessful(
                                 "You already don't receive direct messages for level up announcements.");
-                            return;
                         }
 
                         config.AnnouncementsSendDirectMessages = false;
@@ -485,6 +479,8 @@ namespace Conbot.RankingPlugin
                     _db.SaveChangesAsync(),
                     ReplyAsync(text)
                 );
+
+                return Successful;
             }
         }
 
@@ -567,7 +563,7 @@ namespace Conbot.RankingPlugin
                 "Only one role can be rewarded for a specific level and only one level can be set for a specific role.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             [RequireBotPermission(GuildPermission.ManageRoles)]
-            public async Task AddAsync(
+            public async Task<CommandResult> AddAsync(
                 [Description("The role to reward.")]
                 [Remarks(
                     "Make sure the role is *below* the bots highest role. Otherwise the bot won't be able " +
@@ -582,17 +578,12 @@ namespace Conbot.RankingPlugin
 
                 var roleReward = await _db.GetRoleRewardAsync(Context.Guild, level);
                 if (roleReward != null)
-                {
-                    await ReplyAsync("There already exists a reward for this level.");
-                    return;
-                }
+                    return Unsuccessful("There already exists a reward for this level.");
+
 
                 roleReward = await _db.GetRoleRewardAsync(role);
                 if (roleReward != null)
-                {
-                    await ReplyAsync("There already exists a reward for this role.");
-                    return;
-                }
+                    return Unsuccessful("There already exists a reward for this role.");
 
                 await _db.AddRoleRewardAsync(config, level, role);
 
@@ -602,6 +593,8 @@ namespace Conbot.RankingPlugin
                         $"Role {role.Mention} has been added as a reward for level **{level}**.",
                         allowedMentions: AllowedMentions.None)
                 );
+
+                return Successful;
             }
 
             [Command("remove")]
@@ -609,15 +602,13 @@ namespace Conbot.RankingPlugin
             [Remarks("This will automatically remove the role from everyone.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             [RequireBotPermission(GuildPermission.ManageRoles)]
-            public async Task RemoveAsync([Description("The role of the reward to remove."), Remainder] IRole role)
+            public async Task<CommandResult> RemoveAsync(
+                [Description("The role of the reward to remove."), Remainder] IRole role)
             {
                 var roleReward = await _db.GetRoleRewardAsync(role);
 
                 if (roleReward == null)
-                {
-                    await ReplyAsync("There exists no reward for this role.");
-                    return;
-                }
+                    return Unsuccessful("There exists no reward for this role.");
 
                 _db.RemoveRoleReward(roleReward);
 
@@ -627,13 +618,15 @@ namespace Conbot.RankingPlugin
                         $"Role {role.Mention} has been removed as a reward for level **{roleReward.Level}**.",
                         allowedMentions: AllowedMentions.None)
                 );
+
+                return Successful;
             }
 
             [Command("type")]
             [Description("Sets the type for role rewards.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
             [RequireBotPermission(GuildPermission.ManageRoles)]
-            public async Task StackAsync(
+            public async Task<CommandResult> StackAsync(
                 [Choices("stack", "remove")]
                 [Description("The type for role rewards.")]
                 [Remarks(
@@ -649,20 +642,14 @@ namespace Conbot.RankingPlugin
                 {
                     case "stack":
                         if (config.RoleRewardsType == RoleRewardsType.Stack)
-                        {
-                            await ReplyAsync("Type for role rewards is already set to **stack**.");
-                            return;
-                        }
+                            return Unsuccessful("Type for role rewards is already set to **stack**.");
 
                         config.RoleRewardsType = RoleRewardsType.Stack;
                         text = "Type for role rewards has been set to **stack**.";
                         break;
                     case "remove":
                         if (config.RoleRewardsType == RoleRewardsType.Remove)
-                        {
-                            await ReplyAsync("Type for role rewards is already set to **remove**.");
-                            return;
-                        }
+                            return Unsuccessful("Type for role rewards is already set to **remove**.");
 
                         config.RoleRewardsType = RoleRewardsType.Remove;
                         text = "Type for role rewards has been set to **remove**.";
@@ -673,6 +660,8 @@ namespace Conbot.RankingPlugin
                     _db.SaveChangesAsync(),
                     ReplyAsync(text)
                 );
+
+                return Successful;
             }
 
             [Command("settings")]
@@ -722,16 +711,13 @@ namespace Conbot.RankingPlugin
             [Description("Adds a channel to ignore.")]
             [RequireUserPermission(GuildPermission.ManageGuild)]
             [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-            public async Task AddAsync([Description("The text channel to ignore.")] ITextChannel channel)
+            public async Task<CommandResult> AddAsync([Description("The text channel to ignore.")] ITextChannel channel)
             {
                 var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild!);
 
                 var ignoredChannel = await _db.GetIgnoredChannelAsync(channel);
                 if (ignoredChannel != null)
-                {
-                    await ReplyAsync("This channel is already ignored.");
-                    return;
-                }
+                    return Unsuccessful("This channel is already ignored.");
 
                 _db.AddIgnoredChannel(channel, config);
 
@@ -739,22 +725,21 @@ namespace Conbot.RankingPlugin
                     _db.SaveChangesAsync(),
                     ReplyAsync($"Channel {channel.Mention} is now ignored from gaining experience points.")
                 );
+
+                return Successful;
             }
 
             [Command("remove")]
             [Description("Removes a channel from being ignored.")]
             [RequireUserPermission(GuildPermission.ManageGuild)]
             [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-            public async Task RemoveAsync(
+            public async Task<CommandResult> RemoveAsync(
                 [Description("The text channel to remove from being ignored.")] ITextChannel channel)
             {
                 var ignoredChannel = await _db.GetIgnoredChannelAsync(channel);
 
                 if (ignoredChannel == null)
-                {
-                    await ReplyAsync("This channel isn't ignored.");
-                    return;
-                }
+                    return Unsuccessful("This channel isn't ignored.");
 
                 _db.RemoveIgnoredChannel(ignoredChannel);
 
@@ -762,6 +747,8 @@ namespace Conbot.RankingPlugin
                     _db.SaveChangesAsync(),
                     ReplyAsync($"Channel {channel.Mention} is now no longer ignored from gaining experience points.")
                 );
+
+                return Successful;
             }
 
             [Command("list", "all")]
@@ -770,7 +757,7 @@ namespace Conbot.RankingPlugin
                 ChannelPermission.AddReactions |
                 ChannelPermission.EmbedLinks |
                 ChannelPermission.UseExternalEmojis)]
-            public async Task ListAsync([Description("The page to start with.")] int page = 1)
+            public async Task<CommandResult> ListAsync([Description("The page to start with.")] int page = 1)
             {
                 var ignoredChannels = await _db.GetIgnoredChannelsAsync(Context.Guild!).ToArrayAsync();
                 int count = ignoredChannels.Length;
@@ -778,7 +765,7 @@ namespace Conbot.RankingPlugin
                 if (count == 0)
                 {
                     await ReplyAsync("There are no channels ignored from gaining experience points.");
-                    return;
+                    return Successful;
                 }
 
                 List<string> pages = new();
@@ -800,10 +787,7 @@ namespace Conbot.RankingPlugin
                 }
 
                 if (page > pages.Count || page < 1)
-                {
-                    await ReplyAsync("This page doesn't exist.");
-                    return;
-                }
+                    return Unsuccessful("This page doesn't exist.");
 
                 var paginator = new Paginator();
 
@@ -820,6 +804,7 @@ namespace Conbot.RankingPlugin
                 }
 
                 await paginator.RunAsync(_interactiveService, Context, page - 1);
+                return Successful;
             }
         }
 

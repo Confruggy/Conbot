@@ -82,7 +82,7 @@ namespace Conbot.TagPlugin
         [Command("create", "add")]
         [Description("Creates a tag.")]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task CreateAsync(
+        public async Task<CommandResult> CreateAsync(
             [Description("The name of the tag."), NotEmpty, MaxLength(50), Inline] string name,
             [Remainder, Description("The content of the tag.")] string content)
         {
@@ -91,8 +91,7 @@ namespace Conbot.TagPlugin
             if (await _db.GetTagAsync(Context.Guild!, name) != null ||
                 await _db.GetTagAliasAsync(Context.Guild, name) != null)
             {
-                await ReplyAsync($"Tag **{Format.Sanitize(name)}** already exists.");
-                return;
+                return Unsuccessful($"Tag **{Format.Sanitize(name)}** already exists.");
             }
 
             if (Context.Interaction != null)
@@ -102,7 +101,10 @@ namespace Conbot.TagPlugin
 
             await Task.WhenAll(
                 _db.SaveChangesAsync(),
-                ReplyAsync($"Tag **{Format.Sanitize(name)}** has been created."));
+                ReplyAsync($"Tag **{Format.Sanitize(name)}** has been created.")
+            );
+
+            return Successful;
         }
 
         [Command("delete", "remove")]
@@ -110,7 +112,8 @@ namespace Conbot.TagPlugin
         [Remarks("Only the owner of a tag or a member with **Manage Server** permission can delete the tag.")]
         [RequireBotPermission(ChannelPermission.AddReactions | ChannelPermission.UseExternalEmojis)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task DeleteAsync([Remainder, Description("The name of the tag to delete.")] string name)
+        public async Task<CommandResult> DeleteAsync(
+            [Remainder, Description("The name of the tag to delete.")] string name)
         {
             var user = (SocketGuildUser)Context.User;
 
@@ -121,10 +124,7 @@ namespace Conbot.TagPlugin
             {
                 alias = await _db.GetTagAliasAsync(Context.Guild, name);
                 if (alias == null)
-                {
-                    await ReplyAsync($"Tag **{Format.Sanitize(name)}** hasn't been found.");
-                    return;
-                }
+                    return Unsuccessful($"Tag **{Format.Sanitize(name)}** hasn't been found.");
             }
 
             var creator = Context.Guild.GetUser(tag?.OwnerId ?? alias?.OwnerId ?? 0);
@@ -134,8 +134,7 @@ namespace Conbot.TagPlugin
                 (user.GuildPermissions.ManageMessages &&
                 (creator == null || user.Hierarchy > creator.Hierarchy))))
             {
-                await ReplyAsync("You aren't the owner of this tag.");
-                return;
+                return Unsuccessful("You aren't the owner of this tag.");
             }
 
             var message = await ConfirmAsync("Do you really want to delete this tag?");
@@ -168,27 +167,23 @@ namespace Conbot.TagPlugin
             tasks.Add(message.Item1.TryDeleteAsync());
 
             await Task.WhenAll(tasks);
+
+            return Successful;
         }
 
         [Command("edit", "modify")]
         [Description("Edits the content of a tag you own.")]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task EditAsync(
+        public async Task<CommandResult> EditAsync(
             [Description("The name of the tag you want to edit.")] string name,
             [Remainder, Name("new content"), Description("The new content of the tag.")] string newContent)
         {
             var tag = await _db.GetTagAsync(Context.Guild!, name);
             if (tag == null)
-            {
-                await ReplyAsync($"Tag **{Format.Sanitize(name)}** hasn't been found.");
-                return;
-            }
+                return Unsuccessful($"Tag **{Format.Sanitize(name)}** hasn't been found.");
 
             if (tag.OwnerId != Context.User.Id)
-            {
-                await ReplyAsync("You aren't the owner of this tag.");
-                return;
-            }
+                return Unsuccessful("You aren't the owner of this tag.");
 
             if (Context.Interaction != null)
                 await _db.ModifyTagAsync(tag, Context.Interaction, newContent);
@@ -197,7 +192,10 @@ namespace Conbot.TagPlugin
 
             await Task.WhenAll(
                 _db.SaveChangesAsync(),
-                ReplyAsync($"Tag **{Format.Sanitize(tag.Name)}** has been edited."));
+                ReplyAsync($"Tag **{Format.Sanitize(tag.Name)}** has been edited.")
+            );
+
+            return Successful;
         }
 
         [Command("transfer")]
@@ -206,21 +204,15 @@ namespace Conbot.TagPlugin
             "This will only change the owner of a tag or alias, but not the creator. However, only the owner " +
             "of a tag or alias is able to edit or delete it.")]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task TransferAsync(
+        public async Task<CommandResult> TransferAsync(
             [Description("The name of the tag or alias you want to transfer.")] string name,
             [Description("The member you want to transfer the tag or alias to.")] IGuildUser member)
         {
             if (member.Id == Context.User.Id)
-            {
-                await ReplyAsync("You can't transfer tags or aliases to yourself.");
-                return;
-            }
+                return Unsuccessful("You can't transfer tags or aliases to yourself.");
 
             if (member.IsBot)
-            {
-                await ReplyAsync("You can't transfer tags or aliases to bots.");
-                return;
-            }
+                return Unsuccessful("You can't transfer tags or aliases to bots.");
 
             TagAlias? alias = null;
             var tag = await _db.GetTagAsync(Context.Guild!, name);
@@ -229,17 +221,11 @@ namespace Conbot.TagPlugin
             {
                 alias = await _db.GetTagAliasAsync(Context.Guild, name);
                 if (alias == null)
-                {
-                    await ReplyAsync($"Tag **{Format.Sanitize(name)}** hasn't been found.");
-                    return;
-                }
+                    return Unsuccessful($"Tag **{Format.Sanitize(name)}** hasn't been found.");
             }
 
             if (!(tag?.OwnerId == Context.User.Id || alias?.OwnerId == Context.User.Id))
-            {
-                await ReplyAsync("You aren't the owner of this tag.");
-                return;
-            }
+                return Unsuccessful("You aren't the owner of this tag.");
 
             if (tag != null)
             {
@@ -277,6 +263,8 @@ namespace Conbot.TagPlugin
                         allowedMentions: AllowedMentions.None),
                     _db.SaveChangesAsync());
             }
+
+            return Successful;
         }
 
         [Command("claim", "yoink")]
@@ -285,25 +273,19 @@ namespace Conbot.TagPlugin
             "If a member created tags or aliases and left the server, you can claim them by using this command. This " +
             "will make you the new owner of the tag or alias.")]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task ClaimAsync(
+        public async Task<CommandResult> ClaimAsync(
             [Description("The name of the tag or alias you want to claim."), Remainder] string name)
         {
             var tag = await _db.GetTagAsync(Context.Guild!, name);
             if (tag is not null)
             {
                 if (tag.OwnerId == Context.User.Id)
-                {
-                    await ReplyAsync("You already own this tag.");
-                    return;
-                }
+                    return Unsuccessful("You already own this tag.");
 
                 var user = await Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, tag.OwnerId);
 
                 if (user is not null)
-                {
-                    await ReplyAsync("The owner of this tag is still in the server.");
-                    return;
-                }
+                    return Unsuccessful("The owner of this tag is still in the server.");
 
                 if (Context.Interaction != null)
                 {
@@ -317,30 +299,22 @@ namespace Conbot.TagPlugin
 
                 await Task.WhenAll(
                     ReplyAsync($"You claimed the tag **{Format.Sanitize(tag.Name)}**."),
-                    _db.SaveChangesAsync());
+                    _db.SaveChangesAsync()
+                );
             }
             else
             {
                 var alias = await _db.GetTagAliasAsync(Context.Guild, name);
                 if (alias is null)
-                {
-                    await ReplyAsync($"Tag or alias **{Format.Sanitize(name)}** wasn't found.");
-                    return;
-                }
+                    return Unsuccessful($"Tag or alias **{Format.Sanitize(name)}** wasn't found.");
 
                 if (alias.OwnerId == Context.User.Id)
-                {
-                    await ReplyAsync("You already own this alias.");
-                    return;
-                }
+                    return Unsuccessful("You already own this alias.");
 
                 var user = await Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, alias.OwnerId);
 
                 if (user is not null)
-                {
-                    await ReplyAsync("The owner of this alias is still in the server.");
-                    return;
-                }
+                    return Unsuccessful("The owner of this alias is still in the server.");
 
                 if (Context.Interaction != null)
                 {
@@ -355,8 +329,11 @@ namespace Conbot.TagPlugin
 
                 await Task.WhenAll(
                     ReplyAsync($"You claimed the alias **{Format.Sanitize(alias.Name)}**."),
-                    _db.SaveChangesAsync());
+                    _db.SaveChangesAsync()
+                );
             }
+
+            return Successful;
         }
 
         [Command("info")]
@@ -364,7 +341,8 @@ namespace Conbot.TagPlugin
         [RequireTimeZone]
         [RequireBotPermission(ChannelPermission.EmbedLinks)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task InfoAsync([Remainder, Description("The name of the tag or alias.")] string name)
+        public async Task<CommandResult> InfoAsync(
+            [Remainder, Description("The name of the tag or alias.")] string name)
         {
             var tags = await _db.GetTagsAsync(Context.Guild).ToArrayAsync();
             var tag = Array.Find(tags, x => x.GuildId == Context.Guild!.Id &&
@@ -377,10 +355,7 @@ namespace Conbot.TagPlugin
                 var alias = await _db.GetTagAliasAsync(Context.Guild!, name);
 
                 if (alias == null)
-                {
-                    await ReplyAsync($"Tag **{Format.Sanitize(name)}** hasn't been found.");
-                    return;
-                }
+                    return Unsuccessful($"Tag **{Format.Sanitize(name)}** hasn't been found.");
 
                 await ReplyAsync("", embed: CreateTagAliasEmbed(alias, timeZone!));
             }
@@ -391,6 +366,8 @@ namespace Conbot.TagPlugin
                 int rank = count - tags.Count(x => x.Uses.Count <= uses) + 1;
                 await ReplyAsync("", embed: CreateTagEmbed(tag, uses, rank, count, timeZone!));
             }
+
+            return Successful;
         }
 
         private Embed CreateTagEmbed(Tag tag, int uses, int rank, int count, DateTimeZone timeZone)
@@ -485,7 +462,7 @@ namespace Conbot.TagPlugin
         [Description("Creates an alias for an already existing tag.")]
         [Remarks("When the original tag gets deleted, the alias gets deleted as well.")]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task AliasAsync(
+        public async Task<CommandResult> AliasAsync(
             [Description("The name of the alias."), NotEmpty, MaxLength(50), Inline] string name,
             [Remainder, Name("tag name"), Description("The name of the tag the alias points to.")] string tagName)
         {
@@ -493,16 +470,12 @@ namespace Conbot.TagPlugin
 
             var tag = await _db.GetTagAsync(Context.Guild!, tagName);
             if (tag == null)
-            {
-                await ReplyAsync($"Tag **{Format.Sanitize(tagName)}** hasn't been found.");
-                return;
-            }
+                return Unsuccessful($"Tag **{Format.Sanitize(tagName)}** hasn't been found.");
 
             if (await _db.GetTagAsync(Context.Guild, name) != null ||
                 await _db.GetTagAliasAsync(Context.Guild, name) != null)
             {
-                await ReplyAsync($"Tag **{Format.Sanitize(name)}** already exists.");
-                return;
+                return Unsuccessful($"Tag **{Format.Sanitize(name)}** already exists.");
             }
 
             if (Context.Interaction != null)
@@ -514,7 +487,10 @@ namespace Conbot.TagPlugin
                 _db.SaveChangesAsync(),
                 ReplyAsync(
                     $"Alias **{Format.Sanitize(name)}** which points " +
-                    $"to **{Format.Sanitize(tag.Name)}** has been created."));
+                    $"to **{Format.Sanitize(tag.Name)}** has been created.")
+            );
+
+            return Successful;
         }
 
         [Command("list", "all")]
@@ -523,7 +499,7 @@ namespace Conbot.TagPlugin
             ChannelPermission.AddReactions |
             ChannelPermission.EmbedLinks |
             ChannelPermission.UseExternalEmojis)]
-        public async Task ListAsync(
+        public async Task<CommandResult> ListAsync(
             [Description(
                 "The member to lists tags from. If no user is entered, it lists all tags for the server instead.")]
             IGuildUser? user = null,
@@ -540,7 +516,7 @@ namespace Conbot.TagPlugin
                 else
                     await ReplyAsync($"**{user.Nickname ?? user.Username}** doesn't have any tags.");
 
-                return;
+                return Successful;
             }
 
             int count = tags.Length;
@@ -568,10 +544,7 @@ namespace Conbot.TagPlugin
             }
 
             if (page > pages.Count || page < 1)
-            {
-                await ReplyAsync("This page doesn't exist.");
-                return;
-            }
+                return Unsuccessful("This page doesn't exist.");
 
             var paginator = new Paginator();
 
@@ -588,6 +561,7 @@ namespace Conbot.TagPlugin
             }
 
             await paginator.RunAsync(_interactiveService, Context, page - 1);
+            return Successful;
         }
     }
 }

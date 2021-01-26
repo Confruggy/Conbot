@@ -129,17 +129,8 @@ namespace Conbot.Commands
 
                 var result = await _commandService.ExecuteAsync(commandString.ToString(), context);
 
-                if (result.IsSuccessful)
-                    return;
-
-                if (result is FailedResult failedResult)
-                {
-                    var message = await context
-                        .ReplyAsync(GetErrorMessage(failedResult), allowedMentions: AllowedMentions.None);
-
-                    await _errorMessageSent.InvokeAsync(
-                        new CommandErrorMessageSentEventArgs(message, context, failedResult));
-                }
+                if (!result.IsSuccessful)
+                    await HandleCommandErrorAsync(result, context);
             });
             return Task.CompletedTask;
         }
@@ -198,15 +189,34 @@ namespace Conbot.Commands
 
             var result = await _commandService.ExecuteAsync(prefixResult.Output, context);
 
-            if (result.IsSuccessful)
-                return;
+            if (!result.IsSuccessful)
+                await HandleCommandErrorAsync(result, context);
+        }
+
+        private async Task HandleCommandErrorAsync(IResult result, DiscordCommandContext context)
+        {
+            if (result is RuntimeResult runtimeResult && runtimeResult.ErrorReason is not null)
+            {
+                var runtimeFailedResult = new RuntimeFailedResult(runtimeResult.Command, runtimeResult.ErrorReason,
+                    runtimeResult.Message);
+
+                if (runtimeResult.Message is not null)
+                {
+                    await _errorMessageSent.InvokeAsync(
+                        new CommandErrorMessageSentEventArgs(runtimeResult.Message, context, runtimeFailedResult));
+                    return;
+                }
+
+                result = runtimeFailedResult;
+            }
 
             if (result is FailedResult failedResult)
             {
                 var message = await context
                     .ReplyAsync(GetErrorMessage(failedResult), allowedMentions: AllowedMentions.None);
 
-                await _errorMessageSent.InvokeAsync(new CommandErrorMessageSentEventArgs(message, context, failedResult));
+                await _errorMessageSent.InvokeAsync(
+                    new CommandErrorMessageSentEventArgs(message, context, failedResult));
             }
         }
 

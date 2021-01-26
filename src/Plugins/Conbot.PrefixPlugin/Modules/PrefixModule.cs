@@ -41,59 +41,53 @@ namespace Conbot.PrefixPlugin
         [Description("Adds a command prefix.")]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task AddAsync(
+        public async Task<CommandResult> AddAsync(
             [Description("The prefix to add."), NotEmpty, MaxLength(20), Inline] string prefix)
         {
             prefix = prefix.TrimStart();
 
             if (prefix.StartsWith('/'))
-            {
-                await ReplyAsync("Prefix can't start with a slash character.");
-                return;
-            }
+                return Unsuccessful("Prefix can't start with a slash character.");
 
             var prefixes = await _db.GetPrefixesAsync(Context.Guild!);
 
             if (prefixes.Count >= 10)
-            {
-                await ReplyAsync("You can't add more than 10 prefixes.");
-                return;
-            }
+                return Unsuccessful("You can't add more than 10 prefixes.");
 
             if (prefixes.Find(x => x.GuildId == Context.Guild.Id && x.Text == prefix) != null)
-            {
-                await ReplyAsync("This prefix has been already added.");
-                return;
-            }
+                return Unsuccessful("This prefix has been already added.");
 
             await _db.AddPrefixAsync(Context.Guild, prefix);
 
             await Task.WhenAll(
                 _db.SaveChangesAsync(),
-                ReplyAsync($"Prefix **{Format.Sanitize(prefix)}** has been added."));
+                ReplyAsync($"Prefix **{Format.Sanitize(prefix)}** has been added.")
+            );
+
+            return Successful;
         }
 
         [Command("remove", "delete")]
         [Description("Removes a command prefix.")]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task RemoveAsync([Description("The prefix to remove."), NotEmpty] string prefix)
+        public async Task<CommandResult> RemoveAsync([Description("The prefix to remove."), NotEmpty] string prefix)
         {
             prefix = prefix.TrimStart();
 
             var dbPrefix = await _db.GetPrefixAsync(Context.Guild!, prefix);
 
             if (dbPrefix == null)
-            {
-                await ReplyAsync("Prefix hasn't been found.");
-                return;
-            }
+                return Unsuccessful("Prefix hasn't been found.");
 
             _db.RemovePrefix(dbPrefix);
 
             await Task.WhenAll(
                 _db.SaveChangesAsync(),
-                ReplyAsync($"Prefix **{Format.Sanitize(prefix)}** has been removed."));
+                ReplyAsync($"Prefix **{Format.Sanitize(prefix)}** has been removed.")
+            );
+
+            return Successful;
         }
 
         [Command("list", "all")]
@@ -103,7 +97,7 @@ namespace Conbot.PrefixPlugin
             ChannelPermission.AddReactions |
             ChannelPermission.EmbedLinks |
             ChannelPermission.UseExternalEmojis)]
-        public async Task ListAsync([Description("The page to start with")] int page = 1)
+        public async Task<CommandResult> ListAsync([Description("The page to start with")] int page = 1)
         {
             var prefixes = (await _db.GetPrefixesAsync(Context.Guild!))
                 .OrderByDescending(x => x.Text.Length)
@@ -112,7 +106,7 @@ namespace Conbot.PrefixPlugin
             if (!prefixes.Any())
             {
                 await ReplyAsync("There aren't any prefixes for this server.");
-                return;
+                return Successful;
             }
 
             int count = prefixes.Count();
@@ -139,10 +133,7 @@ namespace Conbot.PrefixPlugin
             }
 
             if (page > pages.Count || page < 1)
-            {
-                await ReplyAsync("This page doesn't exist.");
-                return;
-            }
+                return Unsuccessful("This page doesn't exist.");
 
             var paginator = new Paginator();
 
@@ -159,6 +150,7 @@ namespace Conbot.PrefixPlugin
             }
 
             await paginator.RunAsync(_interactiveService, Context, page - 1);
+            return Successful;
         }
     }
 }

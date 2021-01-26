@@ -101,7 +101,7 @@ namespace Conbot.ModerationPlugin
         [RequireUserPermission(GuildPermission.ManageRoles)]
         [RequireBotPermission(GuildPermission.ManageRoles)]
         [RequireBotPermission(ChannelPermission.AddReactions | ChannelPermission.UseExternalEmojis)]
-        public async Task MuteAsync(
+        public async Task<CommandResult> MuteAsync(
             [Description("The member to mute.")]
             IGuildUser member,
             [Description("The duration for how long the member will be muted.")]
@@ -113,23 +113,16 @@ namespace Conbot.ModerationPlugin
             IRole role;
             if (config?.RoleId is null || (role = Context.Guild.GetRole(config.RoleId.Value)) is null)
             {
-                await ReplyAsync(
+                return Unsuccessful(
                     "There is no role for muting members configured. Please configure a muted role with the " +
                     "**mutedrole** command.");
-                return;
             }
 
             if (member.Id == Context.User.Id)
-            {
-                await ReplyAsync("You can't mute yourself.");
-                return;
-            }
+                return Unsuccessful("You can't mute yourself.");
 
             if (member.Id == Context.Guild.CurrentUser.Id)
-            {
-                await ReplyAsync("You can't mute the bot.");
-                return;
-            }
+                return Unsuccessful("You can't mute the bot.");
 
             if (member.RoleIds.Contains(config.RoleId.Value))
             {
@@ -138,24 +131,22 @@ namespace Conbot.ModerationPlugin
                 if (message.Item2 != true)
                 {
                     await ReplyAsync("Duration for the mute wasn't adjusted.");
-                    return;
+                    return Successful;
                 }
             }
 
             if (role.Position >= ((SocketGuildUser)Context.User).Hierarchy)
             {
-                await ReplyAsync(
+                return Unsuccessful(
                     "You can't assign the muted role to members because its position is as high or higher than your " +
                     "highest role.");
-                return;
             }
 
             if (role.Position >= Context.Guild.CurrentUser.Hierarchy)
             {
-                await ReplyAsync(
+                return Unsuccessful(
                     "The muted role can't be assigned to members because its position is as high or higher than the " +
                     "bots highest role.");
-                return;
             }
 
             string text;
@@ -189,6 +180,8 @@ namespace Conbot.ModerationPlugin
                 _db.SaveChangesAsync(),
                 ReplyAsync(text, allowedMentions: AllowedMentions.None)
             );
+
+            return Successful;
         }
 
         [Command("unmute")]
@@ -260,7 +253,7 @@ namespace Conbot.ModerationPlugin
             [Description("Sets a role for muting members.")]
             [Remarks("This will set a role which will be used by the **mute** command.")]
             [RequireUserPermission(GuildPermission.ManageRoles)]
-            public async Task SetAsync(
+            public async Task<CommandResult> SetAsync(
                 [Description("The role for muting members.")]
                 [Remarks(
                     "This should optimally be a role which denies **Send Messages**, **Add Reactions**, **Speak** " +
@@ -275,11 +268,7 @@ namespace Conbot.ModerationPlugin
                 var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild!);
 
                 if (config.RoleId == role.Id)
-                {
-                    await ReplyAsync($"Role for muting members is already set to {role.Mention}.",
-                        allowedMentions: AllowedMentions.None);
-                    return;
-                }
+                    return Unsuccessful($"Role for muting members is already set to {role.Mention}.");
 
                 config.RoleId = role.Id;
 
@@ -287,6 +276,8 @@ namespace Conbot.ModerationPlugin
                     _db.SaveChangesAsync(),
                     ReplyAsync($"Role for muting members has been set to {role.Mention}.")
                 );
+
+                return Successful;
             }
 
             [Command("create", "generate")]
@@ -301,7 +292,8 @@ namespace Conbot.ModerationPlugin
                 GuildPermission.AddReactions | GuildPermission.Speak | GuildPermission.Stream)]
             [RequireBotPermission(GuildPermission.ManageRoles | GuildPermission.SendMessages |
                 GuildPermission.AddReactions | GuildPermission.Speak | GuildPermission.Stream)]
-            public async Task CreateAsync([Description("The name of the muted role."), Remainder] string name = "Muted")
+            public async Task<CommandResult> CreateAsync(
+                [Description("The name of the muted role."), Remainder] string name = "Muted")
             {
                 var message = await ReplyAsync("Creating muted role. This may take a while …");
                 IRole role;
@@ -334,7 +326,7 @@ namespace Conbot.ModerationPlugin
                 {
                     await message.ModifyAsync(x => x.Content =
                         "An error occurred while creating the muted role. Please try again.");
-                    return;
+                    return Unsuccessful(message);
                 }
 
                 _db.AddPreconfiguredMutedRole(role);
@@ -343,6 +335,8 @@ namespace Conbot.ModerationPlugin
                     message.ModifyAsync(x => x.Content = $"Muted role {role.Mention} has been created."),
                     _db.SaveChangesAsync()
                 );
+
+                return Successful;
             }
 
             [Command("update")]
@@ -354,7 +348,7 @@ namespace Conbot.ModerationPlugin
                 GuildPermission.AddReactions | GuildPermission.Speak | GuildPermission.Stream)]
             [RequireBotPermission(GuildPermission.ManageRoles | GuildPermission.SendMessages |
                 GuildPermission.AddReactions | GuildPermission.Speak | GuildPermission.Stream)]
-            public async Task UpdateAsync(
+            public async Task<CommandResult> UpdateAsync(
                 [Description("The role to update")]
                 [Remarks("This must be a role which has been created using the **mutedrole create** command.")]
                 [Remainder]
@@ -364,9 +358,8 @@ namespace Conbot.ModerationPlugin
                 var mutedRole = await _db.GetPreconfiguredMutedRoleAsync(role);
                 if (mutedRole is null)
                 {
-                    await ReplyAsync(
+                    return Unsuccessful(
                         "You can only update roles which have been created using the **mutedrole create** command.");
-                    return;
                 }
 
                 var message = await ReplyAsync($"Updating muted role {role.Mention}. This may take a while …",
@@ -404,10 +397,11 @@ namespace Conbot.ModerationPlugin
                 {
                     await message.ModifyAsync(x => x.Content =
                         "An error occurred while creating the muted role. Please try again.");
-                    return;
+                    return Unsuccessful(message);
                 }
 
                 await message.ModifyAsync(x => x.Content = $"Muted role {role.Mention} has been updated.");
+                return Successful;
             }
 
             [Command("settings")]
@@ -436,7 +430,7 @@ namespace Conbot.ModerationPlugin
         [RequireUserPermission(GuildPermission.BanMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task BanAsync(
+        public async Task<CommandResult> BanAsync(
             [Description("The member to ban.")]
             [LowerHierarchy]
             SocketGuildUser member,
@@ -450,13 +444,11 @@ namespace Conbot.ModerationPlugin
             string? reason = null)
         {
             if (member.Id == Context.User.Id)
-            {
-                await ReplyAsync("You can't ban yourself.");
-                return;
-            }
+                return Unsuccessful("You can't ban yourself.");
 
             await Context.Guild!.AddBanAsync(member, pruneDays, reason);
             await ReplyAsync($"**{Format.Sanitize(member.ToString())}** has been banned.");
+            return Successful;
         }
 
         [Command("hackban")]
@@ -465,7 +457,7 @@ namespace Conbot.ModerationPlugin
         [RequireUserPermission(GuildPermission.BanMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task HackbanAsync(
+        public async Task<CommandResult> HackbanAsync(
             [Description("The ID of the user to ban.")]
             ulong id,
             [Name("prune days")]
@@ -478,26 +470,22 @@ namespace Conbot.ModerationPlugin
             string? reason = null)
         {
             if (id == Context.User.Id)
-            {
-                await ReplyAsync("You can't ban yourself.");
-                return;
-            }
+                return Unsuccessful("You can't ban yourself.");
 
             try
             {
                 await Context.Guild!.AddBanAsync(id, pruneDays, reason);
-                await ReplyAsync($"User with ID **{id}** has been banned.");
             }
             catch (HttpException e)
             {
                 if (e.HttpCode == HttpStatusCode.NotFound)
-                {
-                    await ReplyAsync("User hasn't been found.");
-                    return;
-                }
+                    return Unsuccessful("User hasn't been found.");
 
-                await ReplyAsync("The bot isn't able to ban this user.");
+                return Unsuccessful("The bot isn't able to ban this user.");
             }
+
+            await ReplyAsync($"User with ID **{id}** has been banned.");
+            return Successful;
         }
 
         [Command("unban")]
@@ -505,18 +493,20 @@ namespace Conbot.ModerationPlugin
         [RequireUserPermission(GuildPermission.BanMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task UnbanAsync(
+        public async Task<CommandResult> UnbanAsync(
             [Description("The user to revoke the ban from.")] SocketGuildUser user)
         {
             try
             {
                 await Context.Guild!.RemoveBanAsync(user);
-                await ReplyAsync($"**{Format.Sanitize(user.ToString())}** has been unbanned.");
             }
             catch (HttpException)
             {
-                await ReplyAsync("User hasn't been found in the ban list.");
+                return Unsuccessful("User hasn't been found in the ban list.");
             }
+
+            await ReplyAsync($"**{Format.Sanitize(user.ToString())}** has been unbanned.");
+            return Successful;
         }
 
         [Command("softban")]
@@ -528,7 +518,7 @@ namespace Conbot.ModerationPlugin
         [RequireUserPermission(GuildPermission.BanMembers, GuildPermission.KickMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task SoftBanAsync(
+        public async Task<CommandResult> SoftBanAsync(
             [Description("The member to soft ban.")]
             [LowerHierarchy]
             SocketGuildUser member,
@@ -542,15 +532,13 @@ namespace Conbot.ModerationPlugin
             string? reason = null)
         {
             if (member.Id == Context.User.Id)
-            {
-                await ReplyAsync("You can't soft ban yourself.");
-                return;
-            }
+                return Unsuccessful("You can't soft ban yourself.");
 
             await Context.Guild!.AddBanAsync(member, pruneDays, reason);
             await Context.Guild.RemoveBanAsync(member);
 
             await ReplyAsync($"**{Format.Sanitize(member.ToString())}** has been soft banned.");
+            return Successful;
         }
 
         [Command("kick")]
@@ -558,7 +546,7 @@ namespace Conbot.ModerationPlugin
         [RequireUserPermission(GuildPermission.BanMembers, GuildPermission.KickMembers)]
         [RequireBotPermission(GuildPermission.KickMembers)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task KickAsync(
+        public async Task<CommandResult> KickAsync(
             [Description("The member to kick.")]
             [LowerHierarchy]
             SocketGuildUser user,
@@ -568,13 +556,11 @@ namespace Conbot.ModerationPlugin
             string? reason = null)
         {
             if (user.Id == Context.User.Id)
-            {
-                await ReplyAsync("You can't kick yourself.");
-                return;
-            }
+                return Unsuccessful("You can't kick yourself.");
 
             await user.KickAsync(reason);
             await ReplyAsync($"**{Format.Sanitize(user.ToString())}** has been kicked.");
+            return Successful;
         }
     }
 }
