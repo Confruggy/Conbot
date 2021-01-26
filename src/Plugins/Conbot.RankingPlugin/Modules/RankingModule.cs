@@ -149,7 +149,7 @@ namespace Conbot.RankingPlugin
 
                 var user = Context.Guild.GetUser(rank.UserId);
                 if (user == null)
-                    return;
+                    continue;
 
                 int level = _rankingService.GetLevel(rank.ExperiencePoints);
                 int levelExperiencePoints = rank.ExperiencePoints - _rankingService.GetTotalExperiencePoints(level);
