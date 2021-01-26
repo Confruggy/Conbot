@@ -24,7 +24,7 @@ namespace Conbot.Commands
 
             return module != null
                 ? TypeParserResult<Module>.Successful(module)
-                : TypeParserResult<Module>.Unsuccessful("Module hasn't been found.");
+                : TypeParserResult<Module>.Unsuccessful("Group hasn't been found.");
         }
     }
 }

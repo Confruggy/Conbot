@@ -48,7 +48,7 @@ namespace Conbot.Commands
 
             return role is T tRole
                 ? TypeParserResult<T>.Successful(tRole)
-                : TypeParserResult<T>.Unsuccessful("Role wasn't found.");
+                : TypeParserResult<T>.Unsuccessful("Role hasn't been found.");
         }
     }
 }

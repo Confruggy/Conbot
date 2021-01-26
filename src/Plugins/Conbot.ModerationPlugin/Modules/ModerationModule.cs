@@ -130,24 +130,16 @@ namespace Conbot.ModerationPlugin
 
                 if (message.Item2 != true)
                 {
-                    await ReplyAsync("Duration for the mute wasn't adjusted.");
+                    await ReplyAsync("Duration for the mute hasn't been adjusted.");
                     return Successful;
                 }
             }
 
             if (role.Position >= ((SocketGuildUser)Context.User).Hierarchy)
-            {
-                return Unsuccessful(
-                    "You can't assign the muted role to members because its position is as high or higher than your " +
-                    "highest role.");
-            }
+                return Unsuccessful("Muted role must be lower than your highest role.");
 
             if (role.Position >= Context.Guild.CurrentUser.Hierarchy)
-            {
-                return Unsuccessful(
-                    "The muted role can't be assigned to members because its position is as high or higher than the " +
-                    "bots highest role.");
-            }
+                return Unsuccessful("Muted role must be lower than the bot's highest role.");
 
             string text;
             if (duration is null)
@@ -192,39 +184,25 @@ namespace Conbot.ModerationPlugin
             "In those cases the bot might try to remove the role from the member after the mute duration expired " +
             "when the member was temporarily muted. So unmuting a member using this command is recommended. You can " +
             "use the **mutedmembers** command to check which members are currently temporarily muted.")]
-        public async Task UnmuteAsync([Description("The member to unmute.")] IGuildUser member)
+        public async Task<CommandResult> UnmuteAsync([Description("The member to unmute.")] IGuildUser member)
         {
             var config = await _db.GetGuildConfigurationAsync(Context.Guild!);
             IRole role;
             if (config?.RoleId is null || (role = Context.Guild.GetRole(config.RoleId.Value)) is null)
             {
-                await ReplyAsync(
+                return Unsuccessful(
                     "There is no role for muting members configured. Please configure a muted role with the " +
                     "**mutedrole** command.");
-                return;
             }
 
             if (!member.RoleIds.Contains(config.RoleId.Value))
-            {
-                await ReplyAsync("This member isn't muted.");
-                return;
-            }
+                return Unsuccessful("This member isn't muted.");
 
             if (role.Position >= ((SocketGuildUser)Context.User).Hierarchy)
-            {
-                await ReplyAsync(
-                    "You can't remove the muted role from members because its position is as high or higher than " +
-                    "your highest role.");
-                return;
-            }
+                return Unsuccessful("Muted role must be lower than your highest role.");
 
             if (role.Position >= Context.Guild.CurrentUser.Hierarchy)
-            {
-                await ReplyAsync(
-                    "The muted role can't be removed from members because its position is as high or higher than the " +
-                    "bots highest role.");
-                return;
-            }
+                return Unsuccessful("Muted role must be lower than the bot's highest role.");
 
             string reason = $"Unmuted by {Context.User} (ID: {Context.User.Id})";
 
@@ -237,6 +215,8 @@ namespace Conbot.ModerationPlugin
                 _db.SaveChangesAsync(),
                 ReplyAsync($"{member.Mention} has been unmuted.")
             );
+
+            return Successful;
         }
 
         //TODO add mutedmembers command

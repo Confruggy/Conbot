@@ -18,14 +18,33 @@ namespace Conbot.Commands
             var user = (SocketGuildUser)discordCommandContext.User;
             var currentUser = discordCommandContext.Guild.CurrentUser;
 
-            if ((argument is SocketRole role && user.Hierarchy > role.Position && currentUser.Hierarchy > role.Position) ||
-                (argument is SocketGuildUser target && user.Hierarchy > target.Hierarchy &&
-                    currentUser.Hierarchy > target.Hierarchy))
+            if (argument is SocketRole role)
             {
-                return CheckResult.Successful;
+                if (role.Position >= user.Hierarchy)
+                {
+                    return CheckResult.Unsuccessful("Role must be lower than your highest role.");
+                }
+                else if (role.Position >= currentUser.Hierarchy)
+                {
+                    return CheckResult.Unsuccessful("Role must be lower than the bot's highest role.");
+                }
             }
 
-            return CheckResult.Unsuccessful("Roles position is too high.");
+            if (argument is SocketGuildUser target)
+            {
+                if (target.Hierarchy >= user.Hierarchy)
+                {
+                    return CheckResult.Unsuccessful(
+                        "Member's highest role must be lower than your highest role.");
+                }
+                else if (target.Hierarchy >= currentUser.Hierarchy)
+                {
+                    return CheckResult.Unsuccessful(
+                        "Member's highest role must be lower than the bot's highest role.");
+                }
+            }
+
+            return CheckResult.Successful;
         }
     }
 }

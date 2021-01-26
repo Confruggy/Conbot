@@ -142,7 +142,7 @@ namespace Conbot.Interactive
                     .AddReactionCallback(config.GetValue<string>("Emotes:GoToPage"), x => x
                         .WithCallback(async _ =>
                         {
-                            var msg = await message.Channel.SendMessageAsync("To which page do you want to go?");
+                            var msg = await message.Channel.SendMessageAsync("Enter the page you want to go to");
 
                             var respond = await context.WaitForMessageAsync();
 

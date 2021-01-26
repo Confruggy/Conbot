@@ -61,7 +61,7 @@ namespace Conbot.Commands
                     return TypeParserResult<T>.Unsuccessful($"{parameter.Name.Humanize()} must be a category.");
             }
 
-            return TypeParserResult<T>.Unsuccessful("Channel wasn't found.");
+            return TypeParserResult<T>.Unsuccessful("Channel hasn't been found.");
         }
     }
 }

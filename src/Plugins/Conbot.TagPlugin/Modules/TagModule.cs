@@ -306,7 +306,7 @@ namespace Conbot.TagPlugin
             {
                 var alias = await _db.GetTagAliasAsync(Context.Guild, name);
                 if (alias is null)
-                    return Unsuccessful($"Tag or alias **{Format.Sanitize(name)}** wasn't found.");
+                    return Unsuccessful($"Tag or alias **{Format.Sanitize(name)}** hasn't been found.");
 
                 if (alias.OwnerId == Context.User.Id)
                     return Unsuccessful("You already own this alias.");
