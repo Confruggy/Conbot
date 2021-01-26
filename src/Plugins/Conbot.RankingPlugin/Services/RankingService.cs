@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 
 using Discord;
 using Discord.WebSocket;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conbot.RankingPlugin
 {
@@ -19,13 +20,15 @@ namespace Conbot.RankingPlugin
         private readonly DiscordShardedClient _client;
         private readonly Random _random;
         private readonly int[] _levels;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         public RankingService(DiscordShardedClient client, Random random, IConfiguration config,
-            ILogger<RankingService> logger)
+            IServiceScopeFactory scopeFactory, ILogger<RankingService> logger)
         {
             _client = client;
             _random = random;
             _levels = config.GetSection("RankingPlugin:Levels").Get<int[]>();
+            _scopeFactory = scopeFactory;
             _logger = logger;
         }
 
@@ -57,7 +60,8 @@ namespace Conbot.RankingPlugin
                 var now = DateTime.UtcNow;
                 var guild = user.Guild;
 
-                using var context = new RankingContext();
+                using var scope = _scopeFactory.CreateScope();
+                using var context = scope.ServiceProvider.GetRequiredService<RankingContext>();
 
                 var config = await context.GetGuildConfigurationAsync(guild);
                 if (config?.IgnoredChannels.Any(x => x.ChannelId == message.Channel.Id) == true)
@@ -150,7 +154,8 @@ namespace Conbot.RankingPlugin
         {
             _ = Task.Run(async () =>
             {
-                using var context = new RankingContext();
+                using var scope = _scopeFactory.CreateScope();
+                using var context = scope.ServiceProvider.GetRequiredService<RankingContext>();
 
                 var rank = await context.GetRankAsync(user);
                 int level = rank is null ? 0 : GetLevel(rank.ExperiencePoints);
@@ -166,11 +171,12 @@ namespace Conbot.RankingPlugin
             return Task.CompletedTask;
         }
 
-        public static Task OnRoleDeletedAsync(SocketRole role)
+        public Task OnRoleDeletedAsync(SocketRole role)
         {
             _ = Task.Run(async () =>
             {
-                using var context = new RankingContext();
+                using var scope = _scopeFactory.CreateScope();
+                using var context = scope.ServiceProvider.GetRequiredService<RankingContext>();
 
                 var config = await context.GetGuildConfigurationAsync(role.Guild);
                 if (config is null)
@@ -199,7 +205,8 @@ namespace Conbot.RankingPlugin
                     if (roles is null)
                         return;
 
-                    using var context = new RankingContext();
+                    using var scope = _scopeFactory.CreateScope();
+                    using var context = scope.ServiceProvider.GetRequiredService<RankingContext>();
 
                     var config = await context.GetGuildConfigurationAsync(guild);
                     if (config is null)
@@ -225,7 +232,6 @@ namespace Conbot.RankingPlugin
         public static IEnumerable<IRole> GetRolesForLevel(IEnumerable<IRole> roles, int level,
             RankGuildConfiguration configuration)
         {
-
             foreach (var roleReward in configuration.RoleRewards)
             {
                 var role = roles.FirstOrDefault(x => x.Id == roleReward.RoleId);

@@ -12,6 +12,9 @@ namespace Conbot.RankingPlugin
         public DbSet<IgnoredChannel> IgnoredChannels => Set<IgnoredChannel>();
         public DbSet<RankUserConfiguration> UserConfigurations => Set<RankUserConfiguration>();
 
+        public RankingContext(DbContextOptions<RankingContext> options)
+            : base(options) { }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Rank>()
@@ -41,7 +44,8 @@ namespace Conbot.RankingPlugin
             optionsBuilder
                 .UseSqlite(
                     $"Data Source={Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "Ranking")}.db")
-                .UseLazyLoadingProxies();
+                .UseLazyLoadingProxies()
+                .EnableSensitiveDataLogging();
         }
     }
 }

@@ -9,6 +9,9 @@ namespace Conbot.TimeZonePlugin
         public DbSet<UserTimeZone> UserTimeZones => Set<UserTimeZone>();
         public DbSet<GuildTimeZone> GuildTimeZones => Set<GuildTimeZone>();
 
+        public TimeZoneContext(DbContextOptions<TimeZoneContext> options)
+            : base(options) { }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder) { }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -16,7 +19,8 @@ namespace Conbot.TimeZonePlugin
             optionsBuilder
                 .UseSqlite(
                     $"Data Source={Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "timezone")}.db")
-                .UseLazyLoadingProxies();
+                .UseLazyLoadingProxies()
+                .EnableSensitiveDataLogging();
         }
     }
 }

@@ -2,12 +2,17 @@
 using System.IO;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace Conbot.ReminderPlugin
 {
     public class ReminderContext : DbContext
     {
         public DbSet<Reminder> Reminders => Set<Reminder>();
+
+        public ReminderContext(DbContextOptions<ReminderContext> options)
+            : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -24,7 +29,8 @@ namespace Conbot.ReminderPlugin
             optionsBuilder
                 .UseSqlite(
                     $"Data Source={Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "reminder")}.db")
-                .UseLazyLoadingProxies();
+                .UseLazyLoadingProxies()
+                .EnableSensitiveDataLogging();
         }
     }
 }

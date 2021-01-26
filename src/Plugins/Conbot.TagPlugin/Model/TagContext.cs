@@ -14,6 +14,9 @@ namespace Conbot.TagPlugin
         public DbSet<TagOwnerChange> TagOwnerChanges => Set<TagOwnerChange>();
         public DbSet<TagAliasOwnerChange> TagAliasOwnerChanges => Set<TagAliasOwnerChange>();
 
+        public TagContext(DbContextOptions<TagContext> options)
+            : base(options) { }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Tag>()
@@ -68,7 +71,8 @@ namespace Conbot.TagPlugin
             optionsBuilder
                 .UseSqlite(
                     $"Data Source={Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "tag")}.db")
-                .UseLazyLoadingProxies();
+                .UseLazyLoadingProxies()
+                .EnableSensitiveDataLogging();
         }
     }
 }

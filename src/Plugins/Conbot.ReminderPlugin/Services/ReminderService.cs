@@ -17,6 +17,7 @@ using Discord.WebSocket;
 using Humanizer;
 
 using NodaTime;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conbot.ReminderPlugin
 {
@@ -26,15 +27,17 @@ namespace Conbot.ReminderPlugin
         private readonly DiscordShardedClient _client;
         private readonly IDateTimeZoneProvider _provider;
         private readonly IConfiguration _config;
+        private readonly IServiceScopeFactory _scopeFactory;
         private Task? _task;
 
         public ReminderService(ILogger<ReminderService> logger, DiscordShardedClient client,
-            IDateTimeZoneProvider provider, IConfiguration config)
+            IDateTimeZoneProvider provider, IConfiguration config, IServiceScopeFactory scopeFactory)
         {
             _logger = logger;
             _client = client;
             _provider = provider;
             _config = config;
+            _scopeFactory = scopeFactory;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -53,20 +56,19 @@ namespace Conbot.ReminderPlugin
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                Reminder[] reminders;
+                using var scope = _scopeFactory.CreateScope();
+                using var reminderContext = scope.ServiceProvider.GetRequiredService<ReminderContext>();
+                using var timeZoneContext = scope.ServiceProvider.GetRequiredService<TimeZoneContext>();
 
-                using (var db = new ReminderContext())
-                {
-                    reminders = await db.Reminders.ToAsyncEnumerable()
-                        .Where(x => !x.Finished && x.EndsAt < DateTime.UtcNow)
-                        .ToArrayAsync(cancellationToken);
+                var reminders = await reminderContext.Reminders.ToAsyncEnumerable()
+                    .Where(x => !x.Finished && x.EndsAt < DateTime.UtcNow)
+                    .ToArrayAsync(cancellationToken);
 
-                    foreach (var reminder in reminders)
-                        reminder.Finished = true;
+                foreach (var reminder in reminders)
+                    reminder.Finished = true;
 
-                    if (reminders.Length > 0)
-                        await db.SaveChangesAsync(cancellationToken);
-                }
+                if (reminders.Length > 0)
+                    await reminderContext.SaveChangesAsync(cancellationToken);
 
                 var tasks = new List<Task>();
 
@@ -97,15 +99,10 @@ namespace Conbot.ReminderPlugin
 
                     if (toSendChannel != null)
                     {
-                        DateTimeZone timeZone;
-
-                        using (var timeZoneContext = new TimeZoneContext())
-                        {
-                            var userTimeZone = await timeZoneContext.GetUserTimeZoneAsync(reminder.UserId);
-                            timeZone = userTimeZone != null
-                                ? _provider.GetZoneOrNull(userTimeZone.TimeZoneId)!
-                                : _provider.GetSystemDefault();
-                        }
+                        var userTimeZone = await timeZoneContext.GetUserTimeZoneAsync(reminder.UserId);
+                        var timeZone = userTimeZone != null
+                            ? _provider.GetZoneOrNull(userTimeZone.TimeZoneId)!
+                            : _provider.GetSystemDefault();
 
                         string time = Instant.FromDateTimeUtc(reminder.EndsAt).InZone(timeZone)
                             .ToDurationString(
