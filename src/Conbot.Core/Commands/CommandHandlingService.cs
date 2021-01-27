@@ -74,9 +74,10 @@ namespace Conbot.Commands
 
         private void AddTypeParsers()
         {
-            _commandService.AddTypeParser(new CommandTypeParser());
-            _commandService.AddTypeParser(new ModuleTypeParser());
+            //Primitive
+            _commandService.AddTypeParser(new IntegerTypeParser(), true);
 
+            //Discord
             _commandService.AddTypeParser(new UserTypeParser<IUser>());
             _commandService.AddTypeParser(new UserTypeParser<SocketUser>());
             _commandService.AddTypeParser(new UserTypeParser<IGuildUser>());
@@ -93,7 +94,10 @@ namespace Conbot.Commands
             _commandService.AddTypeParser(new ChannelTypeParser<IVoiceChannel>());
             _commandService.AddTypeParser(new ChannelTypeParser<SocketVoiceChannel>());
 
+            //Utils
             _commandService.AddTypeParser(new TimeSpanTypeParser());
+            _commandService.AddTypeParser(new CommandTypeParser());
+            _commandService.AddTypeParser(new ModuleTypeParser());
         }
 
         private Task OnInteractionCreatedAsync(SocketInteraction interaction)
