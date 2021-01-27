@@ -439,6 +439,7 @@ namespace Conbot.ModerationPlugin
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task<CommandResult> HackbanAsync(
             [Description("The ID of the user to ban.")]
+            [Snowflake(SnowflakeType.User)]
             ulong id,
             [Name("prune days")]
             [Description("The amount of days to prune messages from the user.")]

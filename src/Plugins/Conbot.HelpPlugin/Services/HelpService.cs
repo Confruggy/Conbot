@@ -506,17 +506,48 @@ namespace Conbot.HelpPlugin
                 string type;
 
                 if (parameter.Type.IsAssignableFrom(typeof(bool)))
+                {
                     type = "Boolean";
+                }
                 else if (parameter.Type.IsAssignableFrom(typeof(int)))
+                {
                     type = "Integer";
+                }
+                else if (parameter.Type.IsAssignableFrom(typeof(ulong)))
+                {
+                    if (parameter.Attributes.FirstOrDefault(x => x is SnowflakeAttribute)
+                        is SnowflakeAttribute attribute)
+                    {
+                        type = attribute.Type switch
+                        {
+                            SnowflakeType.Guild => "Server ID",
+                            SnowflakeType.Channel => "Channel ID",
+                            SnowflakeType.Message => "Message ID",
+                            SnowflakeType.User => "User ID",
+                            _ => "ID"
+                        };
+                    }
+                    else
+                    {
+                        type = "Integer";
+                    }
+                }
                 else if (typeof(IUser).IsAssignableFrom(parameter.Type))
+                {
                     type = "User";
+                }
                 else if (typeof(IChannel).IsAssignableFrom(parameter.Type))
+                {
                     type = "Channel";
+                }
                 else if (typeof(IRole).IsAssignableFrom(parameter.Type))
+                {
                     type = "Role";
+                }
                 else
+                {
                     type = "Text";
+                }
 
                 var text = new StringBuilder()
                     .Append("**")

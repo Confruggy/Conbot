@@ -76,6 +76,7 @@ namespace Conbot.Commands
         {
             //Primitive
             _commandService.AddTypeParser(new IntegerTypeParser(), true);
+            _commandService.AddTypeParser(new UnsignedLongTypeParser(), true);
 
             //Discord
             _commandService.AddTypeParser(new UserTypeParser<IUser>());
