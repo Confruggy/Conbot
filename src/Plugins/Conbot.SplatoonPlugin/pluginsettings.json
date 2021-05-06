@@ -1,0 +1,101 @@
+{
+  "SplatoonPlugin": {
+    "Splatoon2InkBaseUrl": "https://splatoon2.ink",
+    "EmbedFooterIconUrl": "https://cdn.discordapp.com/attachments/805485830663569449/805485860292132924/splatoon.png",
+    "Emotes": {
+      "SalmonRun": "salmon_run:359000699477950464",
+      "Modes": {
+        "Regular": "regular:358952047594438657",
+        "Ranked": "ranked:358952047988441088",
+        "League": "league:358952047644770305"
+      },
+      "SplatShop":
+      {
+        "Money": "money:359049509705351171"
+      },
+      "SubWeapons": {
+        "AutoBomb": "auto_bomb:804868405924200528",
+        "BurstBomb": "burst_bomb:804868404669579314",
+        "CurlingBomb": "curling_bomb:804868404711522354",
+        "FizzyBomb": "fizzy_bomb:804868404758052884",
+        "InkMine": "ink_mine:804868404913111060",
+        "PointSensor": "point_sensor:804868404812447794",
+        "SplashWall": "splash_wall:804868404539818005",
+        "SplatBomb": "splat_bomb:804868404719910933",
+        "Sprinkler": "sprinkler:804868404485947423",
+        "SquidBeakon": "squid_beakon:804868404820443166",
+        "SuctionBomb": "suction_bomb:804868404854521856",
+        "Torpedo": "torpedo:804868404561444915",
+        "ToxicMist": "toxic_mist:804868404846395412"
+      },
+      "Specials": {
+        "AutobombLauncher": "autobomb_launcher:804868468784496690",
+        "Baller": "baller:804868468305297419",
+        "BooyahBomb": "booyah_bomb:804868468675051560",
+        "BubbleBlower": "bubble_blower:804868468415135745",
+        "BurstBombLauncher": "burst_bomb_launcher:804868468683964416",
+        "CurlingBombLauncher": "curling_bomb_launcher:804868468796030976",
+        "InkArmor": "ink_armor:804868468767719434",
+        "InkStorm": "ink_storm:804868468737704017",
+        "Inkjet": "inkjet:804868468779778078",
+        "Splashdown": "splashdown:804868468537163817",
+        "SplatBombLauncher": "splat_bomb_launcher:804868468552761416",
+        "StingRay": "sting_ray:804868468969177129",
+        "SuctionBombLauncher": "suction_bomb_launcher:804868468939161600",
+        "TentaMissiles": "tenta_missiles:804868468599816193",
+        "UltraStamp": "ultra_stamp:804868468918321202"
+      },
+      "Skills": {
+        "AbilityDoubler": "ability_doubler:805128412305162240",
+        "BombDefenseUp": "bomb_defense_up:805128412469002240",
+        "BombDefenseUpDx": "bomb_defense_up_dx:805128412225732619",
+        "ColdBlooded": "coldblooded:805128412334391347",
+        "Comeback": "comeback:805128413806592000",
+        "DropRoller": "drop_roller:805128414507171860",
+        "Haunt": "haunt:805128414666162246",
+        "InkRecoveryUp": "ink_recovery_up:805128413965713438",
+        "InkResistanceUp": "ink_resistance_up:805128414398119967",
+        "InkSaverMain": "ink_saver_main:805128413848535062",
+        "InkSaverSub": "ink_saver_sub:805128414096654367",
+        "LastDitchEffort": "last_ditch_effort:805128414414897222",
+        "Locked": "locked:805183147876679720",
+        "MainPowerUp": "MainPowerUp:805120889804554281",
+        "NinjaSquid": "ninja_squid:805128414469554196",
+        "ObjectShredder": "object_shredder:805128414453039174",
+        "OpeningGambit": "opening_gambit:805128414259839009",
+        "QuickRespawn": "quick_respawn:805128414167171123",
+        "QuickSuperJump": "quick_super_jump:805128414499176499",
+        "RespawnPunisher": "respawn_punisher:805128414070571018",
+        "RunSpeedUp": "run_speed_up:805128416487014461",
+        "SpecialChargeUp": "special_charge_up:805128414389993543",
+        "SpecialPowerUp": "special_power_up:805128414503370783",
+        "SpecialSaver": "special_saver:805128414506778664",
+        "StealthJump": "stealth_jump:805128414281334784",
+        "SubPowerUp": "sub_power_up:805128414117625868",
+        "SwimSpeedUp": "swim_speed_up:805128414196793415",
+        "tenacity": "tenacity:805128413983146026",
+        "thermalInk": "thermal_ink:805128414192861215"
+      },
+      "Brands": {
+        "Amiibo": "amiibo:805230966414770187",
+        "Annaki": "annaki:805230966221832243",
+        "Cuttlegear": "cuttlegear:805230966461300756",
+        "Enperry": "enperry:805230966418702356",
+        "Firefin": "firefin:805230966490398720",
+        "Forge": "forge:805230966473883718",
+        "Grizzco": "grizzco:805230966435610634",
+        "Inkline": "inkline:805230966423552030",
+        "KrakOn": "krak_on:805230966464577556",
+        "Rockenberg": "rockenberg:805230966544662558",
+        "Skalop": "skalop:805230966188408833",
+        "SplashMob": "splash_mob:805230966133620749",
+        "SquidForce": "squidforce:805230966150004747",
+        "takoroka": "takoroka:805230966481616896",
+        "tentatek": "tentatek:805230966309519372",
+        "toni_kensa": "toni_kensa:805230966288416849",
+        "zekko": "zekko:805230966737076224",
+        "zink": "zink:805230966754246696"
+      }
+    }
+  }
+}

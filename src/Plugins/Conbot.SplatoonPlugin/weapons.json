@@ -1,0 +1,3755 @@
+[
+  {
+      "Key": "sshooter",
+      "Id": 40,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Splattershot",
+      "SubWeapon": {
+          "Key": "quickbomb",
+          "Name": "Burst Bomb"
+      },
+      "Special": {
+          "Key": "chakuchi",
+          "Name": "Splashdown"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "sshooter",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "maneuver",
+      "Id": 5010,
+      "Type": {
+          "Key": "maneuver",
+          "Name": "Dualies",
+          "Category": {
+              "Key": "maneuver",
+              "Name": "Dualies"
+          }
+      },
+      "Name": "Splat Dualies",
+      "SubWeapon": {
+          "Key": "quickbomb",
+          "Name": "Burst Bomb"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "maneuver",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "splatroller",
+      "Id": 1010,
+      "Type": {
+          "Key": "roller",
+          "Name": "Rollers",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Splat Roller",
+      "SubWeapon": {
+          "Key": "curlingbomb",
+          "Name": "Curling Bomb"
+      },
+      "Special": {
+          "Key": "chakuchi",
+          "Name": "Splashdown"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "splatroller",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "splatcharger",
+      "Id": 2010,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Splat Charger",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "presser",
+          "Name": "Sting Ray"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "splatcharger",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "prime",
+      "Id": 70,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Splattershot Pro",
+      "SubWeapon": {
+          "Key": "pointsensor",
+          "Name": "Point Sensor"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "prime",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "sharp",
+      "Id": 20,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Splash-o-matic",
+      "SubWeapon": {
+          "Key": "poisonmist",
+          "Name": "Toxic Mist"
+      },
+      "Special": {
+          "Key": "jetpack",
+          "Name": "Inkjet"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "sharp",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "hotblaster",
+      "Id": 210,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Blaster",
+      "SubWeapon": {
+          "Key": "poisonmist",
+          "Name": "Toxic Mist"
+      },
+      "Special": {
+          "Key": "chakuchi",
+          "Name": "Splashdown"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "hotblaster",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "dynamo",
+      "Id": 1020,
+      "Type": {
+          "Key": "roller",
+          "Name": "Rollers",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Dynamo Roller",
+      "SubWeapon": {
+          "Key": "trap",
+          "Name": "Ink Mine"
+      },
+      "Special": {
+          "Key": "presser",
+          "Name": "Sting Ray"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "dynamo",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "hokusai",
+      "Id": 1110,
+      "Type": {
+          "Key": "brush",
+          "Name": "Brushes",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Octobrush",
+      "SubWeapon": {
+          "Key": "robotbomb",
+          "Name": "Autobomb"
+      },
+      "Special": {
+          "Key": "jetpack",
+          "Name": "Inkjet"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "hokusai",
+      "MainPowerUp": {
+          "Key": "movement_speed",
+          "Name": "Increase movement speed"
+      }
+  },
+  {
+      "Key": "splatscope",
+      "Id": 2020,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Splatterscope",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "presser",
+          "Name": "Sting Ray"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "splatcharger",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "bucketslosher",
+      "Id": 3000,
+      "Type": {
+          "Key": "slosher",
+          "Name": "Sloshers",
+          "Category": {
+              "Key": "slosher",
+              "Name": "Sloshers"
+          }
+      },
+      "Name": "Slosher",
+      "SubWeapon": {
+          "Key": "kyubanbomb",
+          "Name": "Suction Bomb"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "bucketslosher",
+      "MainPowerUp": {
+          "Key": "damage_from_higher_grounds",
+          "Name": "Increase damage from higher grounds"
+      }
+  },
+  {
+      "Key": "barrelspinner",
+      "Id": 4010,
+      "Type": {
+          "Key": "splatling",
+          "Name": "Splatlings",
+          "Category": {
+              "Key": "splatling",
+              "Name": "Splatlings"
+          }
+      },
+      "Name": "Heavy Splatling",
+      "SubWeapon": {
+          "Key": "sprinkler",
+          "Name": "Sprinkler"
+      },
+      "Special": {
+          "Key": "presser",
+          "Name": "Sting Ray"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "barrelspinner",
+      "MainPowerUp": {
+          "Key": "duration_of_firing",
+          "Name": "Increase duration of firing"
+      }
+  },
+  {
+      "Key": "sshooter_collabo",
+      "Id": 41,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Tentatek Splattershot",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "jetpack",
+          "Name": "Inkjet"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "sshooter",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "wakaba",
+      "Id": 10,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Splattershot Jr.",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "armor",
+          "Name": "Ink Armor"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "wakaba",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "sputtery",
+      "Id": 5000,
+      "Type": {
+          "Key": "maneuver",
+          "Name": "Dualies",
+          "Category": {
+              "Key": "maneuver",
+              "Name": "Dualies"
+          }
+      },
+      "Name": "Dapple Dualies",
+      "SubWeapon": {
+          "Key": "jumpbeacon",
+          "Name": "Squid Beakon"
+      },
+      "Special": {
+          "Key": "kyubanbomb_pitcher",
+          "Name": "Suction-Bomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "sputtery",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "clashblaster",
+      "Id": 230,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Clash Blaster",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "presser",
+          "Name": "Sting Ray"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "clashblaster",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "soytuber",
+      "Id": 2060,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Goo Tuber",
+      "SubWeapon": {
+          "Key": "kyubanbomb",
+          "Name": "Suction Bomb"
+      },
+      "Special": {
+          "Key": "chakuchi",
+          "Name": "Splashdown"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "soytuber",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "jetsweeper",
+      "Id": 90,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Jet Squelcher",
+      "SubWeapon": {
+          "Key": "poisonmist",
+          "Name": "Toxic Mist"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "jetsweeper",
+      "MainPowerUp": {
+          "Key": "bullet_velocity",
+          "Name": "Increase bullet velocity"
+      }
+  },
+  {
+      "Key": "nzap85",
+      "Id": 60,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "N-ZAP '85",
+      "SubWeapon": {
+          "Key": "kyubanbomb",
+          "Name": "Suction Bomb"
+      },
+      "Special": {
+          "Key": "armor",
+          "Name": "Ink Armor"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "nzap85",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "promodeler_rg",
+      "Id": 31,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Aerospray RG",
+      "SubWeapon": {
+          "Key": "sprinkler",
+          "Name": "Sprinkler"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "promodeler_mg",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "promodeler_mg",
+      "Id": 30,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Aerospray MG",
+      "SubWeapon": {
+          "Key": "kyubanbomb",
+          "Name": "Suction Bomb"
+      },
+      "Special": {
+          "Key": "curlingbomb_pitcher",
+          "Name": "Curling-Bomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "promodeler_mg",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "52gal",
+      "Id": 50,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": ".52 Gal",
+      "SubWeapon": {
+          "Key": "pointsensor",
+          "Name": "Point Sensor"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "52gal",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "96gal",
+      "Id": 80,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": ".96 Gal",
+      "SubWeapon": {
+          "Key": "sprinkler",
+          "Name": "Sprinkler"
+      },
+      "Special": {
+          "Key": "armor",
+          "Name": "Ink Armor"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "96gal",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "l3reelgun",
+      "Id": 300,
+      "Type": {
+          "Key": "reelgun",
+          "Name": "Nozzlenose",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "L-3 Nozzlenose",
+      "SubWeapon": {
+          "Key": "curlingbomb",
+          "Name": "Curling Bomb"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "l3reelgun",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "h3reelgun",
+      "Id": 310,
+      "Type": {
+          "Key": "reelgun",
+          "Name": "Nozzlenose",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "H-3 Nozzlenose",
+      "SubWeapon": {
+          "Key": "pointsensor",
+          "Name": "Point Sensor"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "h3reelgun",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "hotblaster_custom",
+      "Id": 211,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Custom Blaster",
+      "SubWeapon": {
+          "Key": "robotbomb",
+          "Name": "Autobomb"
+      },
+      "Special": {
+          "Key": "jetpack",
+          "Name": "Inkjet"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "hotblaster",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "nova",
+      "Id": 200,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Luna Blaster",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "nova",
+      "MainPowerUp": {
+          "Key": "high_damage_radius_of_explosions",
+          "Name": "Increase high-damage radius of explosions"
+      }
+  },
+  {
+      "Key": "rapid",
+      "Id": 240,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Rapid Blaster",
+      "SubWeapon": {
+          "Key": "trap",
+          "Name": "Ink Mine"
+      },
+      "Special": {
+          "Key": "splashbomb_pitcher",
+          "Name": "Splat-Bomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "rapid",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "maneuver_collabo",
+      "Id": 5011,
+      "Type": {
+          "Key": "maneuver",
+          "Name": "Dualies",
+          "Category": {
+              "Key": "maneuver",
+              "Name": "Dualies"
+          }
+      },
+      "Name": "Enperry Splat Dualies",
+      "SubWeapon": {
+          "Key": "curlingbomb",
+          "Name": "Curling Bomb"
+      },
+      "Special": {
+          "Key": "jetpack",
+          "Name": "Inkjet"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "maneuver",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "splatroller_collabo",
+      "Id": 1011,
+      "Type": {
+          "Key": "roller",
+          "Name": "Rollers",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Krak-On Splat Roller",
+      "SubWeapon": {
+          "Key": "jumpbeacon",
+          "Name": "Squid Beakon"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "splatroller",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "variableroller",
+      "Id": 1030,
+      "Type": {
+          "Key": "roller",
+          "Name": "Rollers",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Flingza Roller",
+      "SubWeapon": {
+          "Key": "splashshield",
+          "Name": "Splash Wall"
+      },
+      "Special": {
+          "Key": "splashbomb_pitcher",
+          "Name": "Splat-Bomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "variableroller",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "carbon",
+      "Id": 1000,
+      "Type": {
+          "Key": "roller",
+          "Name": "Rollers",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Carbon Roller",
+      "SubWeapon": {
+          "Key": "robotbomb",
+          "Name": "Autobomb"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "carbon",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "splatcharger_collabo",
+      "Id": 2011,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Firefin Splat Charger",
+      "SubWeapon": {
+          "Key": "splashshield",
+          "Name": "Splash Wall"
+      },
+      "Special": {
+          "Key": "kyubanbomb_pitcher",
+          "Name": "Suction-Bomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "splatcharger",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "splatscope_collabo",
+      "Id": 2021,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Firefin Splatterscope",
+      "SubWeapon": {
+          "Key": "splashshield",
+          "Name": "Splash Wall"
+      },
+      "Special": {
+          "Key": "kyubanbomb_pitcher",
+          "Name": "Suction-Bomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "splatcharger",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "liter4k",
+      "Id": 2030,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "E-liter 4K",
+      "SubWeapon": {
+          "Key": "trap",
+          "Name": "Ink Mine"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "liter4k",
+      "MainPowerUp": {
+          "Key": "range",
+          "Name": "Increase range"
+      }
+  },
+  {
+      "Key": "liter4k_scope",
+      "Id": 2040,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "E-liter 4K Scope",
+      "SubWeapon": {
+          "Key": "trap",
+          "Name": "Ink Mine"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "liter4k",
+      "MainPowerUp": {
+          "Key": "range",
+          "Name": "Increase range"
+      }
+  },
+  {
+      "Key": "splatspinner",
+      "Id": 4000,
+      "Type": {
+          "Key": "splatling",
+          "Name": "Splatlings",
+          "Category": {
+              "Key": "splatling",
+              "Name": "Splatlings"
+          }
+      },
+      "Name": "Mini Splatling",
+      "SubWeapon": {
+          "Key": "quickbomb",
+          "Name": "Burst Bomb"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "splatspinner",
+      "MainPowerUp": {
+          "Key": "duration_of_firing",
+          "Name": "Increase duration of firing"
+      }
+  },
+  {
+      "Key": "hissen",
+      "Id": 3010,
+      "Type": {
+          "Key": "slosher",
+          "Name": "Sloshers",
+          "Category": {
+              "Key": "slosher",
+              "Name": "Sloshers"
+          }
+      },
+      "Name": "Tri-Slosher",
+      "SubWeapon": {
+          "Key": "quickbomb",
+          "Name": "Burst Bomb"
+      },
+      "Special": {
+          "Key": "armor",
+          "Name": "Ink Armor"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "hissen",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "pablo",
+      "Id": 1100,
+      "Type": {
+          "Key": "brush",
+          "Name": "Brushes",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Inkbrush",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "chakuchi",
+          "Name": "Splashdown"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "pablo",
+      "MainPowerUp": {
+          "Key": "movement_speed",
+          "Name": "Increase movement speed"
+      }
+  },
+  {
+      "Key": "dualsweeper",
+      "Id": 5030,
+      "Type": {
+          "Key": "maneuver",
+          "Name": "Dualies",
+          "Category": {
+              "Key": "maneuver",
+              "Name": "Dualies"
+          }
+      },
+      "Name": "Dualie Squelchers",
+      "SubWeapon": {
+          "Key": "pointsensor",
+          "Name": "Point Sensor"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "dualsweeper",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "bold",
+      "Id": 0,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Sploosh-o-matic",
+      "SubWeapon": {
+          "Key": "curlingbomb",
+          "Name": "Curling Bomb"
+      },
+      "Special": {
+          "Key": "chakuchi",
+          "Name": "Splashdown"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "bold",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "heroshooter_replica",
+      "Id": 45,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Hero Shot Replica",
+      "SubWeapon": {
+          "Key": "quickbomb",
+          "Name": "Burst Bomb"
+      },
+      "Special": {
+          "Key": "chakuchi",
+          "Name": "Splashdown"
+      },
+      "ReskinOfKey": "sshooter",
+      "MainWeaponKey": "sshooter",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "heroblaster_replica",
+      "Id": 215,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Hero Blaster Replica",
+      "SubWeapon": {
+          "Key": "poisonmist",
+          "Name": "Toxic Mist"
+      },
+      "Special": {
+          "Key": "chakuchi",
+          "Name": "Splashdown"
+      },
+      "ReskinOfKey": "hotblaster",
+      "MainWeaponKey": "hotblaster",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "heromaneuver_replica",
+      "Id": 5015,
+      "Type": {
+          "Key": "maneuver",
+          "Name": "Dualies",
+          "Category": {
+              "Key": "maneuver",
+              "Name": "Dualies"
+          }
+      },
+      "Name": "Hero Dualie Replicas",
+      "SubWeapon": {
+          "Key": "quickbomb",
+          "Name": "Burst Bomb"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": "maneuver",
+      "MainWeaponKey": "maneuver",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "herocharger_replica",
+      "Id": 2015,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Hero Charger Replica",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "presser",
+          "Name": "Sting Ray"
+      },
+      "ReskinOfKey": "splatcharger",
+      "MainWeaponKey": "splatcharger",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "heroroller_replica",
+      "Id": 1015,
+      "Type": {
+          "Key": "roller",
+          "Name": "Rollers",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Hero Roller Replica",
+      "SubWeapon": {
+          "Key": "curlingbomb",
+          "Name": "Curling Bomb"
+      },
+      "Special": {
+          "Key": "chakuchi",
+          "Name": "Splashdown"
+      },
+      "ReskinOfKey": "splatroller",
+      "MainWeaponKey": "splatroller",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "herobrush_replica",
+      "Id": 1115,
+      "Type": {
+          "Key": "brush",
+          "Name": "Brushes",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Herobrush Replica",
+      "SubWeapon": {
+          "Key": "robotbomb",
+          "Name": "Autobomb"
+      },
+      "Special": {
+          "Key": "jetpack",
+          "Name": "Inkjet"
+      },
+      "ReskinOfKey": "hokusai",
+      "MainWeaponKey": "hokusai",
+      "MainPowerUp": {
+          "Key": "movement_speed",
+          "Name": "Increase movement speed"
+      }
+  },
+  {
+      "Key": "heroslosher_replica",
+      "Id": 3005,
+      "Type": {
+          "Key": "slosher",
+          "Name": "Sloshers",
+          "Category": {
+              "Key": "slosher",
+              "Name": "Sloshers"
+          }
+      },
+      "Name": "Hero Slosher Replica",
+      "SubWeapon": {
+          "Key": "kyubanbomb",
+          "Name": "Suction Bomb"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": "bucketslosher",
+      "MainWeaponKey": "bucketslosher",
+      "MainPowerUp": {
+          "Key": "damage_from_higher_grounds",
+          "Name": "Increase damage from higher grounds"
+      }
+  },
+  {
+      "Key": "herospinner_replica",
+      "Id": 4015,
+      "Type": {
+          "Key": "splatling",
+          "Name": "Splatlings",
+          "Category": {
+              "Key": "splatling",
+              "Name": "Splatlings"
+          }
+      },
+      "Name": "Hero Splatling Replica",
+      "SubWeapon": {
+          "Key": "sprinkler",
+          "Name": "Sprinkler"
+      },
+      "Special": {
+          "Key": "presser",
+          "Name": "Sting Ray"
+      },
+      "ReskinOfKey": "barrelspinner",
+      "MainWeaponKey": "barrelspinner",
+      "MainPowerUp": {
+          "Key": "duration_of_firing",
+          "Name": "Increase duration of firing"
+      }
+  },
+  {
+      "Key": "parashelter",
+      "Id": 6000,
+      "Type": {
+          "Key": "brella",
+          "Name": "Brellas",
+          "Category": {
+              "Key": "brella",
+              "Name": "Brellas"
+          }
+      },
+      "Name": "Splat Brella",
+      "SubWeapon": {
+          "Key": "sprinkler",
+          "Name": "Sprinkler"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "parashelter",
+      "MainPowerUp": {
+          "Key": "speed_up_canopy_regeneration",
+          "Name": "Speed up brella canopy regeneration"
+      }
+  },
+  {
+      "Key": "heroshelter_replica",
+      "Id": 6005,
+      "Type": {
+          "Key": "brella",
+          "Name": "Brellas",
+          "Category": {
+              "Key": "brella",
+              "Name": "Brellas"
+          }
+      },
+      "Name": "Hero Brella Replica",
+      "SubWeapon": {
+          "Key": "sprinkler",
+          "Name": "Sprinkler"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": "parashelter",
+      "MainWeaponKey": "parashelter",
+      "MainPowerUp": {
+          "Key": "speed_up_canopy_regeneration",
+          "Name": "Speed up brella canopy regeneration"
+      }
+  },
+  {
+      "Key": "squiclean_a",
+      "Id": 2000,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Classic Squiffer",
+      "SubWeapon": {
+          "Key": "pointsensor",
+          "Name": "Point Sensor"
+      },
+      "Special": {
+          "Key": "armor",
+          "Name": "Ink Armor"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "squiclean_a",
+      "MainPowerUp": {
+          "Key": "range",
+          "Name": "Increase range"
+      }
+  },
+  {
+      "Key": "prime_collabo",
+      "Id": 71,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Forge Splattershot Pro",
+      "SubWeapon": {
+          "Key": "kyubanbomb",
+          "Name": "Suction Bomb"
+      },
+      "Special": {
+          "Key": "bubble",
+          "Name": "Bubble Blower"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "prime",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "screwslosher",
+      "Id": 3020,
+      "Type": {
+          "Key": "slosher",
+          "Name": "Sloshers",
+          "Category": {
+              "Key": "slosher",
+              "Name": "Sloshers"
+          }
+      },
+      "Name": "Sloshing Machine",
+      "SubWeapon": {
+          "Key": "robotbomb",
+          "Name": "Autobomb"
+      },
+      "Special": {
+          "Key": "presser",
+          "Name": "Sting Ray"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "screwslosher",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "momiji",
+      "Id": 11,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Custom Splattershot Jr.",
+      "SubWeapon": {
+          "Key": "robotbomb",
+          "Name": "Autobomb"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "wakaba",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "barrelspinner_deco",
+      "Id": 4011,
+      "Type": {
+          "Key": "splatling",
+          "Name": "Splatlings",
+          "Category": {
+              "Key": "splatling",
+              "Name": "Splatlings"
+          }
+      },
+      "Name": "Heavy Splatling Deco",
+      "SubWeapon": {
+          "Key": "splashshield",
+          "Name": "Splash Wall"
+      },
+      "Special": {
+          "Key": "bubble",
+          "Name": "Bubble Blower"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "barrelspinner",
+      "MainPowerUp": {
+          "Key": "duration_of_firing",
+          "Name": "Increase duration of firing"
+      }
+  },
+  {
+      "Key": "rapid_elite",
+      "Id": 250,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Rapid Blaster Pro",
+      "SubWeapon": {
+          "Key": "poisonmist",
+          "Name": "Toxic Mist"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "rapid_elite",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "campingshelter",
+      "Id": 6010,
+      "Type": {
+          "Key": "brella",
+          "Name": "Brellas",
+          "Category": {
+              "Key": "brella",
+              "Name": "Brellas"
+          }
+      },
+      "Name": "Tenta Brella",
+      "SubWeapon": {
+          "Key": "jumpbeacon",
+          "Name": "Squid Beakon"
+      },
+      "Special": {
+          "Key": "bubble",
+          "Name": "Bubble Blower"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "campingshelter",
+      "MainPowerUp": {
+          "Key": "canopy_durability",
+          "Name": "Increase brella canopy durability"
+      }
+  },
+  {
+      "Key": "bamboo14mk1",
+      "Id": 2050,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Bamboozler 14 Mk I",
+      "SubWeapon": {
+          "Key": "curlingbomb",
+          "Name": "Curling Bomb"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "bamboo14mk1",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "liter4k_custom",
+      "Id": 2031,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Custom E-liter 4K",
+      "SubWeapon": {
+          "Key": "jumpbeacon",
+          "Name": "Squid Beakon"
+      },
+      "Special": {
+          "Key": "bubble",
+          "Name": "Bubble Blower"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "liter4k",
+      "MainPowerUp": {
+          "Key": "range",
+          "Name": "Increase range"
+      }
+  },
+  {
+      "Key": "liter4k_scope_custom",
+      "Id": 2041,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Custom E-liter 4K Scope",
+      "SubWeapon": {
+          "Key": "jumpbeacon",
+          "Name": "Squid Beakon"
+      },
+      "Special": {
+          "Key": "bubble",
+          "Name": "Bubble Blower"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "liter4k",
+      "MainPowerUp": {
+          "Key": "range",
+          "Name": "Increase range"
+      }
+  },
+  {
+      "Key": "longblaster",
+      "Id": 220,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Range Blaster",
+      "SubWeapon": {
+          "Key": "kyubanbomb",
+          "Name": "Suction Bomb"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "longblaster",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "dynamo_tesla",
+      "Id": 1021,
+      "Type": {
+          "Key": "roller",
+          "Name": "Rollers",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Gold Dynamo Roller",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "armor",
+          "Name": "Ink Armor"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "dynamo",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "jetsweeper_custom",
+      "Id": 91,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Custom Jet Squelcher",
+      "SubWeapon": {
+          "Key": "quickbomb",
+          "Name": "Burst Bomb"
+      },
+      "Special": {
+          "Key": "presser",
+          "Name": "Sting Ray"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "jetsweeper",
+      "MainPowerUp": {
+          "Key": "bullet_velocity",
+          "Name": "Increase bullet velocity"
+      }
+  },
+  {
+      "Key": "pablo_hue",
+      "Id": 1101,
+      "Type": {
+          "Key": "brush",
+          "Name": "Brushes",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Inkbrush Nouveau",
+      "SubWeapon": {
+          "Key": "trap",
+          "Name": "Ink Mine"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "pablo",
+      "MainPowerUp": {
+          "Key": "movement_speed",
+          "Name": "Increase movement speed"
+      }
+  },
+  {
+      "Key": "variableroller_foil",
+      "Id": 1031,
+      "Type": {
+          "Key": "roller",
+          "Name": "Rollers",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Foil Flingza Roller",
+      "SubWeapon": {
+          "Key": "kyubanbomb",
+          "Name": "Suction Bomb"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "variableroller",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "hydra",
+      "Id": 4020,
+      "Type": {
+          "Key": "splatling",
+          "Name": "Splatlings",
+          "Category": {
+              "Key": "splatling",
+              "Name": "Splatlings"
+          }
+      },
+      "Name": "Hydra Splatling",
+      "SubWeapon": {
+          "Key": "robotbomb",
+          "Name": "Autobomb"
+      },
+      "Special": {
+          "Key": "chakuchi",
+          "Name": "Splashdown"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "hydra",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "kelvin525",
+      "Id": 5020,
+      "Type": {
+          "Key": "maneuver",
+          "Name": "Dualies",
+          "Category": {
+              "Key": "maneuver",
+              "Name": "Dualies"
+          }
+      },
+      "Name": "Glooga Dualies",
+      "SubWeapon": {
+          "Key": "trap",
+          "Name": "Ink Mine"
+      },
+      "Special": {
+          "Key": "jetpack",
+          "Name": "Inkjet"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "kelvin525",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "nzap89",
+      "Id": 61,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "N-ZAP '89",
+      "SubWeapon": {
+          "Key": "robotbomb",
+          "Name": "Autobomb"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "nzap85",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "bucketslosher_deco",
+      "Id": 3001,
+      "Type": {
+          "Key": "slosher",
+          "Name": "Sloshers",
+          "Category": {
+              "Key": "slosher",
+              "Name": "Sloshers"
+          }
+      },
+      "Name": "Slosher Deco",
+      "SubWeapon": {
+          "Key": "sprinkler",
+          "Name": "Sprinkler"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "bucketslosher",
+      "MainPowerUp": {
+          "Key": "damage_from_higher_grounds",
+          "Name": "Increase damage from higher grounds"
+      }
+  },
+  {
+      "Key": "bottlegeyser",
+      "Id": 400,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Squeezer",
+      "SubWeapon": {
+          "Key": "splashshield",
+          "Name": "Splash Wall"
+      },
+      "Special": {
+          "Key": "presser",
+          "Name": "Sting Ray"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "bottlegeyser",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "spygadget",
+      "Id": 6020,
+      "Type": {
+          "Key": "brella",
+          "Name": "Brellas",
+          "Category": {
+              "Key": "brella",
+              "Name": "Brellas"
+          }
+      },
+      "Name": "Undercover Brella",
+      "SubWeapon": {
+          "Key": "trap",
+          "Name": "Ink Mine"
+      },
+      "Special": {
+          "Key": "chakuchi",
+          "Name": "Splashdown"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "spygadget",
+      "MainPowerUp": {
+          "Key": "speed_up_canopy_regeneration",
+          "Name": "Speed up brella canopy regeneration"
+      }
+  },
+  {
+      "Key": "hokusai_hue",
+      "Id": 1111,
+      "Type": {
+          "Key": "brush",
+          "Name": "Brushes",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Octobrush Nouveau",
+      "SubWeapon": {
+          "Key": "jumpbeacon",
+          "Name": "Squid Beakon"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "hokusai",
+      "MainPowerUp": {
+          "Key": "movement_speed",
+          "Name": "Increase movement speed"
+      }
+  },
+  {
+      "Key": "l3reelgun_d",
+      "Id": 301,
+      "Type": {
+          "Key": "reelgun",
+          "Name": "Nozzlenose",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "L-3 Nozzlenose D",
+      "SubWeapon": {
+          "Key": "quickbomb",
+          "Name": "Burst Bomb"
+      },
+      "Special": {
+          "Key": "jetpack",
+          "Name": "Inkjet"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "l3reelgun",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "sputtery_hue",
+      "Id": 5001,
+      "Type": {
+          "Key": "maneuver",
+          "Name": "Dualies",
+          "Category": {
+              "Key": "maneuver",
+              "Name": "Dualies"
+          }
+      },
+      "Name": "Dapple Dualies Nouveau",
+      "SubWeapon": {
+          "Key": "poisonmist",
+          "Name": "Toxic Mist"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "sputtery",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "52gal_deco",
+      "Id": 51,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": ".52 Gal Deco",
+      "SubWeapon": {
+          "Key": "curlingbomb",
+          "Name": "Curling Bomb"
+      },
+      "Special": {
+          "Key": "presser",
+          "Name": "Sting Ray"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "52gal",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "rapid_deco",
+      "Id": 241,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Rapid Blaster Deco",
+      "SubWeapon": {
+          "Key": "kyubanbomb",
+          "Name": "Suction Bomb"
+      },
+      "Special": {
+          "Key": "jetpack",
+          "Name": "Inkjet"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "rapid",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "96gal_deco",
+      "Id": 81,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": ".96 Gal Deco",
+      "SubWeapon": {
+          "Key": "splashshield",
+          "Name": "Splash Wall"
+      },
+      "Special": {
+          "Key": "chakuchi",
+          "Name": "Splashdown"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "96gal",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "soytuber_custom",
+      "Id": 2061,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Custom Goo Tuber",
+      "SubWeapon": {
+          "Key": "curlingbomb",
+          "Name": "Curling Bomb"
+      },
+      "Special": {
+          "Key": "jetpack",
+          "Name": "Inkjet"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "soytuber",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "screwslosher_neo",
+      "Id": 3021,
+      "Type": {
+          "Key": "slosher",
+          "Name": "Sloshers",
+          "Category": {
+              "Key": "slosher",
+              "Name": "Sloshers"
+          }
+      },
+      "Name": "Sloshing Machine Neo",
+      "SubWeapon": {
+          "Key": "pointsensor",
+          "Name": "Point Sensor"
+      },
+      "Special": {
+          "Key": "splashbomb_pitcher",
+          "Name": "Splat-Bomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "screwslosher",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "nova_neo",
+      "Id": 201,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Luna Blaster Neo",
+      "SubWeapon": {
+          "Key": "trap",
+          "Name": "Ink Mine"
+      },
+      "Special": {
+          "Key": "kyubanbomb_pitcher",
+          "Name": "Suction-Bomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "nova",
+      "MainPowerUp": {
+          "Key": "high_damage_radius_of_explosions",
+          "Name": "Increase high-damage radius of explosions"
+      }
+  },
+  {
+      "Key": "quadhopper_black",
+      "Id": 5040,
+      "Type": {
+          "Key": "maneuver",
+          "Name": "Dualies",
+          "Category": {
+              "Key": "maneuver",
+              "Name": "Dualies"
+          }
+      },
+      "Name": "Dark Tetra Dualies",
+      "SubWeapon": {
+          "Key": "robotbomb",
+          "Name": "Autobomb"
+      },
+      "Special": {
+          "Key": "chakuchi",
+          "Name": "Splashdown"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "quadhopper_black",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "bold_neo",
+      "Id": 1,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Neo Sploosh-o-matic",
+      "SubWeapon": {
+          "Key": "jumpbeacon",
+          "Name": "Squid Beakon"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "bold",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "h3reelgun_d",
+      "Id": 311,
+      "Type": {
+          "Key": "reelgun",
+          "Name": "Nozzlenose",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "H-3 Nozzlenose D",
+      "SubWeapon": {
+          "Key": "kyubanbomb",
+          "Name": "Suction Bomb"
+      },
+      "Special": {
+          "Key": "armor",
+          "Name": "Ink Armor"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "h3reelgun",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "splatspinner_collabo",
+      "Id": 4001,
+      "Type": {
+          "Key": "splatling",
+          "Name": "Splatlings",
+          "Category": {
+              "Key": "splatling",
+              "Name": "Splatlings"
+          }
+      },
+      "Name": "Zink Mini Splatling",
+      "SubWeapon": {
+          "Key": "curlingbomb",
+          "Name": "Curling Bomb"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "splatspinner",
+      "MainPowerUp": {
+          "Key": "duration_of_firing",
+          "Name": "Increase duration of firing"
+      }
+  },
+  {
+      "Key": "parashelter_sorella",
+      "Id": 6001,
+      "Type": {
+          "Key": "brella",
+          "Name": "Brellas",
+          "Category": {
+              "Key": "brella",
+              "Name": "Brellas"
+          }
+      },
+      "Name": "Sorella Brella",
+      "SubWeapon": {
+          "Key": "robotbomb",
+          "Name": "Autobomb"
+      },
+      "Special": {
+          "Key": "splashbomb_pitcher",
+          "Name": "Splat-Bomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "parashelter",
+      "MainPowerUp": {
+          "Key": "speed_up_canopy_regeneration",
+          "Name": "Speed up brella canopy regeneration"
+      }
+  },
+  {
+      "Key": "clashblaster_neo",
+      "Id": 231,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Clash Blaster Neo",
+      "SubWeapon": {
+          "Key": "curlingbomb",
+          "Name": "Curling Bomb"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "clashblaster",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "hissen_hue",
+      "Id": 3011,
+      "Type": {
+          "Key": "slosher",
+          "Name": "Sloshers",
+          "Category": {
+              "Key": "slosher",
+              "Name": "Sloshers"
+          }
+      },
+      "Name": "Tri-Slosher Nouveau",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "hissen",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "longblaster_custom",
+      "Id": 221,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Custom Range Blaster",
+      "SubWeapon": {
+          "Key": "curlingbomb",
+          "Name": "Curling Bomb"
+      },
+      "Special": {
+          "Key": "bubble",
+          "Name": "Bubble Blower"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "longblaster",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "sharp_neo",
+      "Id": 21,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Neo Splash-o-matic",
+      "SubWeapon": {
+          "Key": "quickbomb",
+          "Name": "Burst Bomb"
+      },
+      "Special": {
+          "Key": "kyubanbomb_pitcher",
+          "Name": "Suction-Bomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "sharp",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "bottlegeyser_foil",
+      "Id": 401,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Foil Squeezer",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "bubble",
+          "Name": "Bubble Blower"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "bottlegeyser",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "squiclean_b",
+      "Id": 2001,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "New Squiffer",
+      "SubWeapon": {
+          "Key": "robotbomb",
+          "Name": "Autobomb"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "squiclean_a",
+      "MainPowerUp": {
+          "Key": "range",
+          "Name": "Increase range"
+      }
+  },
+  {
+      "Key": "kelvin525_deco",
+      "Id": 5021,
+      "Type": {
+          "Key": "maneuver",
+          "Name": "Dualies",
+          "Category": {
+              "Key": "maneuver",
+              "Name": "Dualies"
+          }
+      },
+      "Name": "Glooga Dualies Deco",
+      "SubWeapon": {
+          "Key": "splashshield",
+          "Name": "Splash Wall"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "kelvin525",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "dualsweeper_custom",
+      "Id": 5031,
+      "Type": {
+          "Key": "maneuver",
+          "Name": "Dualies",
+          "Category": {
+              "Key": "maneuver",
+              "Name": "Dualies"
+          }
+      },
+      "Name": "Custom Dualie Squelchers",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "dualsweeper",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "rapid_elite_deco",
+      "Id": 251,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Rapid Blaster Pro Deco",
+      "SubWeapon": {
+          "Key": "splashshield",
+          "Name": "Splash Wall"
+      },
+      "Special": {
+          "Key": "armor",
+          "Name": "Ink Armor"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "rapid_elite",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "spygadget_sorella",
+      "Id": 6021,
+      "Type": {
+          "Key": "brella",
+          "Name": "Brellas",
+          "Category": {
+              "Key": "brella",
+              "Name": "Brellas"
+          }
+      },
+      "Name": "Undercover Sorella Brella",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "spygadget",
+      "MainPowerUp": {
+          "Key": "speed_up_canopy_regeneration",
+          "Name": "Speed up brella canopy regeneration"
+      }
+  },
+  {
+      "Key": "carbon_deco",
+      "Id": 1001,
+      "Type": {
+          "Key": "roller",
+          "Name": "Rollers",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Carbon Roller Deco",
+      "SubWeapon": {
+          "Key": "quickbomb",
+          "Name": "Burst Bomb"
+      },
+      "Special": {
+          "Key": "robotbomb_pitcher",
+          "Name": "Autobomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "carbon",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "octoshooter_replica",
+      "Id": 46,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Octo Shot Replica",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "jetpack",
+          "Name": "Inkjet"
+      },
+      "ReskinOfKey": "sshooter_collabo",
+      "MainWeaponKey": "sshooter",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "bamboo14mk2",
+      "Id": 2051,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Bamboozler 14 Mk II",
+      "SubWeapon": {
+          "Key": "poisonmist",
+          "Name": "Toxic Mist"
+      },
+      "Special": {
+          "Key": "quickbomb_pitcher",
+          "Name": "Burst-Bomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "bamboo14mk1",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "campingshelter_sorella",
+      "Id": 6011,
+      "Type": {
+          "Key": "brella",
+          "Name": "Brellas",
+          "Category": {
+              "Key": "brella",
+              "Name": "Brellas"
+          }
+      },
+      "Name": "Tenta Sorella Brella",
+      "SubWeapon": {
+          "Key": "splashshield",
+          "Name": "Splash Wall"
+      },
+      "Special": {
+          "Key": "curlingbomb_pitcher",
+          "Name": "Curling-Bomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "campingshelter",
+      "MainPowerUp": {
+          "Key": "canopy_durability",
+          "Name": "Increase brella canopy durability"
+      }
+  },
+  {
+      "Key": "kugelschreiber",
+      "Id": 4030,
+      "Type": {
+          "Key": "splatling",
+          "Name": "Splatlings",
+          "Category": {
+              "Key": "splatling",
+              "Name": "Splatlings"
+          }
+      },
+      "Name": "Ballpoint Splatling",
+      "SubWeapon": {
+          "Key": "poisonmist",
+          "Name": "Toxic Mist"
+      },
+      "Special": {
+          "Key": "jetpack",
+          "Name": "Inkjet"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "kugelschreiber",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "explosher",
+      "Id": 3040,
+      "Type": {
+          "Key": "slosher",
+          "Name": "Sloshers",
+          "Category": {
+              "Key": "slosher",
+              "Name": "Sloshers"
+          }
+      },
+      "Name": "Explosher",
+      "SubWeapon": {
+          "Key": "sprinkler",
+          "Name": "Sprinkler"
+      },
+      "Special": {
+          "Key": "bubble",
+          "Name": "Bubble Blower"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "explosher",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "quadhopper_white",
+      "Id": 5041,
+      "Type": {
+          "Key": "maneuver",
+          "Name": "Dualies",
+          "Category": {
+              "Key": "maneuver",
+              "Name": "Dualies"
+          }
+      },
+      "Name": "Light Tetra Dualies",
+      "SubWeapon": {
+          "Key": "sprinkler",
+          "Name": "Sprinkler"
+      },
+      "Special": {
+          "Key": "robotbomb_pitcher",
+          "Name": "Autobomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "quadhopper_black",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "hydra_custom",
+      "Id": 4021,
+      "Type": {
+          "Key": "splatling",
+          "Name": "Splatlings",
+          "Category": {
+              "Key": "splatling",
+              "Name": "Splatlings"
+          }
+      },
+      "Name": "Custom Hydra Splatling",
+      "SubWeapon": {
+          "Key": "trap",
+          "Name": "Ink Mine"
+      },
+      "Special": {
+          "Key": "armor",
+          "Name": "Ink Armor"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "hydra",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "furo",
+      "Id": 3030,
+      "Type": {
+          "Key": "slosher",
+          "Name": "Sloshers",
+          "Category": {
+              "Key": "slosher",
+              "Name": "Sloshers"
+          }
+      },
+      "Name": "Bloblobber",
+      "SubWeapon": {
+          "Key": "splashshield",
+          "Name": "Splash Wall"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "furo",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "nautilus47",
+      "Id": 4040,
+      "Type": {
+          "Key": "splatling",
+          "Name": "Splatlings",
+          "Category": {
+              "Key": "splatling",
+              "Name": "Splatlings"
+          }
+      },
+      "Name": "Nautilus 47",
+      "SubWeapon": {
+          "Key": "pointsensor",
+          "Name": "Point Sensor"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "nautilus47",
+      "MainPowerUp": {
+          "Key": "duration_of_firing",
+          "Name": "Increase duration of firing"
+      }
+  },
+  {
+      "Key": "sshooter_becchu",
+      "Id": 42,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Kensa Splattershot",
+      "SubWeapon": {
+          "Key": "kyubanbomb",
+          "Name": "Suction Bomb"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "sshooter",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "splatroller_becchu",
+      "Id": 1012,
+      "Type": {
+          "Key": "roller",
+          "Name": "Rollers",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Kensa Splat Roller",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "bubble",
+          "Name": "Bubble Blower"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "splatroller",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "splatcharger_becchu",
+      "Id": 2012,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Kensa Charger",
+      "SubWeapon": {
+          "Key": "sprinkler",
+          "Name": "Sprinkler"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "splatcharger",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "splatscope_becchu",
+      "Id": 2022,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Kensa Splatterscope",
+      "SubWeapon": {
+          "Key": "sprinkler",
+          "Name": "Sprinkler"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "splatcharger",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "maneuver_becchu",
+      "Id": 5012,
+      "Type": {
+          "Key": "maneuver",
+          "Name": "Dualies",
+          "Category": {
+              "Key": "maneuver",
+              "Name": "Dualies"
+          }
+      },
+      "Name": "Kensa Splat Dualies",
+      "SubWeapon": {
+          "Key": "kyubanbomb",
+          "Name": "Suction Bomb"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "maneuver",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "prime_becchu",
+      "Id": 72,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Kensa Splattershot Pro",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "nicedama",
+          "Name": "Booyah Bomb"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "prime",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "nova_becchu",
+      "Id": 202,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Kensa Luna Blaster",
+      "SubWeapon": {
+          "Key": "tansanbomb",
+          "Name": "Fizzy Bomb"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "nova",
+      "MainPowerUp": {
+          "Key": "high_damage_radius_of_explosions",
+          "Name": "Increase high-damage radius of explosions"
+      }
+  },
+  {
+      "Key": "dynamo_becchu",
+      "Id": 1022,
+      "Type": {
+          "Key": "roller",
+          "Name": "Rollers",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Kensa Dynamo Roller",
+      "SubWeapon": {
+          "Key": "sprinkler",
+          "Name": "Sprinkler"
+      },
+      "Special": {
+          "Key": "nicedama",
+          "Name": "Booyah Bomb"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "dynamo",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "screwslosher_becchu",
+      "Id": 3022,
+      "Type": {
+          "Key": "slosher",
+          "Name": "Sloshers",
+          "Category": {
+              "Key": "slosher",
+              "Name": "Sloshers"
+          }
+      },
+      "Name": "Kensa Sloshing Machine",
+      "SubWeapon": {
+          "Key": "tansanbomb",
+          "Name": "Fizzy Bomb"
+      },
+      "Special": {
+          "Key": "chakuchi",
+          "Name": "Splashdown"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "screwslosher",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "ochiba",
+      "Id": 12,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Kensa Splattershot Jr.",
+      "SubWeapon": {
+          "Key": "torpedo",
+          "Name": "Torpedo"
+      },
+      "Special": {
+          "Key": "bubble",
+          "Name": "Bubble Blower"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "wakaba",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "hokusai_becchu",
+      "Id": 1112,
+      "Type": {
+          "Key": "brush",
+          "Name": "Brushes",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Kensa Octobrush",
+      "SubWeapon": {
+          "Key": "kyubanbomb",
+          "Name": "Suction Bomb"
+      },
+      "Special": {
+          "Key": "ultrahanko",
+          "Name": "Ultra Stamp"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "hokusai",
+      "MainPowerUp": {
+          "Key": "movement_speed",
+          "Name": "Increase movement speed"
+      }
+  },
+  {
+      "Key": "spygadget_becchu",
+      "Id": 6022,
+      "Type": {
+          "Key": "brella",
+          "Name": "Brellas",
+          "Category": {
+              "Key": "brella",
+              "Name": "Brellas"
+          }
+      },
+      "Name": "Kensa Undercover Brella",
+      "SubWeapon": {
+          "Key": "torpedo",
+          "Name": "Torpedo"
+      },
+      "Special": {
+          "Key": "armor",
+          "Name": "Ink Armor"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "spygadget",
+      "MainPowerUp": {
+          "Key": "speed_up_canopy_regeneration",
+          "Name": "Speed up brella canopy regeneration"
+      }
+  },
+  {
+      "Key": "l3reelgun_becchu",
+      "Id": 302,
+      "Type": {
+          "Key": "reelgun",
+          "Name": "Nozzlenose",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Kensa L-3 Nozzlenose",
+      "SubWeapon": {
+          "Key": "splashshield",
+          "Name": "Splash Wall"
+      },
+      "Special": {
+          "Key": "ultrahanko",
+          "Name": "Ultra Stamp"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "l3reelgun",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "explosher_custom",
+      "Id": 3041,
+      "Type": {
+          "Key": "slosher",
+          "Name": "Sloshers",
+          "Category": {
+              "Key": "slosher",
+              "Name": "Sloshers"
+          }
+      },
+      "Name": "Custom Explosher",
+      "SubWeapon": {
+          "Key": "pointsensor",
+          "Name": "Point Sensor"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "explosher",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "kugelschreiber_hue",
+      "Id": 4031,
+      "Type": {
+          "Key": "splatling",
+          "Name": "Splatlings",
+          "Category": {
+              "Key": "splatling",
+              "Name": "Splatlings"
+          }
+      },
+      "Name": "Ballpoint Splatling Nouveau",
+      "SubWeapon": {
+          "Key": "jumpbeacon",
+          "Name": "Squid Beakon"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "kugelschreiber",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "furo_deco",
+      "Id": 3031,
+      "Type": {
+          "Key": "slosher",
+          "Name": "Sloshers",
+          "Category": {
+              "Key": "slosher",
+              "Name": "Sloshers"
+          }
+      },
+      "Name": "Bloblobber Deco",
+      "SubWeapon": {
+          "Key": "sprinkler",
+          "Name": "Sprinkler"
+      },
+      "Special": {
+          "Key": "kyubanbomb_pitcher",
+          "Name": "Suction-Bomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "furo",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "nautilus79",
+      "Id": 4041,
+      "Type": {
+          "Key": "splatling",
+          "Name": "Splatlings",
+          "Category": {
+              "Key": "splatling",
+              "Name": "Splatlings"
+          }
+      },
+      "Name": "Nautilus 79",
+      "SubWeapon": {
+          "Key": "kyubanbomb",
+          "Name": "Suction Bomb"
+      },
+      "Special": {
+          "Key": "jetpack",
+          "Name": "Inkjet"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "nautilus47",
+      "MainPowerUp": {
+          "Key": "duration_of_firing",
+          "Name": "Increase duration of firing"
+      }
+  },
+  {
+      "Key": "52gal_becchu",
+      "Id": 52,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Kensa .52 Gal",
+      "SubWeapon": {
+          "Key": "splashshield",
+          "Name": "Splash Wall"
+      },
+      "Special": {
+          "Key": "nicedama",
+          "Name": "Booyah Bomb"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "52gal",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "kelvin525_becchu",
+      "Id": 5022,
+      "Type": {
+          "Key": "maneuver",
+          "Name": "Dualies",
+          "Category": {
+              "Key": "maneuver",
+              "Name": "Dualies"
+          }
+      },
+      "Name": "Kensa Glooga Dualies",
+      "SubWeapon": {
+          "Key": "tansanbomb",
+          "Name": "Fizzy Bomb"
+      },
+      "Special": {
+          "Key": "armor",
+          "Name": "Ink Armor"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "kelvin525",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "splatspinner_becchu",
+      "Id": 4002,
+      "Type": {
+          "Key": "splatling",
+          "Name": "Splatlings",
+          "Category": {
+              "Key": "splatling",
+              "Name": "Splatlings"
+          }
+      },
+      "Name": "Kensa Mini Splatling",
+      "SubWeapon": {
+          "Key": "poisonmist",
+          "Name": "Toxic Mist"
+      },
+      "Special": {
+          "Key": "ultrahanko",
+          "Name": "Ultra Stamp"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "splatspinner",
+      "MainPowerUp": {
+          "Key": "duration_of_firing",
+          "Name": "Increase duration of firing"
+      }
+  },
+  {
+      "Key": "rapid_becchu",
+      "Id": 242,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Kensa Rapid Blaster",
+      "SubWeapon": {
+          "Key": "torpedo",
+          "Name": "Torpedo"
+      },
+      "Special": {
+          "Key": "sphere",
+          "Name": "Baller"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "rapid",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "sputtery_clear",
+      "Id": 5002,
+      "Type": {
+          "Key": "maneuver",
+          "Name": "Dualies",
+          "Category": {
+              "Key": "maneuver",
+              "Name": "Dualies"
+          }
+      },
+      "Name": "Clear Dapple Dualies",
+      "SubWeapon": {
+          "Key": "torpedo",
+          "Name": "Torpedo"
+      },
+      "Special": {
+          "Key": "chakuchi",
+          "Name": "Splashdown"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "sputtery",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "campingshelter_camo",
+      "Id": 6012,
+      "Type": {
+          "Key": "brella",
+          "Name": "Brellas",
+          "Category": {
+              "Key": "brella",
+              "Name": "Brellas"
+          }
+      },
+      "Name": "Tenta Camo Brella",
+      "SubWeapon": {
+          "Key": "trap",
+          "Name": "Ink Mine"
+      },
+      "Special": {
+          "Key": "ultrahanko",
+          "Name": "Ultra Stamp"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "campingshelter",
+      "MainPowerUp": {
+          "Key": "canopy_durability",
+          "Name": "Increase brella canopy durability"
+      }
+  },
+  {
+      "Key": "squiclean_g",
+      "Id": 2002,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Fresh Squiffer",
+      "SubWeapon": {
+          "Key": "kyubanbomb",
+          "Name": "Suction Bomb"
+      },
+      "Special": {
+          "Key": "jetpack",
+          "Name": "Inkjet"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "squiclean_a",
+      "MainPowerUp": {
+          "Key": "range",
+          "Name": "Increase range"
+      }
+  },
+  {
+      "Key": "pablo_permanent",
+      "Id": 1102,
+      "Type": {
+          "Key": "brush",
+          "Name": "Brushes",
+          "Category": {
+              "Key": "roller",
+              "Name": "Rollers"
+          }
+      },
+      "Name": "Permanent Inkbrush",
+      "SubWeapon": {
+          "Key": "sprinkler",
+          "Name": "Sprinkler"
+      },
+      "Special": {
+          "Key": "armor",
+          "Name": "Ink Armor"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "pablo",
+      "MainPowerUp": {
+          "Key": "movement_speed",
+          "Name": "Increase movement speed"
+      }
+  },
+  {
+      "Key": "bucketslosher_soda",
+      "Id": 3002,
+      "Type": {
+          "Key": "slosher",
+          "Name": "Sloshers",
+          "Category": {
+              "Key": "slosher",
+              "Name": "Sloshers"
+          }
+      },
+      "Name": "Soda Slosher",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "quickbomb_pitcher",
+          "Name": "Burst-Bomb Launcher"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "bucketslosher",
+      "MainPowerUp": {
+          "Key": "damage_from_higher_grounds",
+          "Name": "Increase damage from higher grounds"
+      }
+  },
+  {
+      "Key": "barrelspinner_remix",
+      "Id": 4012,
+      "Type": {
+          "Key": "splatling",
+          "Name": "Splatlings",
+          "Category": {
+              "Key": "splatling",
+              "Name": "Splatlings"
+          }
+      },
+      "Name": "Heavy Splatling Remix",
+      "SubWeapon": {
+          "Key": "pointsensor",
+          "Name": "Point Sensor"
+      },
+      "Special": {
+          "Key": "nicedama",
+          "Name": "Booyah Bomb"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "barrelspinner",
+      "MainPowerUp": {
+          "Key": "duration_of_firing",
+          "Name": "Increase duration of firing"
+      }
+  },
+  {
+      "Key": "bamboo14mk3",
+      "Id": 2052,
+      "Type": {
+          "Key": "charger",
+          "Name": "Chargers",
+          "Category": {
+              "Key": "charger",
+              "Name": "Chargers"
+          }
+      },
+      "Name": "Bamboozler 14 Mk III",
+      "SubWeapon": {
+          "Key": "tansanbomb",
+          "Name": "Fizzy Bomb"
+      },
+      "Special": {
+          "Key": "bubble",
+          "Name": "Bubble Blower"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "bamboo14mk1",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "longblaster_necro",
+      "Id": 222,
+      "Type": {
+          "Key": "blaster",
+          "Name": "Blasters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Grim Range Blaster",
+      "SubWeapon": {
+          "Key": "quickbomb",
+          "Name": "Burst Bomb"
+      },
+      "Special": {
+          "Key": "missile",
+          "Name": "Tenta Missiles"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "longblaster",
+      "MainPowerUp": {
+          "Key": "shot_accuracy",
+          "Name": "Increase shot accuracy"
+      }
+  },
+  {
+      "Key": "nzap83",
+      "Id": 62,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "N-ZAP '83",
+      "SubWeapon": {
+          "Key": "sprinkler",
+          "Name": "Sprinkler"
+      },
+      "Special": {
+          "Key": "amefurashi",
+          "Name": "Ink Storm"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "nzap85",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "promodeler_pg",
+      "Id": 32,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Aerospray PG",
+      "SubWeapon": {
+          "Key": "quickbomb",
+          "Name": "Burst Bomb"
+      },
+      "Special": {
+          "Key": "nicedama",
+          "Name": "Booyah Bomb"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "promodeler_mg",
+      "MainPowerUp": {
+          "Key": "ink_coverage",
+          "Name": "Increase ink coverage"
+      }
+  },
+  {
+      "Key": "bold_7",
+      "Id": 2,
+      "Type": {
+          "Key": "shooter",
+          "Name": "Shooters",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Sploosh-o-matic 7",
+      "SubWeapon": {
+          "Key": "splashbomb",
+          "Name": "Splat Bomb"
+      },
+      "Special": {
+          "Key": "ultrahanko",
+          "Name": "Ultra Stamp"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "bold",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  },
+  {
+      "Key": "h3reelgun_cherry",
+      "Id": 312,
+      "Type": {
+          "Key": "reelgun",
+          "Name": "Nozzlenose",
+          "Category": {
+              "Key": "shooter",
+              "Name": "Shooters"
+          }
+      },
+      "Name": "Cherry H-3 Nozzlenose",
+      "SubWeapon": {
+          "Key": "splashshield",
+          "Name": "Splash Wall"
+      },
+      "Special": {
+          "Key": "bubble",
+          "Name": "Bubble Blower"
+      },
+      "ReskinOfKey": null,
+      "MainWeaponKey": "h3reelgun",
+      "MainPowerUp": {
+          "Key": "damage",
+          "Name": "Increase damage"
+      }
+  }
+]

@@ -1,157 +1,167 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        //build
-        {
-            "label": "build",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/src/Conbot/Conbot.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile",
-            "dependsOn":
-            [
-                "build Conbot.HelpPlugin",
-                "build Conbot.InfoPlugin",
-                "build Conbot.ModerationPlugin",
-                "build Conbot.PrefixPlugin",
-                "build Conbot.RankingPlugin",
-                "build Conbot.ReminderPlugin",
-                "build Conbot.RngPlugin",
-                "build Conbot.TagPlugin",
-                "build Conbot.UrbanPlugin",
-                "build Conbot.TimeZonePlugin"
-            ]
-        },
-        {
-            "label": "build Conbot.HelpPlugin",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/src/Plugins/Conbot.HelpPlugin/Conbot.HelpPlugin.csproj"
-            ],
-            "problemMatcher": "$msCompile",
-        },
-        {
-            "label": "build Conbot.InfoPlugin",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/src/Plugins/Conbot.InfoPlugin/Conbot.InfoPlugin.csproj"
-            ],
-            "problemMatcher": "$msCompile",
-        },
-        {
-            "label": "build Conbot.ModerationPlugin",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/src/Plugins/Conbot.ModerationPlugin/Conbot.ModerationPlugin.csproj"
-            ],
-            "problemMatcher": "$msCompile",
-        },
-        {
-            "label": "build Conbot.PrefixPlugin",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/src/Plugins/Conbot.PrefixPlugin/Conbot.PrefixPlugin.csproj"
-            ],
-            "problemMatcher": "$msCompile",
-        },
-        {
-            "label": "build Conbot.RankingPlugin",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/src/Plugins/Conbot.RankingPlugin/Conbot.RankingPlugin.csproj"
-            ],
-            "problemMatcher": "$msCompile",
-        },
-        {
-            "label": "build Conbot.ReminderPlugin",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/src/Plugins/Conbot.ReminderPlugin/Conbot.ReminderPlugin.csproj"
-            ],
-            "problemMatcher": "$msCompile",
-        },
-        {
-            "label": "build Conbot.RngPlugin",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/src/Plugins/Conbot.RngPlugin/Conbot.RngPlugin.csproj"
-            ],
-            "problemMatcher": "$msCompile",
-        },
-        {
-            "label": "build Conbot.TagPlugin",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/src/Plugins/Conbot.TagPlugin/Conbot.TagPlugin.csproj"
-            ],
-            "problemMatcher": "$msCompile",
-        },
-        {
-            "label": "build Conbot.UrbanPlugin",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/src/Plugins/Conbot.UrbanPlugin/Conbot.UrbanPlugin.csproj"
-            ],
-            "problemMatcher": "$msCompile",
-        },
-        {
-            "label": "build Conbot.TimeZonePlugin",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/src/Plugins/Conbot.TimeZonePlugin/Conbot.TimeZonePlugin.csproj"
-            ],
-            "problemMatcher": "$msCompile",
-        },
-        //publish
-        {
-            "label": "publish",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "publish",
-                "${workspaceFolder}/src/Conbot/Conbot.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "${workspaceFolder}/src/Conbot/Conbot.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    //build
+    {
+      "label": "build",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Conbot/Conbot.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile",
+      "dependsOn": [
+        "build Conbot.HelpPlugin",
+        "build Conbot.InfoPlugin",
+        "build Conbot.ModerationPlugin",
+        "build Conbot.PrefixPlugin",
+        "build Conbot.RankingPlugin",
+        "build Conbot.ReminderPlugin",
+        "build Conbot.RngPlugin",
+        "build Conbot.SplatoonPlugin",
+        "build Conbot.TagPlugin",
+        "build Conbot.UrbanPlugin",
+        "build Conbot.TimeZonePlugin"
+      ]
+    },
+    {
+      "label": "build Conbot.HelpPlugin",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Plugins/Conbot.HelpPlugin/Conbot.HelpPlugin.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+    },
+    {
+      "label": "build Conbot.InfoPlugin",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Plugins/Conbot.InfoPlugin/Conbot.InfoPlugin.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+    },
+    {
+      "label": "build Conbot.ModerationPlugin",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Plugins/Conbot.ModerationPlugin/Conbot.ModerationPlugin.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+    },
+    {
+      "label": "build Conbot.PrefixPlugin",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Plugins/Conbot.PrefixPlugin/Conbot.PrefixPlugin.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+    },
+    {
+      "label": "build Conbot.RankingPlugin",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Plugins/Conbot.RankingPlugin/Conbot.RankingPlugin.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+    },
+    {
+      "label": "build Conbot.ReminderPlugin",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Plugins/Conbot.ReminderPlugin/Conbot.ReminderPlugin.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+    },
+    {
+      "label": "build Conbot.RngPlugin",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Plugins/Conbot.RngPlugin/Conbot.RngPlugin.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+    },
+    {
+      "label": "build Conbot.SplatoonPlugin",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Plugins/Conbot.SplatoonPlugin/Conbot.SplatoonPlugin.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+    },
+    {
+      "label": "build Conbot.TagPlugin",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Plugins/Conbot.TagPlugin/Conbot.TagPlugin.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+    },
+    {
+      "label": "build Conbot.UrbanPlugin",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Plugins/Conbot.UrbanPlugin/Conbot.UrbanPlugin.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+    },
+    {
+      "label": "build Conbot.TimeZonePlugin",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Plugins/Conbot.TimeZonePlugin/Conbot.TimeZonePlugin.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+    },
+    //publish
+    {
+      "label": "publish",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "publish",
+        "${workspaceFolder}/src/Conbot/Conbot.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "watch",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "watch",
+        "run",
+        "${workspaceFolder}/src/Conbot/Conbot.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
+    }
+  ]
 }
