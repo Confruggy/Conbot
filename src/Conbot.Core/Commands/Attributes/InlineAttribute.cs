@@ -11,7 +11,7 @@ namespace Conbot.Commands
         public override ValueTask<CheckResult> CheckAsync(object argument, CommandContext context)
         {
             if (argument is string text && text.Contains('\n'))
-                return CheckResult.Unsuccessful($"{Parameter.Name.Humanize()} can't contain line breaks.");
+                return CheckResult.Failed($"{Parameter.Name.Humanize()} can't contain line breaks.");
 
             return CheckResult.Successful;
         }

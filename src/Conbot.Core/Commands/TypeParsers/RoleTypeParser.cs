@@ -1,54 +1,32 @@
 using System;
-using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
 
-using Discord;
+using Disqord;
+using Disqord.Gateway;
 
 using Qmmands;
 
 namespace Conbot.Commands
 {
-    public class RoleTypeParser<T> : TypeParser<T> where T : class, IRole
+    public class RoleTypeParser : ConbotGuildTypeParser<IRole>
     {
-        public override ValueTask<TypeParserResult<T>> ParseAsync(Parameter parameter, string value,
-            CommandContext context)
+        public override ValueTask<TypeParserResult<IRole>> ParseAsync(Parameter parameter, string value,
+            ConbotGuildCommandContext context)
         {
-            var discordCommandContext = (DiscordCommandContext)context;
+            if (!context.Bot.CacheProvider.TryGetRoles(context.GuildId, out var roleCache))
+                throw new InvalidOperationException($"The {GetType().Name} requires the role cache.");
 
-            if (discordCommandContext.Guild == null)
-                return TypeParserResult<T>.Unsuccessful("This command must be used in a server.");
+            IRole? role;
 
-            IRole? role = null;
-
-            if (MentionUtils.TryParseRole(value, out ulong id))
-            {
-                role = discordCommandContext.Guild.GetRole(id);
-            }
-            else if (ulong.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out id))
-            {
-                role = discordCommandContext.Guild.GetRole(id);
-            }
+            if (Snowflake.TryParse(value, out var id) || Mention.TryParseRole(value, out id))
+                role = roleCache.GetValueOrDefault(id);
             else
-            {
-                var roles = discordCommandContext.Guild.Roles;
-                var foundRoles = roles.Where(x => string.Equals(value, x.Name, StringComparison.OrdinalIgnoreCase));
+                role = Array.Find(roleCache.Values, x => x.Name == value);
 
-                if (foundRoles.Count() > 1)
-                {
-                    return TypeParserResult<T>.Unsuccessful(
-                        "Role name is ambiguous. Try mentioning the role or enter the ID.");
-                }
+            if (role is not null)
+                return Success(role);
 
-                role = foundRoles.FirstOrDefault();
-            }
-
-            if (role?.Id == discordCommandContext.Guild.Id)
-                return TypeParserResult<T>.Unsuccessful("You can't enter the **@\u200beveryone** role.");
-
-            return role is T tRole
-                ? TypeParserResult<T>.Successful(tRole)
-                : TypeParserResult<T>.Unsuccessful("Role hasn't been found.");
+            return Failure("No role found matching the input.");
         }
     }
 }

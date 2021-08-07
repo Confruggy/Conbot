@@ -2,64 +2,46 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 
 using Conbot.Commands;
 using Conbot.Extensions;
 using Conbot.Interactive;
 
-using Discord;
-using Discord.Rest;
+using Disqord;
+using Disqord.Bot.Hosting;
+using Disqord.Rest;
 
 using Qmmands;
 
 namespace Conbot.HelpPlugin
 {
-    public class HelpService : IHostedService
+    public class HelpService : DiscordBotService
     {
-        private readonly CommandHandlingService _commandHandlingService;
-        private readonly CommandService _commandService;
         private readonly InteractiveService _interactiveService;
         private readonly IConfiguration _config;
 
-        public HelpService(CommandHandlingService commandHandlingService,
-            CommandService commandService, InteractiveService interactiveService, IConfiguration config)
+        public HelpService(InteractiveService interactiveService, IConfiguration config)
         {
-            _commandHandlingService = commandHandlingService;
-            _commandService = commandService;
             _interactiveService = interactiveService;
             _config = config;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            _commandHandlingService.CommandErrorMessageSent += OnCommandErrorMessageSent;
-            return Task.CompletedTask;
-        }
+        public Task ExecuteHelpMessageAsync(ConbotCommandContext context, bool deleteAfterCompletion = false)
+            => ExecuteHelpMessageAsync(context, null, null, deleteAfterCompletion);
 
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _commandHandlingService.CommandErrorMessageSent -= OnCommandErrorMessageSent;
-            return Task.CompletedTask;
-        }
+        public Task ExecuteHelpMessageAsync(ConbotCommandContext context, Command startCommand,
+            bool deleteAfterCompletion = false)
+            => ExecuteHelpMessageAsync(context, null, startCommand, deleteAfterCompletion);
 
-        public Task ExecuteHelpMessageAsync(DiscordCommandContext context, IUserMessage? message = null)
-            => ExecuteHelpMessageAsync(context, null, null, message);
+        public Task ExecuteHelpMessageAsync(ConbotCommandContext context, Module startModule,
+            bool deleteAfterCompletion = false)
+            => ExecuteHelpMessageAsync(context, startModule, null, deleteAfterCompletion);
 
-        public Task ExecuteHelpMessageAsync(DiscordCommandContext context, Command startCommand,
-            IUserMessage? message = null)
-            => ExecuteHelpMessageAsync(context, null, startCommand, message: message);
-
-        public Task ExecuteHelpMessageAsync(DiscordCommandContext context, Module startModule,
-            IUserMessage? message = null)
-            => ExecuteHelpMessageAsync(context, startModule, null, message: message);
-
-        private async Task ExecuteHelpMessageAsync(DiscordCommandContext context, Module? startModule = null,
-            Command? startCommand = null, IUserMessage? message = null)
+        private async Task ExecuteHelpMessageAsync(ConbotCommandContext context, Module? startModule = null,
+            Command? startCommand = null, bool deleteAfterCompletion = false)
         {
             var moduleDictionary = new Dictionary<string, Module>();
             var commandDictionary = new Dictionary<string, Command>();
@@ -67,90 +49,78 @@ namespace Conbot.HelpPlugin
             Module? currentModule = null;
             Command? currentCommand = null;
 
-            Embed embed;
+            LocalEmbed embed;
 
-            if (startModule != null)
+            if (startModule is not null)
             {
                 embed = CreateModuleEmbed(startModule, out moduleDictionary, out commandDictionary);
                 currentModule = startModule;
             }
-            else if (startCommand != null)
+            else if (startCommand is not null)
             {
                 embed = CreateCommandEmbed(startCommand, out commandDictionary);
                 currentCommand = startCommand;
             }
             else
             {
-                embed = CreateStartEmbed(context, out moduleDictionary);
+                embed = CreateStartEmbed(out moduleDictionary);
             }
 
-            if (message == null)
-            {
-                message = context.Interaction != null
-                    ? (RestUserMessage)await context.Interaction.RespondAsync(embed: embed)
-                    : await context.Message.ReplyAsync(embed: embed, allowedMentions: AllowedMentions.None);
-            }
-            else
-            {
-                await message.ModifyAsync(x => x.Embed = embed);
-            }
-
-            var interactiveMessage = new InteractiveMessageBuilder()
-                .WithPrecondition(x => x.Id == context.User.Id)
+            var interactiveMessage = new LocalInteractiveMessage()
+                .AddEmbed(embed)
+                .WithPrecondition(x => x.Id == context.Author.Id)
                 .AddReactionCallback(_config.GetValue<string>("Emotes:Home"), x => x
-                    .WithCallback(async _ =>
+                    .WithCallback(async (msg, _) =>
                     {
-                        if (currentModule != null || currentCommand != null)
+                        if (currentModule is not null || currentCommand is not null)
                         {
-                            await message.ModifyAsync(x => x.Embed = CreateStartEmbed(context, out moduleDictionary));
+                            await msg.ModifyAsync(x => x.Embeds = new[] { CreateStartEmbed(out moduleDictionary) });
                             currentModule = null;
                             currentCommand = null;
                         }
-                    })
-                    .ShouldResumeAfterExecution(true))
+                    }))
                 .AddReactionCallback(_config.GetValue<string>("Emotes:Backward"), x => x
-                    .WithCallback(async _ =>
+                    .WithCallback(async (msg, _) =>
                     {
-                        if (currentCommand != null)
+                        if (currentCommand is not null)
                         {
-                            await message.ModifyAsync(x =>
-                                x.Embed = CreateModuleEmbed(currentCommand.Module, out moduleDictionary,
-                                    out commandDictionary));
+                            await msg.ModifyAsync(x =>
+                                x.Embeds = new[] { CreateModuleEmbed(currentCommand.Module, out moduleDictionary,
+                                    out commandDictionary) });
                             currentModule = currentCommand.Module;
                             currentCommand = null;
                         }
-                        else if (currentModule?.Parent != null)
+                        else if (currentModule?.Parent is not null)
                         {
-                            await message.ModifyAsync(x =>
-                                x.Embed = CreateModuleEmbed(currentModule.Parent, out moduleDictionary,
-                                    out commandDictionary));
+                            await msg.ModifyAsync(x =>
+                                x.Embeds = new[] { CreateModuleEmbed(currentModule.Parent, out moduleDictionary,
+                                    out commandDictionary) });
                             currentModule = currentModule.Parent;
                         }
-                        else if (currentModule != null)
+                        else if (currentModule is not null)
                         {
-                            await message.ModifyAsync(x => x.Embed = CreateStartEmbed(context, out moduleDictionary));
+                            await msg.ModifyAsync(x => x.Embeds = new[] { CreateStartEmbed(out moduleDictionary) });
                         }
-                    })
-                    .ShouldResumeAfterExecution(true))
+                    }))
                 .AddReactionCallback(_config.GetValue<string>("Emotes:Stop"), x => x
-                    .ShouldResumeAfterExecution(false))
+                    .WithCallback((msg, _) => msg.Stop()))
                 .AddMessageCallback(x => x
-                    .WithPrecondition(msg => int.TryParse(msg.Content, out int number))
-                    .WithCallback(async msg =>
+                    .WithPrecondition((_, e) => int.TryParse(e.Message.Content, out int number))
+                    .WithCallback(async (msg, e) =>
                     {
                         List<Task> tasks = new();
 
-                        if (moduleDictionary.TryGetValue(msg.Content, out var moduleInfo))
+                        if (moduleDictionary.TryGetValue(e.Message.Content, out var moduleInfo))
                         {
-                            tasks.Add(message.ModifyAsync(x => x.Embed = CreateModuleEmbed(moduleInfo,
-                                out moduleDictionary, out commandDictionary)));
+                            tasks.Add(msg.ModifyAsync(x => x.Embeds = new[] { CreateModuleEmbed(moduleInfo,
+                                out moduleDictionary, out commandDictionary) }));
                             currentModule = moduleInfo;
                             currentCommand = null;
                         }
-                        else if (commandDictionary.TryGetValue(msg.Content, out var commandInfo))
+                        else if (commandDictionary.TryGetValue(e.Message.Content, out var commandInfo))
                         {
-                            tasks.Add(message.ModifyAsync(x => x.Embed = CreateCommandEmbed(commandInfo,
-                                out commandDictionary)));
+                            tasks.Add(msg.ModifyAsync(x => x.Embeds = new[] { CreateCommandEmbed(commandInfo,
+                                out commandDictionary)}));
                             currentCommand = commandInfo;
                             currentModule = null;
                         }
@@ -159,28 +129,30 @@ namespace Conbot.HelpPlugin
                             return;
                         }
 
-                        tasks.Add(msg.TryDeleteAsync());
+                        tasks.Add(e.Message.TryDeleteAsync());
 
                         await Task.WhenAll(tasks);
-                    })
-                    .ShouldResumeAfterExecution(true))
-                .Build();
+                    }));
 
-            await _interactiveService.ExecuteInteractiveMessageAsync(interactiveMessage, message, context.User);
+            var message = await _interactiveService.ExecuteInteractiveMessageAsync(interactiveMessage, context);
+
+            if (deleteAfterCompletion)
+                _ = message.TryDeleteAsync();
         }
 
-        public Embed CreateStartEmbed(DiscordCommandContext context, out Dictionary<string, Module> moduleDictionary)
+        public LocalEmbed CreateStartEmbed(out Dictionary<string, Module> moduleDictionary)
         {
-            var embed = new EmbedBuilder()
-                .WithAuthor(context.Client.CurrentUser.Username, context.Client.CurrentUser.GetAvatarUrl())
+            var embed = new LocalEmbed()
+                .WithAuthor(Bot.CurrentUser.Name, Bot.CurrentUser.GetDefaultAvatarUrl())
                 .WithDescription(
                     "Below you see all available categories. " +
                     "Each category has one or several commands.")
-                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
+                .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")))
                 .WithFooter("Enter a number for more information about a category.");
 
-            var modules = _commandService.GetAllModules()
-                .Where(x => x.Parent == null)
+            var modules = Bot.Commands
+                .GetAllModules()
+                .Where(x => x.Parent is null)
                 .OrderBy(x => x.Name)
                 .ToArray();
 
@@ -202,26 +174,26 @@ namespace Conbot.HelpPlugin
             string? serverInviteUrl = _config.GetValue<string?>("ServerInviteUrl", null);
 
             string? botInviteText = !string.IsNullOrEmpty(botInviteUrl)
-                ? Format.Url($"Invite {context.Client.CurrentUser.Username}", botInviteUrl)
+                ? Markdown.Link($"Invite {Bot.CurrentUser.Name}", botInviteUrl)
                 : null;
             string? serverInviteText = !string.IsNullOrEmpty(serverInviteUrl)
-                ? Format.Url("Discord Server", serverInviteUrl)
+                ? Markdown.Link("Discord Server", serverInviteUrl)
                 : null;
 
             string linksText = string.Join("｜", new[] { botInviteText, serverInviteText }.Where(x => x is not null));
             if (!string.IsNullOrEmpty(linksText))
                 embed.AddField("Links", linksText);
 
-            return embed.Build();
+            return embed;
         }
 
-        public Embed CreateModuleEmbed(Module module,
+        public LocalEmbed CreateModuleEmbed(Module module,
             out Dictionary<string, Module> moduleDictionary,
             out Dictionary<string, Command> commandDictionary)
         {
-            var embed = new EmbedBuilder()
+            var embed = new LocalEmbed()
                 .WithAuthor(GetPath(module))
-                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"));
+                .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")));
 
             var descriptionText = new StringBuilder()
                 .AppendLine(module.Description ?? "No Description.");
@@ -303,15 +275,15 @@ namespace Conbot.HelpPlugin
 
             embed.WithFooter(footerText.ToString());
 
-            return embed.Build();
+            return embed;
         }
 
-        public Embed CreateCommandEmbed(Command command, out Dictionary<string, Command> commandDictionary)
+        public LocalEmbed CreateCommandEmbed(Command command, out Dictionary<string, Command> commandDictionary)
         {
-            var embed = new EmbedBuilder()
+            var embed = new LocalEmbed()
                 .WithAuthor(GetPath(command))
-                .WithTitle($"{command.FullAliases[0]} {FormatParameters(command)}")
-                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"));
+                .WithTitle($"{command.FullAliases[0]} {HelpUtils.FormatParameters(command)}")
+                .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")));
 
             var descriptionText = new StringBuilder()
                 .AppendLine(command.Description ?? "No Description.");
@@ -334,7 +306,7 @@ namespace Conbot.HelpPlugin
                 foreach (var parameter in command.Parameters)
                 {
                     parameterText
-                        .AppendLine(ParameterToString(parameter, true))
+                        .AppendLine(HelpUtils.FormatParameter(parameter, true))
                         .Append("> ")
                         .Append(parameter.Description ?? "No Description.");
 
@@ -436,9 +408,9 @@ namespace Conbot.HelpPlugin
                 foreach (string? alias in command.FullAliases.Skip(1))
                 {
                     aliasesText
-                        .Append(Format.Bold(alias))
+                        .Append(Markdown.Bold(alias))
                         .Append(' ')
-                        .AppendLine(FormatParameters(command));
+                        .AppendLine(HelpUtils.FormatParameters(command));
                 }
 
                 if (footerText.Length != 0)
@@ -450,17 +422,18 @@ namespace Conbot.HelpPlugin
                     .AddField("Aliases", aliasesText);
             }
 
-            embed.WithFooter(footerText.ToString());
+            if (footerText.Length != 0)
+                embed.WithFooter(footerText.ToString());
 
-            return embed.Build();
+            return embed;
         }
 
         private static string GetShortCommand(Command command, int index, int padding)
-            => $"`{index.ToString().PadLeft(padding)}.` **{command.FullAliases[0]}** {FormatParameters(command)}\n" +
+            => $"`{index.ToString().PadLeft(padding)}.` **{command.FullAliases[0]}** {HelpUtils.FormatParameters(command)}\n" +
                 $"> {command.Description ?? "No Description."}";
 
         private static string GetShortModule(Module module, int index, int padding)
-            => $"`{index.ToString().PadLeft(padding)}.` **{(module.Parent != null ? $"{module.FullAliases[0]}*" : module.Name)}**\n" +
+            => $"`{index.ToString().PadLeft(padding)}.` **{(module.Parent is not null ? $"{module.FullAliases[0]}*" : module.Name)}**\n" +
                 $"> {module.Description ?? "No Description."}";
 
         private static string GetPath(Module module)
@@ -472,7 +445,7 @@ namespace Conbot.HelpPlugin
 
             var parent = module.Parent;
 
-            while (parent?.Parent != null)
+            while (parent?.Parent is not null)
                 parent = module.Parent;
 
             return $"{parent?.Name ?? module.Name} › {string.Join(" › ", alias.Split(' '))}";
@@ -482,223 +455,62 @@ namespace Conbot.HelpPlugin
         {
             var module = command.Module;
 
-            while (module.Parent != null)
+            while (module.Parent is not null)
                 module = module.Parent;
 
             return $"{module.Name} › {command.FullAliases[0].Replace(" ", " › ")}";
         }
 
-        private static string ParameterToString(Parameter parameter, bool literal = false)
-        {
-            string name;
-            if (parameter.Checks.FirstOrDefault(x => x is ChoicesAttribute)
-                is ChoicesAttribute optionsAttribute)
-            {
-                name = string.Join('|', optionsAttribute.Choices);
-            }
-            else
-            {
-                name = parameter.Name;
-            }
-
-            if (literal)
-            {
-                string type;
-
-                if (parameter.Type.IsAssignableFrom(typeof(bool)))
-                {
-                    type = "Boolean";
-                }
-                else if (parameter.Type.IsAssignableFrom(typeof(int)))
-                {
-                    type = "Integer";
-                }
-                else if (parameter.Type.IsAssignableFrom(typeof(ulong)))
-                {
-                    if (parameter.Attributes.FirstOrDefault(x => x is SnowflakeAttribute)
-                        is SnowflakeAttribute attribute)
-                    {
-                        type = attribute.Type switch
-                        {
-                            SnowflakeType.Guild => "Server ID",
-                            SnowflakeType.Channel => "Channel ID",
-                            SnowflakeType.Message => "Message ID",
-                            SnowflakeType.User => "User ID",
-                            _ => "ID"
-                        };
-                    }
-                    else
-                    {
-                        type = "Integer";
-                    }
-                }
-                else if (typeof(IUser).IsAssignableFrom(parameter.Type))
-                {
-                    type = "User";
-                }
-                else if (typeof(IChannel).IsAssignableFrom(parameter.Type))
-                {
-                    type = "Channel";
-                }
-                else if (typeof(IRole).IsAssignableFrom(parameter.Type))
-                {
-                    type = "Role";
-                }
-                else
-                {
-                    type = "Text";
-                }
-
-                var text = new StringBuilder()
-                    .Append("**")
-                    .Append(name)
-                    .Append("** : ")
-                    .Append(type)
-                    .Append(" (*");
-
-                if (parameter.IsMultiple)
-                    text.Append("multiple");
-                else if (parameter.IsOptional)
-                    text.Append("optional");
-                else
-                    text.Append("required");
-
-                if (parameter.IsRemainder)
-                    text.Append(", remainder");
-
-                text.Append("*)");
-                return text.ToString();
-            }
-            else
-            {
-                if (parameter.IsMultiple)
-                    return $"[{name}] […]";
-                else if (parameter.IsRemainder && !parameter.IsOptional && !name.Contains('|'))
-                    return $"<{name}…>";
-                else if (parameter.IsRemainder && parameter.IsOptional && !name.Contains('|'))
-                    return $"[{name}…]";
-                else if (parameter.IsOptional)
-                    return $"[{name}]";
-                else
-                    return $"<{name}>";
-            }
-        }
-
-        private static string FormatParameters(Command command)
-            => string.Join(" ", command.Parameters.Select(x => ParameterToString(x)));
-
         private static string GetPermissionsText(Command command)
         {
-            List<RequireUserPermissionAttribute> userPermissions = new();
-            List<RequireBotPermissionAttribute> botPermissions = new();
+            List<RequireAuthorGuildPermissionsAttribute> authorGuildPermissions = new();
+            List<RequireAuthorChannelPermissionsAttribute> authorChannelPermissions = new();
+            List<RequireBotGuildPermissionsAttribute> botGuildPermissions = new();
+            List<RequireBotChannelPermissionsAttribute> botChannelPermissions = new();
 
             var module = command.Module;
             while (module is not null)
             {
-                userPermissions.AddRange(module.Checks.OfType<RequireUserPermissionAttribute>());
-                botPermissions.AddRange(module.Checks.OfType<RequireBotPermissionAttribute>());
+                authorGuildPermissions.AddRange(module.Checks.OfType<RequireAuthorGuildPermissionsAttribute>());
+                authorChannelPermissions.AddRange(module.Checks.OfType<RequireAuthorChannelPermissionsAttribute>());
+                botGuildPermissions.AddRange(module.Checks.OfType<RequireBotGuildPermissionsAttribute>());
+                botChannelPermissions.AddRange(module.Checks.OfType<RequireBotChannelPermissionsAttribute>());
+
                 module = module.Parent;
             }
 
-            userPermissions.AddRange(command.Checks.OfType<RequireUserPermissionAttribute>());
-            botPermissions.AddRange(command.Checks.OfType<RequireBotPermissionAttribute>());
-
-            var userGuildPermissions = userPermissions
-                .Where(x => x.GuildPermissions.Length != 0)
-                .Select(x => x.GuildPermissions);
-            var userChannelPermissions = userPermissions
-                .Where(x => x.ChannelPermissions.Length != 0)
-                .Select(x => x.ChannelPermissions);
-
-            var botGuildPermissions = botPermissions
-                .Where(x => x.GuildPermissions.Length != 0)
-                .Select(x => x.GuildPermissions);
-            var botChannelPermissions = botPermissions
-                .Where(x => x.ChannelPermissions.Length != 0)
-                .Select(x => x.ChannelPermissions);
+            authorGuildPermissions.AddRange(command.Checks.OfType<RequireAuthorGuildPermissionsAttribute>());
+            authorChannelPermissions.AddRange(command.Checks.OfType<RequireAuthorChannelPermissionsAttribute>());
+            botGuildPermissions.AddRange(command.Checks.OfType<RequireBotGuildPermissionsAttribute>());
+            botChannelPermissions.AddRange(command.Checks.OfType<RequireBotChannelPermissionsAttribute>());
 
             var permissionsText = new StringBuilder();
 
-            foreach (var userGuildPermission in userGuildPermissions)
+            foreach (var authorGuildPermission in authorGuildPermissions)
             {
-                permissionsText
-                    .AppendLine(RequirePermissionUtils.CreateRequirePermissionErrorReason(userGuildPermission));
+                permissionsText.AppendLine(
+                    RequirePermissionUtils.CreateRequirePermissionErrorReason(authorGuildPermission.Permissions));
             }
 
-            foreach (var userChannelPermission in userChannelPermissions)
+            foreach (var authorChannelPermission in authorChannelPermissions)
             {
-                permissionsText
-                    .AppendLine(RequirePermissionUtils.CreateRequirePermissionErrorReason(userChannelPermission));
+                permissionsText.AppendLine(
+                    RequirePermissionUtils.CreateRequirePermissionErrorReason(authorChannelPermission.Permissions));
             }
 
             foreach (var botGuildPermission in botGuildPermissions)
             {
-                permissionsText
-                    .AppendLine(RequirePermissionUtils.CreateRequirePermissionErrorReason(botGuildPermission, true));
+                permissionsText.AppendLine(
+                    RequirePermissionUtils.CreateRequirePermissionErrorReason(botGuildPermission.Permissions, true));
             }
 
             foreach (var botChannelPermission in botChannelPermissions)
             {
-                permissionsText
-                    .AppendLine(RequirePermissionUtils.CreateRequirePermissionErrorReason(botChannelPermission, true));
+                permissionsText.AppendLine(
+                    RequirePermissionUtils.CreateRequirePermissionErrorReason(botChannelPermission.Permissions, true));
             }
 
             return permissionsText.ToString();
-        }
-
-        private async Task OnCommandErrorMessageSent(CommandErrorMessageSentEventArgs e)
-        {
-            if (e.Message.Channel is ITextChannel textChannel && e.Context.Guild is not null)
-            {
-                var user = e.Context.Guild.CurrentUser;
-
-                if (!user.GetPermissions(textChannel).Has(ChannelPermission.AddReactions))
-                    return;
-            }
-
-            var command = e.Result switch
-            {
-                ArgumentParseFailedResult argumentParseFailedResult => argumentParseFailedResult.Command,
-                TypeParseFailedResult typeParseFailedResult => typeParseFailedResult.Parameter.Command,
-                ChecksFailedResult checksFailedResult => checksFailedResult.Command,
-                ParameterChecksFailedResult parameterChecksFailedResult => parameterChecksFailedResult.Parameter.Command,
-                RuntimeFailedResult runtimeFailedResult => runtimeFailedResult.Command,
-                _ => null
-            };
-
-            Module? module = null;
-
-            if (command is null)
-            {
-                if (e.Result is OverloadsFailedResult overloadsFailedResult)
-                {
-                    if (overloadsFailedResult.FailedOverloads.Count == 1)
-                        command = overloadsFailedResult.FailedOverloads.First().Key;
-                    else
-                        module = overloadsFailedResult.FailedOverloads.First().Key.Module;
-                }
-                else
-                {
-                    return;
-                }
-            }
-
-            bool executeHelpCommand = false;
-
-            var interactiveMessage = new InteractiveMessageBuilder()
-                .WithPrecondition(x => x.Id == e.Context.User.Id)
-                .AddReactionCallback(_config.GetValue<string>("Emotes:Info"), x => x
-                    .WithCallback(_ => executeHelpCommand = true)
-                    .ShouldResumeAfterExecution(false))
-                .Build();
-
-            await _interactiveService.ExecuteInteractiveMessageAsync(interactiveMessage, e.Message, e.Context.User);
-
-            if (executeHelpCommand)
-            {
-                await ExecuteHelpMessageAsync(e.Context, module, command, e.Message);
-                await e.Message.ModifyAsync(x => x.Embed = null);
-            }
         }
     }
 }

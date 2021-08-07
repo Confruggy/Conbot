@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-using Discord;
+using Disqord;
 
 namespace Conbot.ModerationPlugin
 {
@@ -18,6 +18,6 @@ namespace Conbot.ModerationPlugin
         }
 
         public PreconfiguredMutedRole(IRole role)
-            : this(role.Id, role.Guild.Id) { }
+            : this(role.Id, role.GuildId) { }
     }
 }

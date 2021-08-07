@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using Disqord.Bot;
+
 using Qmmands;
 
 namespace Conbot.Commands
@@ -13,15 +15,16 @@ namespace Conbot.Commands
         public override ValueTask<TypeParserResult<Command>> ParseAsync(Parameter parameter, string value,
             CommandContext context)
         {
-            var commandService = context.ServiceProvider.GetRequiredService<CommandService>();
+            var bot = context.Services.GetRequiredService<DiscordBot>();
 
-            var command = commandService.GetAllCommands()
+            var command = bot.Commands
+                .GetAllCommands()
                 .FirstOrDefault(c => c.FullAliases
                     .Any(a => string.Equals(a, value, StringComparison.OrdinalIgnoreCase)));
 
-            return command != null
+            return command is not null
                 ? TypeParserResult<Command>.Successful(command)
-                : TypeParserResult<Command>.Unsuccessful("Command hasn't been found.");
+                : TypeParserResult<Command>.Failed("Command hasn't been found.");
         }
     }
 }

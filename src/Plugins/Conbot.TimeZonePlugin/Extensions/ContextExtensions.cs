@@ -1,8 +1,9 @@
+using System;
 using System.Threading.Tasks;
 
-using Conbot.Commands;
-
 using Microsoft.Extensions.DependencyInjection;
+
+using Disqord.Bot;
 
 using NodaTime;
 
@@ -12,25 +13,25 @@ namespace Conbot.TimeZonePlugin.Extensions
     {
         public static async ValueTask<DateTimeZone?> GetUserTimeZoneAsync(this DiscordCommandContext context)
         {
-            var db = context.ServiceProvider.GetRequiredService<TimeZoneContext>();
-            var provider = context.ServiceProvider.GetRequiredService<IDateTimeZoneProvider>();
+            var db = context.Services.GetRequiredService<TimeZoneContext>();
+            var provider = context.Services.GetRequiredService<IDateTimeZoneProvider>();
 
-            var userTimeZone = await db.GetUserTimeZoneAsync(context.User);
+            var userTimeZone = await db.GetUserTimeZoneAsync(context.Author);
 
-            return userTimeZone != null ? provider.GetZoneOrNull(userTimeZone.TimeZoneId) : null;
+            return userTimeZone is not null ? provider.GetZoneOrNull(userTimeZone.TimeZoneId) : null;
         }
 
-        public static async ValueTask<DateTimeZone?> GetGuildTimeZoneAsync(this DiscordCommandContext context)
+        public static async ValueTask<DateTimeZone?> GetGuildTimeZoneAsync(this DiscordGuildCommandContext context)
         {
-            if (context.Guild == null)
-                return null;
+            if (context.Guild is null) //TODO can it be null?
+                throw new InvalidOperationException("Guild is null");
 
-            var db = context.ServiceProvider.GetRequiredService<TimeZoneContext>();
-            var provider = context.ServiceProvider.GetRequiredService<IDateTimeZoneProvider>();
+            var db = context.Services.GetRequiredService<TimeZoneContext>();
+            var provider = context.Services.GetRequiredService<IDateTimeZoneProvider>();
 
             var guildTimeZone = await db.GetGuildTimeZoneAsync(context.Guild);
 
-            return guildTimeZone != null ? provider.GetZoneOrNull(guildTimeZone.TimeZoneId) : null;
+            return guildTimeZone is not null ? provider.GetZoneOrNull(guildTimeZone.TimeZoneId) : null;
         }
     }
 }

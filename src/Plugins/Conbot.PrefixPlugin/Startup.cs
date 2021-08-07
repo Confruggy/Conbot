@@ -4,6 +4,8 @@ using Microsoft.Extensions.Hosting;
 
 using Conbot.Plugins;
 
+using Disqord.Bot;
+
 namespace Conbot.PrefixPlugin
 {
     public class Startup : IPluginStartup
@@ -11,7 +13,7 @@ namespace Conbot.PrefixPlugin
         public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
         {
             services
-                .AddHostedService<PrefixPluginService>()
+                .AddSingleton<IPrefixProvider>(x => x.GetRequiredService<CustomPrefixProvider>())
                 .AddDbContext<PrefixContext>();
         }
 

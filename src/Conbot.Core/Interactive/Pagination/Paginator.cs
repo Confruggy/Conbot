@@ -8,117 +8,103 @@ using Microsoft.Extensions.DependencyInjection;
 using Conbot.Commands;
 using Conbot.Extensions;
 
-using Discord;
-using Discord.Rest;
+using Disqord;
+using Disqord.Extensions.Interactivity;
+using Disqord.Rest;
 
 namespace Conbot.Interactive
 {
     public class Paginator
     {
-        private readonly List<(string?, Embed?)> _pages = new();
+        private readonly List<(string?, LocalEmbed?)> _pages = new();
 
-        public void AddPage(string? text, Embed? embed) => _pages.Add((text, embed));
+        public void AddPage(string? text, LocalEmbed? embedBuilder) => _pages.Add((text, embedBuilder));
 
-        public void AddPage(Embed embed) => AddPage(null, embed);
+        public void AddPage(LocalEmbed embedBuilder) => AddPage(null, embedBuilder);
 
         public void AddPage(string text) => AddPage(text, null);
 
-        public Task<IUserMessage> RunAsync(InteractiveService service, DiscordCommandContext context,
-            int startIndex = 0, bool reply = true)
+        public LocalInteractiveMessage ToInteractiveMessage(ConbotCommandContext context, int startIndex = 0,
+            bool reply = true)
         {
             if (startIndex >= _pages.Count || startIndex < 0)
                 throw new ArgumentOutOfRangeException(nameof(startIndex));
 
-            return RunInternalAsync(service, context, startIndex, reply);
+            return ToInteractiveMessageInternal(context, startIndex, reply);
         }
 
-        private async Task<IUserMessage> RunInternalAsync(InteractiveService service, DiscordCommandContext context,
-            int startIndex = 0, bool reply = true)
+        private LocalInteractiveMessage ToInteractiveMessageInternal(ConbotCommandContext context, int startIndex = 0,
+            bool reply = true)
         {
-            var config = context.ServiceProvider.GetRequiredService<IConfiguration>();
+            var config = context.Services.GetRequiredService<IConfiguration>();
 
             int currentIndex = startIndex;
             var start = _pages[currentIndex];
 
-            RestUserMessage message;
-            if (context.Interaction != null)
-            {
-                message = (RestUserMessage)await context.Interaction.RespondAsync(start.Item1, embed: start.Item2);
-            }
-            else
-            {
-                message = await context.Channel.SendMessageAsync(
-                    start.Item1,
-                    embed: start.Item2,
-                    allowedMentions: AllowedMentions.None,
-                    messageReference: reply ? new MessageReference(context.Message!.Id) : null);
-            }
+            var message = new LocalInteractiveMessage()
+                .WithContent(start.Item1)
+                .WithEmbeds(start.Item2)
+                .WithPrecondition(x => x.Id == context.Author.Id);
 
-            if (_pages.Count <= 1)
-                return message;
-
-            var builder = new InteractiveMessageBuilder()
-                .WithPrecondition(x => x.Id == context.User.Id);
+            if (reply)
+                message.WithReply(context.Message!.Id, context.ChannelId, context.GuildId, false);
 
             if (_pages.Count > 2)
             {
-                builder.AddReactionCallback(config.GetValue<string>("Emotes:First"), x => x
-                    .WithCallback(async _ =>
+                message.AddReactionCallback(config.GetValue<string>("Emotes:First"), x => x
+                    .WithCallback(async (msg, _) =>
                     {
                         if (currentIndex != 0)
                         {
                             currentIndex = 0;
 
                             var page = _pages[currentIndex];
-                            await message.ModifyAsync(m =>
+                            await msg.ModifyAsync(m =>
                             {
                                 m.Content = page.Item1;
-                                m.Embed = page.Item2;
+                                m.Embeds = page.Item2 is null ? null : new[] { page.Item2 };
                             });
                         }
-                    })
-                    .ShouldResumeAfterExecution(true));
+                    }));
             }
 
-            builder
+            message
                 .AddReactionCallback(config.GetValue<string>("Emotes:Backward"), x => x
-                    .WithCallback(async _ =>
+                    .WithCallback(async (msg, _) =>
                     {
                         if (currentIndex > 0)
                         {
                             currentIndex--;
 
                             var page = _pages[currentIndex];
-                            await message.ModifyAsync(m =>
+                            await msg.ModifyAsync(m =>
                             {
                                 m.Content = page.Item1;
-                                m.Embed = page.Item2;
+                                m.Embeds = page.Item2 is null ? null : new[] { page.Item2 };
                             });
                         }
-                    })
-                    .ShouldResumeAfterExecution(true))
+                    }))
                 .AddReactionCallback(config.GetValue<string>("Emotes:Forward"), x => x
-                    .WithCallback(async _ =>
+                    .WithCallback(async (msg, _) =>
                     {
                         if (currentIndex < _pages.Count - 1)
                         {
                             currentIndex++;
 
                             var page = _pages[currentIndex];
-                            await message.ModifyAsync(m =>
+                            await msg.ModifyAsync(m =>
                             {
                                 m.Content = page.Item1;
-                                m.Embed = page.Item2;
+                                m.Embeds = page.Item2 is null ? null : new[] { page.Item2 };
                             });
                         }
-                    })
-                    .ShouldResumeAfterExecution(true));
+                    }));
 
             if (_pages.Count > 2)
             {
-                builder
+                message
                     .AddReactionCallback(config.GetValue<string>("Emotes:Last"), x => x
-                        .WithCallback(async _ =>
+                        .WithCallback(async (msg, _) =>
                         {
                             if (currentIndex != _pages.Count - 1)
                             {
@@ -126,44 +112,46 @@ namespace Conbot.Interactive
 
                                 var page = _pages[currentIndex];
 
-                                await message.ModifyAsync(m =>
+                                await msg.ModifyAsync(m =>
                                 {
                                     m.Content = page.Item1;
-                                    m.Embed = page.Item2;
+                                    m.Embeds = page.Item2 is null ? null : new[] { page.Item2 };
                                 });
                             }
-                        })
-                        .ShouldResumeAfterExecution(true));
+                        }));
             }
 
             if (_pages.Count > 3)
             {
-                builder
+                message
                     .AddReactionCallback(config.GetValue<string>("Emotes:GoToPage"), x => x
-                        .WithCallback(async _ =>
+                        .WithCallback(async (msg, _) =>
                         {
-                            var msg = await message.Channel.SendMessageAsync("Enter the page you want to go to");
+                            var message = await context.Bot.SendMessageAsync(msg.ChannelId,
+                                new LocalMessage().WithContent("Enter the page you want to go to"));
 
-                            var respond = await context.WaitForMessageAsync();
+                            var response = await context.WaitForMessageAsync();
 
-                            var tasks = new List<Task> { msg.TryDeleteAsync() };
+                            var tasks = new List<Task> { message.TryDeleteAsync() };
 
-                            if (respond == null)
+                            if (response is null || response.Message is not IUserMessage responseMessage)
                                 return;
 
-                            if (!int.TryParse(respond.Content, out int pageIndex))
+                            if (!int.TryParse(responseMessage.Content, out int pageIndex))
                             {
-                                await msg.Channel.SendMessageAsync("Invalid input.");
+                                await context.Bot.SendMessageAsync(msg.ChannelId,
+                                    new LocalMessage().WithContent("Invalid input."));
                                 return;
                             }
 
                             if (pageIndex < 1 || pageIndex > _pages.Count)
                             {
-                                await msg.Channel.SendMessageAsync("This page doesn't exist.");
+                                await context.Bot.SendMessageAsync(msg.ChannelId,
+                                    new LocalMessage().WithContent("This page doesn't exist."));
                                 return;
                             }
 
-                            tasks.Add(respond.TryDeleteAsync());
+                            tasks.Add(responseMessage.TryDeleteAsync());
 
                             currentIndex = pageIndex - 1;
 
@@ -171,17 +159,16 @@ namespace Conbot.Interactive
                             await message.ModifyAsync(m =>
                             {
                                 m.Content = page.Item1;
-                                m.Embed = page.Item2;
+                                m.Embeds = page.Item2 is null ? null : new[] { page.Item2 };
                             });
 
                             await Task.WhenAll(tasks);
-                        })
-                        .ShouldResumeAfterExecution(true));
+                        }));
             }
 
-            builder.AddReactionCallback(config.GetValue<string>("Emotes:Stop"), x => x.ShouldResumeAfterExecution(false));
+            message.AddReactionCallback(config.GetValue<string>("Emotes:Stop"), x => x
+                .WithCallback((msg, _) => msg.Stop()));
 
-            await service.ExecuteInteractiveMessageAsync(builder.Build(), message, context.User);
             return message;
         }
     }

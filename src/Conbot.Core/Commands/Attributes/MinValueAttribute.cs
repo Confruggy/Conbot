@@ -17,7 +17,7 @@ namespace Conbot.Commands
         {
             return (argument as IComparable)?.CompareTo(MinValue) >= 0
                 ? CheckResult.Successful
-                : CheckResult.Unsuccessful($"{Parameter.Name.Humanize()} must be greater than or equal to {MinValue}.");
+                : CheckResult.Failed($"{Parameter.Name.Humanize()} must be greater than or equal to {MinValue}.");
         }
     }
 }

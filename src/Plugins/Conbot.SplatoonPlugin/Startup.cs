@@ -1,10 +1,10 @@
 ﻿using System.IO;
 
-using Conbot.Plugins;
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
+using Conbot.Plugins;
 
 namespace Conbot.SplatoonPlugin
 {
@@ -13,7 +13,6 @@ namespace Conbot.SplatoonPlugin
         public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
         {
             services
-                .AddHostedService<SplatoonPluginService>()
                 .AddSingleton<SplatoonService>();
         }
 

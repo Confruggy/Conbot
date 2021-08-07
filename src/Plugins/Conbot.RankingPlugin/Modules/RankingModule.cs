@@ -9,8 +9,9 @@ using Microsoft.Extensions.Configuration;
 using Conbot.Commands;
 using Conbot.Interactive;
 
-using Discord;
-using Discord.WebSocket;
+using Disqord;
+using Disqord.Bot;
+using Disqord.Gateway;
 
 using Humanizer;
 
@@ -28,30 +29,26 @@ namespace Conbot.RankingPlugin
         "With gaining experience points, you increase your level. The higher your level is, the more experience " +
         "points you need to achieve a level up. The formula to determine the total amount of experience points " +
         "needed for a specific level is `(n^2.5) * 10` where n is the level.")]
-    public class RankingModule : DiscordModuleBase
+    public class RankingModule : ConbotGuildModuleBase
     {
         private readonly RankingContext _db;
         private readonly RankingService _rankingService;
-        private readonly InteractiveService _interactiveService;
         private readonly IConfiguration _config;
 
-        public RankingModule(RankingContext context, RankingService service, InteractiveService interactiveService,
-            IConfiguration config)
+        public RankingModule(RankingContext context, RankingService service, IConfiguration config)
         {
             _db = context;
             _rankingService = service;
-            _interactiveService = interactiveService;
             _config = config;
         }
 
         [Command("show", "")]
         [Description("Shows your or someone else's rank in the server.")]
-        [RequireContext(ContextType.Guild)]
-        [RequireBotPermission(ChannelPermission.EmbedLinks)]
-        public async Task RankAsync(
-            [Description("The member to show the rank of.")] IGuildUser? member = null)
+        [Commands.RequireBotChannelPermissions(Permission.SendEmbeds)]
+        public async Task<DiscordCommandResult> RankAsync(
+            [Description("The member to show the rank of.")] IMember? member = null)
         {
-            member ??= (SocketGuildUser)Context.User;
+            member ??= Context.Author;
 
             Rank? foundRank = null;
             int index = 0;
@@ -69,21 +66,19 @@ namespace Conbot.RankingPlugin
                     total++;
             }
 
-            if (foundRank == null)
+            if (foundRank is null)
             {
-                if (member.Id == Context.User.Id)
-                    await ReplyAsync("You don't have a rank on this server yet.");
+                if (member.Id == Context.Author.Id)
+                    return Reply("You don't have a rank on this server yet.");
                 else
-                    await ReplyAsync("This member has no rank on this server.");
-
-                return;
+                    return Reply("This member has no rank on this server.");
             }
 
             var embed = CreateRankEmbed(member, foundRank.ExperiencePoints, foundRank.RankedMessages, index + 1, total);
-            await ReplyAsync(embed: embed);
+            return Reply(embed);
         }
 
-        public Embed CreateRankEmbed(IGuildUser user, int experiencePoints, int messages, int rank, int total)
+        public LocalEmbed CreateRankEmbed(IMember user, int experiencePoints, int messages, int rank, int total)
         {
             int level = _rankingService.GetLevel(experiencePoints);
             int levelExperiencePoints = experiencePoints - _rankingService.GetTotalExperiencePoints(level);
@@ -104,13 +99,13 @@ namespace Conbot.RankingPlugin
 
             descriptionText
                 .Append("Level ")
-                .Append(Format.Bold(level.ToString()))
+                .Append(Markdown.Bold(level.ToString()))
                 .Append(" (")
                 .Append(percentage.ToString("P2", CultureInfo.InvariantCulture))
                 .Append(')');
 
-            var embed = new EmbedBuilder()
-                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
+            var embed = new LocalEmbed()
+                .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")))
                 .WithAuthor(user.ToString(), user.GetAvatarUrl())
                 .WithDescription(descriptionText.ToString());
 
@@ -124,17 +119,16 @@ namespace Conbot.RankingPlugin
                 .AddField("Total XP", $"{experiencePoints:n0} XP", true)
                 .AddField("Messages", $"{messages:n0}", true);
 
-            return embed.Build();
+            return embed;
         }
 
         [Command("leaderboard", "list", "all")]
         [Description("Shows the leaderboard of the server.")]
-        [RequireContext(ContextType.Guild)]
-        [RequireBotPermission(
-            ChannelPermission.AddReactions |
-            ChannelPermission.EmbedLinks |
-            ChannelPermission.UseExternalEmojis)]
-        public async Task ListAsync([Description("The page to start with.")] int page = 1)
+        [Commands.RequireBotChannelPermissions(
+            Permission.AddReactions |
+            Permission.SendEmbeds |
+            Permission.UseExternalEmojis)]
+        public async Task<DiscordCommandResult> ListAsync([Description("The page to start with.")] int page = 1)
         {
             var ranks = await _db.GetRanksAsync(Context.Guild!).ToArrayAsync();
 
@@ -147,8 +141,9 @@ namespace Conbot.RankingPlugin
             {
                 var rank = ranks[i];
 
-                var user = Context.Guild.GetUser(rank.UserId);
-                if (user == null)
+                var user = Bot.GetMember(Context.GuildId!, rank.UserId);
+
+                if (user is null)
                     continue;
 
                 int level = _rankingService.GetLevel(rank.ExperiencePoints);
@@ -195,42 +190,40 @@ namespace Conbot.RankingPlugin
 
             for (int i = 0; i < pages.Count; i++)
             {
-                var embed = new EmbedBuilder()
-                    .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
-                    .WithAuthor(Context.Guild.Name, Context.Guild.IconUrl)
+                var embed = new LocalEmbed()
+                    .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")))
+                    .WithAuthor(Context.Guild.Name, Context.Guild.GetIconUrl())
                     .WithTitle("Leaderboard")
                     .WithDescription(pages[i])
                     .WithFooter($"Page {i + 1}/{pages.Count} ({"entry".ToQuantity(ranks.Length)})");
 
-                paginator.AddPage(embed.Build());
+                paginator.AddPage(embed);
             }
 
-            await paginator.RunAsync(_interactiveService, Context, page - 1);
+            return Paginate(paginator, page - 1);
         }
 
         [Group("announcements")]
         [Description("Configures level up announcements.")]
-        public class Announcements : DiscordModuleBase
+        public class Announcements : ConbotModuleBase
         {
             private readonly RankingContext _db;
-            private readonly IConfiguration _config;
 
-            public Announcements(RankingContext context, IConfiguration config)
+            public Announcements(RankingContext context)
             {
                 _db = context;
-                _config = config;
             }
 
             [Command("toggle", "")]
             [Description("Toggles level up announcements.")]
-            [RequireContext(ContextType.Guild)]
-            [RequireUserPermission(GuildPermission.ManageGuild)]
-            public async Task<CommandResult> ToggleAsync(
+            [Commands.RequireGuild]
+            [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
+            public async Task<DiscordCommandResult> ToggleAsync(
                 [Description("Wether to enable or disable level up announcements.")]
                 [Choices("enable", "disable")]
                 string toggle)
             {
-                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild!);
+                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.GuildId!.Value);
 
                 string? text = null;
 
@@ -238,7 +231,7 @@ namespace Conbot.RankingPlugin
                 {
                     case "enable":
                         if (config.ShowLevelUpAnnouncements == true)
-                            return Unsuccessful("Level up announcements are already enabled.");
+                            return Fail("Level up announcements are already enabled.");
 
                         config.ShowLevelUpAnnouncements = true;
                         text = "Level up announcements have been enabled.";
@@ -246,7 +239,7 @@ namespace Conbot.RankingPlugin
                         break;
                     case "disable":
                         if (config.ShowLevelUpAnnouncements == false)
-                            return Unsuccessful("Level up announcements are already disabled.");
+                            return Fail("Level up announcements are already disabled.");
 
                         config.ShowLevelUpAnnouncements = false;
                         text = "Level up announcements have been disabled.";
@@ -254,47 +247,39 @@ namespace Conbot.RankingPlugin
                         break;
                 }
 
-                await Task.WhenAll(
-                    _db.SaveChangesAsync(),
-                    ReplyAsync(text)
-                );
-
-                return Successful;
+                return Reply(text).RunWith(_db.SaveChangesAsync());
             }
 
             [Command("channel")]
             [Description("Sets a channel for level up announcements.")]
-            [RequireContext(ContextType.Guild)]
-            [RequireUserPermission(GuildPermission.ManageGuild)]
-            public async Task ChannelAsync(
+            [Commands.RequireGuild]
+            [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
+            public async Task<DiscordCommandResult> ChannelAsync(
                 [Description("The text channel for level up announcements.")]
                 [Remarks(
                     "If you leave this blank, then the channel will be set to **Current Channel** which will send " +
                     "level up announcements to the channel where the member achieved the level up.")]
                 ITextChannel? channel = null)
             {
-                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild!);
+                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.GuildId!.Value);
                 config.LevelUpAnnouncementsChannelId = channel?.Id;
 
                 string text;
 
-                if (channel != null)
+                if (channel is not null)
                     text = $"Channel for level up announcements has been set to {channel.Mention}.";
                 else
                     text = "Channel for level up announcements has been set to **Current Channel**.";
 
-                await Task.WhenAll(
-                    _db.SaveChangesAsync(),
-                    ReplyAsync(text)
-                );
+                return Reply(text).RunWith(_db.SaveChangesAsync());
             }
 
             [Command("minimumlevel", "minlevel")]
             [Description("Sets a minimum level for level up announcements.")]
             [Remarks("This is useful to avoid spamming with lower levels where it's faster to achieve a level up.")]
-            [RequireContext(ContextType.Guild)]
-            [RequireUserPermission(GuildPermission.ManageGuild)]
-            public async Task MinimumLevelAsync(
+            [Commands.RequireGuild]
+            [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
+            public async Task<DiscordCommandResult> MinimumLevelAsync(
                 [Description("The minimum level.")]
                 [Remarks(
                     "If you leave this blank, then the minimum level will set to **None** which will send level up " +
@@ -302,58 +287,51 @@ namespace Conbot.RankingPlugin
                 [MinValue(1), MaxValue(1000)]
                 int? level = null)
             {
-                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild!);
+                var config = await _db.GetOrCreateGuildConfigurationAsync(Context.GuildId!.Value);
                 config.LevelUpAnnouncementsMinimumLevel = level;
 
-                string text = level != null
+                string text = level is not null
                     ? $"Minimum level for level up announcements has been set to **{level}**."
                     : "Minimum level for level up announcements has been set to **None**.";
 
-                await Task.WhenAll(
-                    _db.SaveChangesAsync(),
-                    ReplyAsync(text)
-                );
+                return Reply(text).RunWith(_db.SaveChangesAsync());
             }
 
             [Command("settings")]
             [Description("Shows the current settings for level up announcements.")]
-            [RequireBotPermission(ChannelPermission.EmbedLinks)]
-            public async Task<CommandResult> SettingsAsync(
+            [Commands.RequireBotChannelPermissions(Permission.SendEmbeds)]
+            public async Task<DiscordCommandResult> SettingsAsync(
                 [Description("Wether you want to show the server's or your personal settings.")]
                 [Remarks("You can only view the server settings if you have the **Manage Server** permission.")]
                 [Choices("server", "user")]
                 string type = "server")
             {
-                Embed embed;
+                LocalEmbed embed;
 
                 if (type == "server")
                 {
-                    if (Context.User is not SocketGuildUser user)
+                    if (Context.Author is not IMember member)
+                        return Fail("You can only view the server's settings for level up announcements on a server.");
+
+                    if (!member.GetPermissions().Has(Permission.ManageGuild))
                     {
-                        return Unsuccessful(
-                            "You can only view the server's settings for level up announcements on a server.");
+                        return Fail("You require the **Manage Server** permission to view the server's settings for " +
+                            "level up announcements.");
                     }
 
-                    if (!user.GuildPermissions.Has(GuildPermission.ManageGuild))
-                    {
-                        return Unsuccessful(
-                            "You require the **Manage Server** permission to view the server's settings for level up " +
-                            "announcements.");
-                    }
-
-                    var config = await _db.GetGuildConfigurationAsync(Context.Guild!);
+                    var config = await _db.GetGuildConfigurationAsync(Context.GuildId!.Value);
 
                     bool enabled = config?.ShowLevelUpAnnouncements ?? false;
-                    string channel = config?.LevelUpAnnouncementsChannelId != null
-                        ? MentionUtils.MentionChannel(config.LevelUpAnnouncementsChannelId.Value)
+                    string channel = config?.LevelUpAnnouncementsChannelId is not null
+                        ? Mention.Channel(config.LevelUpAnnouncementsChannelId.Value)
                         : "Current Channel";
-                    string minimumlevel = config?.LevelUpAnnouncementsMinimumLevel != null
+                    string minimumlevel = config?.LevelUpAnnouncementsMinimumLevel is not null
                         ? config.LevelUpAnnouncementsMinimumLevel.ToString()!
                         : "None";
 
                     embed = new SettingsEmbedBuilder(Context)
                         .WithTitle("Level Up Announcements Server Settings")
-                        .WithGuild(Context.Guild!)
+                        .WithGuild(Bot.GetGuild(Context.GuildId!.Value))
                         .AddSetting("Show Level Up Announcements", enabled, "toggle")
                         .AddSetting("Announcements Channel", channel, "channel")
                         .AddSetting("Minimum Level", minimumlevel, "minimumlevel")
@@ -361,21 +339,20 @@ namespace Conbot.RankingPlugin
                 }
                 else
                 {
-                    var config = await _db.GetUserConfigurationAsync(Context.User);
+                    var config = await _db.GetUserConfigurationAsync(Context.Author);
 
                     bool allowMentions = config?.AnnouncementsAllowMentions ?? false;
                     bool directMessages = config?.AnnouncementsSendDirectMessages ?? false;
 
                     embed = new SettingsEmbedBuilder(Context)
                         .WithTitle("Level Up Announcements User Settings")
-                        .WithUser(Context.User)
+                        .WithUser(Context.Author)
                         .AddSetting("Mention Notifications", allowMentions, "mentions")
                         .AddSetting("Send Direct Messages", directMessages, "directmessages")
                         .Build();
                 }
 
-                await ReplyAsync(embed: embed);
-                return Successful;
+                return Reply(embed);
             }
 
             [Command("mentions", "notifications")]
@@ -385,12 +362,12 @@ namespace Conbot.RankingPlugin
                 "you get mentioned in level up announcements. Disabling this setting will still send level up " +
                 "announcements if the server has them enabled; however, you won't get a notification that you got " +
                 "mentioned.")]
-            public async Task<CommandResult> MentionAsync(
+            public async Task<DiscordCommandResult> MentionAsync(
                 [Description("Wether to enable or disable notifications for mentions in level up announcements.")]
                 [Choices("enable", "disable")]
                 string toggle)
             {
-                var config = await _db.GetOrCreateUserConfigurationAsync(Context.User);
+                var config = await _db.GetOrCreateUserConfigurationAsync(Context.Author);
 
                 string? text = null;
 
@@ -399,7 +376,7 @@ namespace Conbot.RankingPlugin
                     case "enable":
                         if (config.AnnouncementsAllowMentions ?? false)
                         {
-                            return Unsuccessful(
+                            return Fail(
                                 "You already receive notifications when you get mentioned in level up announcements.");
                         }
 
@@ -411,8 +388,8 @@ namespace Conbot.RankingPlugin
                     case "disable":
                         if (!(config.AnnouncementsAllowMentions ?? false))
                         {
-                            return Unsuccessful(
-                                "You already don't receive notifications when you get mentioned in level up announcements.");
+                            return Fail("You already don't receive notifications when you get mentioned in level up " +
+                                "announcements.");
                         }
 
                         config.AnnouncementsAllowMentions = false;
@@ -422,12 +399,7 @@ namespace Conbot.RankingPlugin
                         break;
                 }
 
-                await Task.WhenAll(
-                    _db.SaveChangesAsync(),
-                    ReplyAsync(text)
-                );
-
-                return Successful;
+                return Reply(text).RunWith(_db.SaveChangesAsync());
             }
 
             [Command("directmessages")]
@@ -438,12 +410,12 @@ namespace Conbot.RankingPlugin
                 "level up announcements are *not* enabled on the server or you don't meet the minimum level " +
                 "specified by the server. If a server has level up announcements enabled and you meet the minimum " +
                 "level, then they will be sent on the server instead.")]
-            public async Task<CommandResult> DirectMessagesAsync(
+            public async Task<DiscordCommandResult> DirectMessagesAsync(
                 [Description("Wether to enable or disable direct messages for level up announcements.")]
                 [Choices("enable", "disable")]
                 string toggle)
             {
-                var config = await _db.GetOrCreateUserConfigurationAsync(Context.User);
+                var config = await _db.GetOrCreateUserConfigurationAsync(Context.Author);
 
                 string? text = null;
 
@@ -451,10 +423,7 @@ namespace Conbot.RankingPlugin
                 {
                     case "enable":
                         if (config.AnnouncementsSendDirectMessages ?? false)
-                        {
-                            return Unsuccessful(
-                                "You already receive direct messages for level up announcements.");
-                        }
+                            return Fail("You already receive direct messages for level up announcements.");
 
                         config.AnnouncementsSendDirectMessages = true;
                         text =
@@ -463,10 +432,7 @@ namespace Conbot.RankingPlugin
                         break;
                     case "disable":
                         if (!(config.AnnouncementsSendDirectMessages ?? false))
-                        {
-                            return Unsuccessful(
-                                "You already don't receive direct messages for level up announcements.");
-                        }
+                            return Fail("You already don't receive direct messages for level up announcements.");
 
                         config.AnnouncementsSendDirectMessages = false;
                         text =
@@ -475,12 +441,7 @@ namespace Conbot.RankingPlugin
                         break;
                 }
 
-                await Task.WhenAll(
-                    _db.SaveChangesAsync(),
-                    ReplyAsync(text)
-                );
-
-                return Successful;
+                return Reply(text).RunWith(_db.SaveChangesAsync());
             }
         }
 
@@ -489,45 +450,38 @@ namespace Conbot.RankingPlugin
         [Remarks(
             "You can set roles which will be automatically given to a member when they reach a specific " +
             "level. Roles of a member will only update after they gained XP.")]
-        [RequireContext(ContextType.Guild)]
-        public class RoleRewardsCommands : DiscordModuleBase
+        public class RoleRewardsCommands : ConbotGuildModuleBase
         {
             private readonly RankingContext _db;
             private readonly RankingService _rankingService;
-            private readonly InteractiveService _interactiveService;
             private readonly IConfiguration _config;
 
-            public RoleRewardsCommands(RankingContext context, RankingService rankingService,
-                InteractiveService interactiveService, IConfiguration config)
+            public RoleRewardsCommands(RankingContext context, RankingService rankingService, IConfiguration config)
             {
                 _db = context;
                 _rankingService = rankingService;
-                _interactiveService = interactiveService;
                 _config = config;
             }
 
             [Command("list", "all", "")]
             [Description("Lists all available role rewards.")]
-            [RequireBotPermission(
-                ChannelPermission.AddReactions |
-                ChannelPermission.EmbedLinks |
-                ChannelPermission.UseExternalEmojis)]
-            public async Task ListAsync([Description("The page to start with.")] int page = 1)
+            [Commands.RequireBotChannelPermissions(
+                Permission.AddReactions |
+                Permission.SendEmbeds |
+                Permission.UseExternalEmojis)]
+            public async Task<DiscordCommandResult> ListAsync([Description("The page to start with.")] int page = 1)
             {
                 var roleRewards = await _db.GetRoleRewardsAsync(Context.Guild!).ToListAsync();
                 int count = roleRewards.Count;
 
                 if (count == 0)
-                {
-                    await ReplyAsync("There are no rewards available for this server.");
-                    return;
-                }
+                    return Reply("There are no rewards available for this server.");
 
                 int currentPage = 1;
                 int totalPages = (count / 10) + (count % 10 != 0 ? 1 : 0);
 
                 var paginator = new Paginator();
-                var embed = new EmbedBuilder();
+                var embed = new LocalEmbed();
 
                 for (int i = 0; i < count; i++)
                 {
@@ -537,33 +491,32 @@ namespace Conbot.RankingPlugin
 
                     embed.AddField(
                         $"Level {level} ({experiencePoints.ToString("n0", CultureInfo.CurrentCulture)} XP)",
-                        MentionUtils.MentionRole(roleReward.RoleId));
+                        Mention.Role(roleReward.RoleId));
 
                     if ((i + 1) % 10 == 0 || i == count - 1)
                     {
                         embed
-                            .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
-                            .WithAuthor(Context.Guild.Name, Context.Guild.IconUrl)
+                            .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")))
+                            .WithAuthor(Context.Guild.Name, Context.Guild.GetIconUrl())
                             .WithTitle("Role Rewards")
-                            .WithFooter($"Page {currentPage}/{totalPages} ({"entry".ToQuantity(count)})")
-                            .Build();
+                            .WithFooter($"Page {currentPage}/{totalPages} ({"entry".ToQuantity(count)})");
 
                         currentPage++;
-                        paginator.AddPage(embed.Build());
-                        embed = new EmbedBuilder();
+                        paginator.AddPage(embed);
+                        embed = new LocalEmbed();
                     }
                 }
 
-                await paginator.RunAsync(_interactiveService, Context, page - 1);
+                return Paginate(paginator, page - 1);
             }
 
             [Command("add")]
             [Description("Adds a role reward for a specific level.")]
             [Remarks(
                 "Only one role can be rewarded for a specific level and only one level can be set for a specific role.")]
-            [RequireUserPermission(GuildPermission.ManageRoles)]
-            [RequireBotPermission(GuildPermission.ManageRoles)]
-            public async Task<CommandResult> AddAsync(
+            [Commands.RequireAuthorGuildPermissions(Permission.ManageRoles)]
+            [Commands.RequireBotGuildPermissions(Permission.ManageRoles)]
+            public async Task<DiscordCommandResult> AddAsync(
                 [Description("The role to reward.")]
                 [Remarks(
                     "Make sure the role is *below* the bots highest role. Otherwise the bot won't be able " +
@@ -577,56 +530,43 @@ namespace Conbot.RankingPlugin
                 var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild!);
 
                 var roleReward = await _db.GetRoleRewardAsync(Context.Guild, level);
-                if (roleReward != null)
-                    return Unsuccessful("There already exists a reward for this level.");
-
+                if (roleReward is not null)
+                    return Fail("There already exists a reward for this level.");
 
                 roleReward = await _db.GetRoleRewardAsync(role);
-                if (roleReward != null)
-                    return Unsuccessful("There already exists a reward for this role.");
+                if (roleReward is not null)
+                    return Fail("There already exists a reward for this role.");
 
                 await _db.AddRoleRewardAsync(config, level, role);
 
-                await Task.WhenAll(
-                    _db.SaveChangesAsync(),
-                    ReplyAsync(
-                        $"Role {role.Mention} has been added as a reward for level **{level}**.",
-                        allowedMentions: AllowedMentions.None)
-                );
-
-                return Successful;
+                return Reply($"Role {role.Mention} has been added as a reward for level **{level}**.")
+                    .RunWith(_db.SaveChangesAsync());
             }
 
             [Command("remove")]
             [Description("Removes a role reward.")]
             [Remarks("This will automatically remove the role from everyone.")]
-            [RequireUserPermission(GuildPermission.ManageRoles)]
-            [RequireBotPermission(GuildPermission.ManageRoles)]
-            public async Task<CommandResult> RemoveAsync(
+            [Commands.RequireAuthorGuildPermissions(Permission.ManageRoles)]
+            [Commands.RequireBotGuildPermissions(Permission.ManageRoles)]
+            public async Task<DiscordCommandResult> RemoveAsync(
                 [Description("The role of the reward to remove."), Remainder] IRole role)
             {
                 var roleReward = await _db.GetRoleRewardAsync(role);
 
-                if (roleReward == null)
-                    return Unsuccessful("There exists no reward for this role.");
+                if (roleReward is null)
+                    return Fail("There exists no reward for this role.");
 
                 _db.RemoveRoleReward(roleReward);
 
-                await Task.WhenAll(
-                    _db.SaveChangesAsync(),
-                    ReplyAsync(
-                        $"Role {role.Mention} has been removed as a reward for level **{roleReward.Level}**.",
-                        allowedMentions: AllowedMentions.None)
-                );
-
-                return Successful;
+                return Reply($"Role {role.Mention} has been removed as a reward for level **{roleReward.Level}**.")
+                    .RunWith(_db.SaveChangesAsync());
             }
 
             [Command("type")]
             [Description("Sets the type for role rewards.")]
-            [RequireUserPermission(GuildPermission.ManageRoles)]
-            [RequireBotPermission(GuildPermission.ManageRoles)]
-            public async Task<CommandResult> StackAsync(
+            [Commands.RequireAuthorGuildPermissions(Permission.ManageRoles)]
+            [Commands.RequireBotGuildPermissions(Permission.ManageRoles)]
+            public async Task<DiscordCommandResult> StackAsync(
                 [Choices("stack", "remove")]
                 [Description("The type for role rewards.")]
                 [Remarks(
@@ -642,33 +582,28 @@ namespace Conbot.RankingPlugin
                 {
                     case "stack":
                         if (config.RoleRewardsType == RoleRewardsType.Stack)
-                            return Unsuccessful("Type for role rewards is already set to **stack**.");
+                            return Fail("Type for role rewards is already set to **stack**.");
 
                         config.RoleRewardsType = RoleRewardsType.Stack;
                         text = "Type for role rewards has been set to **stack**.";
                         break;
                     case "remove":
                         if (config.RoleRewardsType == RoleRewardsType.Remove)
-                            return Unsuccessful("Type for role rewards is already set to **remove**.");
+                            return Fail("Type for role rewards is already set to **remove**.");
 
                         config.RoleRewardsType = RoleRewardsType.Remove;
                         text = "Type for role rewards has been set to **remove**.";
                         break;
                 }
 
-                await Task.WhenAll(
-                    _db.SaveChangesAsync(),
-                    ReplyAsync(text)
-                );
-
-                return Successful;
+                return Reply(text).RunWith(_db.SaveChangesAsync());
             }
 
             [Command("settings")]
             [Description("Shows the current settings for role rewards.")]
-            [RequireUserPermission(GuildPermission.ManageRoles)]
-            [RequireBotPermission(GuildPermission.EmbedLinks)]
-            public async Task SettingsAsync()
+            [Commands.RequireAuthorGuildPermissions(Permission.ManageRoles)]
+            [Commands.RequireBotGuildPermissions(Permission.SendEmbeds)]
+            public async Task<DiscordCommandResult> SettingsAsync()
             {
                 var config = await _db.GetGuildConfigurationAsync(Context.Guild!);
 
@@ -684,7 +619,7 @@ namespace Conbot.RankingPlugin
                     .AddSetting("Type", typeText, "type")
                     .Build();
 
-                await ReplyAsync(embed: embed);
+                return Reply(embed);
             }
         }
 
@@ -693,80 +628,67 @@ namespace Conbot.RankingPlugin
         [Remarks(
             "Ignored channels are useful to avoid gaining experience points from channels where usually no " +
             "actual discussion is held, e.g., bot channels.")]
-        public class IgnoredChannelsCommands : DiscordModuleBase
+        public class IgnoredChannelsCommands : ConbotGuildModuleBase
         {
             private readonly RankingContext _db;
-            private readonly InteractiveService _interactiveService;
             private readonly IConfiguration _config;
 
-            public IgnoredChannelsCommands(RankingContext context, InteractiveService interactiveService,
-                IConfiguration config)
+            public IgnoredChannelsCommands(RankingContext context, IConfiguration config)
             {
                 _db = context;
-                _interactiveService = interactiveService;
                 _config = config;
             }
 
             [Command("add", "")]
             [Description("Adds a channel to ignore.")]
-            [RequireUserPermission(GuildPermission.ManageGuild)]
+            [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
             [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-            public async Task<CommandResult> AddAsync([Description("The text channel to ignore.")] ITextChannel channel)
+            public async Task<DiscordCommandResult> AddAsync(
+                [Description("The text channel to ignore.")] ITextChannel channel)
             {
                 var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild!);
 
                 var ignoredChannel = await _db.GetIgnoredChannelAsync(channel);
-                if (ignoredChannel != null)
-                    return Unsuccessful("This channel is already ignored.");
+                if (ignoredChannel is not null)
+                    return Fail("This channel is already ignored.");
 
                 _db.AddIgnoredChannel(channel, config);
 
-                await Task.WhenAll(
-                    _db.SaveChangesAsync(),
-                    ReplyAsync($"Channel {channel.Mention} is now ignored from gaining experience points.")
-                );
-
-                return Successful;
+                return Reply($"Channel {channel.Mention} is now ignored from gaining experience points.")
+                    .RunWith(_db.SaveChangesAsync());
             }
 
             [Command("remove")]
             [Description("Removes a channel from being ignored.")]
-            [RequireUserPermission(GuildPermission.ManageGuild)]
+            [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
             [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-            public async Task<CommandResult> RemoveAsync(
+            public async Task<DiscordCommandResult> RemoveAsync(
                 [Description("The text channel to remove from being ignored.")] ITextChannel channel)
             {
                 var ignoredChannel = await _db.GetIgnoredChannelAsync(channel);
 
-                if (ignoredChannel == null)
-                    return Unsuccessful("This channel isn't ignored.");
+                if (ignoredChannel is null)
+                    return Fail("This channel isn't ignored.");
 
                 _db.RemoveIgnoredChannel(ignoredChannel);
 
-                await Task.WhenAll(
-                    _db.SaveChangesAsync(),
-                    ReplyAsync($"Channel {channel.Mention} is now no longer ignored from gaining experience points.")
-                );
-
-                return Successful;
+                return Reply($"Channel {channel.Mention} is now no longer ignored from gaining experience points.")
+                    .RunWith(_db.SaveChangesAsync());
             }
 
             [Command("list", "all")]
             [Description("Lists all ignored channels.")]
-            [RequireBotPermission(
-                ChannelPermission.AddReactions |
-                ChannelPermission.EmbedLinks |
-                ChannelPermission.UseExternalEmojis)]
-            public async Task<CommandResult> ListAsync([Description("The page to start with.")] int page = 1)
+            [Commands.RequireBotChannelPermissions(
+                Permission.AddReactions |
+                Permission.SendEmbeds |
+                Permission.UseExternalEmojis)]
+            public async Task<DiscordCommandResult> ListAsync([Description("The page to start with.")] int page = 1)
             {
-                var ignoredChannels = await _db.GetIgnoredChannelsAsync(Context.Guild!).ToArrayAsync();
+                var ignoredChannels = await _db.GetIgnoredChannelsAsync(Context.GuildId).ToArrayAsync();
                 int count = ignoredChannels.Length;
 
                 if (count == 0)
-                {
-                    await ReplyAsync("There are no channels ignored from gaining experience points.");
-                    return Successful;
-                }
+                    return Reply("There are no channels ignored from gaining experience points.");
 
                 List<string> pages = new();
 
@@ -775,7 +697,7 @@ namespace Conbot.RankingPlugin
 
                 foreach (var ignoredChannel in ignoredChannels)
                 {
-                    pageText.AppendLine(MentionUtils.MentionChannel(ignoredChannel.ChannelId));
+                    pageText.AppendLine(Mention.Channel(ignoredChannel.ChannelId));
 
                     if (i % 15 == 0 || i == count)
                     {
@@ -787,50 +709,45 @@ namespace Conbot.RankingPlugin
                 }
 
                 if (page > pages.Count || page < 1)
-                    return Unsuccessful("This page doesn't exist.");
+                    return Fail("This page doesn't exist.");
 
                 var paginator = new Paginator();
 
                 for (int j = 0; j < pages.Count; j++)
                 {
-                    var embed = new EmbedBuilder()
-                        .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
-                        .WithAuthor(Context.Guild!.Name, Context.Guild!.IconUrl)
+                    var embed = new LocalEmbed()
+                        .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")))
+                        .WithAuthor(Context.Guild!.Name, Context.Guild.GetIconUrl())
                         .WithTitle("Ignored Channels")
                         .WithDescription(pages[j])
-                        .WithFooter($"Page {j + 1}/{pages.Count} ({"entry".ToQuantity(count)})")
-                        .Build();
+                        .WithFooter($"Page {j + 1}/{pages.Count} ({"entry".ToQuantity(count)})");
                     paginator.AddPage(embed);
                 }
 
-                await paginator.RunAsync(_interactiveService, Context, page - 1);
-                return Successful;
+                return Paginate(paginator, page - 1);
             }
         }
 
 #if DEBUG
         [Command("xphack")]
         [Description("Gives a member a certain amount of XP in debug mode.")]
-        public async Task XpHackAsync(int amount, IGuildUser? member = null)
+        public async Task<DiscordCommandResult> XpHackAsync(int amount, IMember? member = null)
         {
-            member ??= (SocketGuildUser)Context.User;
+            member ??= Context.Author;
 
             var rank = await _db.GetRankAsync(member);
 
-            if (rank == null)
+            if (rank is null)
             {
-                if (member.Id == Context.User.Id)
-                    await ReplyAsync("You don't have a rank on this server yet.");
+                if (member.Id == Context.Author.Id)
+                    return Reply("You don't have a rank on this server yet.");
                 else
-                    await ReplyAsync("This member has no rank on this server.");
-
-                return;
+                    return Reply("This member has no rank on this server.");
             }
 
             rank.ExperiencePoints += amount;
 
-            await _db.SaveChangesAsync();
-            await ReplyAsync($"You got **{amount}** XP.");
+            return Reply($"You got **{amount}** XP.").RunWith(_db.SaveChangesAsync());
         }
 #endif
     }

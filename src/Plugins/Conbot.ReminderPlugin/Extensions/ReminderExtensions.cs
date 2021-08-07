@@ -5,9 +5,8 @@ using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 
-using Conbot.Commands;
-
-using Discord;
+using Disqord;
+using Disqord.Bot;
 
 namespace Conbot.ReminderPlugin
 {
@@ -15,7 +14,7 @@ namespace Conbot.ReminderPlugin
     {
         public static IAsyncEnumerable<Reminder> GetRemindersAsync(this ReminderContext context, ulong? userId = null)
         {
-            if (userId != null)
+            if (userId is not null)
                 return context.Reminders.AsQueryable().Where(x => x.UserId == userId).AsAsyncEnumerable();
 
             return context.Reminders.AsAsyncEnumerable();
@@ -38,9 +37,8 @@ namespace Conbot.ReminderPlugin
 
         public static Task<Reminder> AddReminderAsync(this ReminderContext db, DiscordCommandContext context,
             DateTime createdAt, DateTime endsAt, string? message = null)
-            => AddReminderAsync(
-                    db, context.User.Id, context.Guild?.Id, context.Channel.Id,
-                    context.Message?.Id ?? context.Interaction!.Id, createdAt, endsAt, message);
+            => AddReminderAsync(db, context.Author.Id, context.GuildId, context.ChannelId, context.Message.Id,
+                createdAt, endsAt, message);
 
         public static void RemoveReminder(this ReminderContext context, Reminder reminder)
             => context.Reminders.Remove(reminder);

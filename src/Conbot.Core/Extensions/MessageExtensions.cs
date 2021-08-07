@@ -1,20 +1,19 @@
 using System.Threading.Tasks;
 
-using Discord;
-using Discord.Net;
+using Disqord;
+using Disqord.Rest;
 
 namespace Conbot.Extensions
 {
     public static class MessageExtensions
     {
-        public static async Task<bool> TryAddReactionAsync(this IUserMessage message, IEmote emote,
-            RequestOptions? options = null)
+        public static async Task<bool> TryDeleteAsync(this IMessage message, IRestRequestOptions? options = null)
         {
             try
             {
-                await message.AddReactionAsync(emote, options);
+                await message.DeleteAsync(options);
             }
-            catch (HttpException)
+            catch
             {
                 return false;
             }
@@ -22,14 +21,14 @@ namespace Conbot.Extensions
             return true;
         }
 
-        public static async Task<bool> TryRemoveReactionAsync(this IUserMessage message, IEmote emote, IUser user,
-            RequestOptions? options = null)
+        public static async Task<bool> TryAddReactionAsync(this IMessage message, LocalEmoji emoji,
+            IRestRequestOptions? options = null)
         {
             try
             {
-                await message.RemoveReactionAsync(emote, user, options);
+                await message.AddReactionAsync(emoji, options);
             }
-            catch (HttpException)
+            catch
             {
                 return false;
             }
@@ -37,14 +36,14 @@ namespace Conbot.Extensions
             return true;
         }
 
-        public static async Task<bool> TryRemoveAllReactionsAsync(this IUserMessage message,
-            RequestOptions? options = null)
+        public static async Task<bool> TryRemoveReactionAsync(this IMessage message, LocalEmoji emoji,
+            Snowflake userId, IRestRequestOptions? options = null)
         {
             try
             {
-                await message.RemoveAllReactionsAsync(options);
+                await message.RemoveReactionAsync(emoji, userId, options);
             }
-            catch (HttpException)
+            catch
             {
                 return false;
             }
@@ -52,24 +51,18 @@ namespace Conbot.Extensions
             return true;
         }
 
-        public static bool HasMentionPrefix(this IUserMessage message, IUser user, out string? output)
+        public static async Task<bool> TryClearAllReactionsAsync(this IMessage message, LocalEmoji? emoji = null,
+            IRestRequestOptions? options = null)
         {
-            string content = message.Content;
-            output = null;
-
-            int endPos = content.IndexOf(' ');
-            if (endPos == -1)
+            try
+            {
+                await message.ClearReactionsAsync(emoji, options);
+            }
+            catch
+            {
                 return false;
+            }
 
-            string mention = content.Substring(0, endPos);
-
-            if (!MentionUtils.TryParseUser(mention, out ulong userId))
-                return false;
-
-            if (userId != user.Id)
-                return false;
-
-            output = content[(mention.Length + 1)..];
             return true;
         }
     }

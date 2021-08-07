@@ -5,8 +5,7 @@ using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 
-using Discord;
-using Discord.WebSocket;
+using Disqord;
 
 namespace Conbot.TagPlugin
 {
@@ -22,13 +21,13 @@ namespace Conbot.TagPlugin
                 .Include(x => x.OwnerChanges)
                 .AsNoTracking();
 
-            if (guildId == null && ownerId == null)
+            if (guildId is null && ownerId is null)
                 return tags.AsAsyncEnumerable();
 
-            if (guildId == null)
+            if (guildId is null)
                 return tags.Where(x => x.OwnerId == ownerId).AsAsyncEnumerable();
 
-            if (ownerId == null)
+            if (ownerId is null)
                 return tags.Where(x => x.GuildId == guildId).AsAsyncEnumerable();
 
             return tags.Where(x => x.GuildId == guildId && x.OwnerId == ownerId)
@@ -56,16 +55,15 @@ namespace Conbot.TagPlugin
             return tag;
         }
 
-        public static Task<Tag> CreateTagAsync(this TagContext context, ITextChannel channel,
-            IMessage message, string name,
-            string content)
-        => CreateTagAsync(context, channel.Guild.Id, message.Channel.Id, message.Id, null, message.Author.Id, name,
+        public static Task<Tag> CreateTagAsync(this TagContext context, IMessageGuildChannel channel, IMessage message,
+            string name, string content)
+        => CreateTagAsync(context, channel.GuildId, message.ChannelId, message.Id, null, message.Author.Id, name,
             content);
 
-        public static Task<Tag> CreateTagAsync(this TagContext context, SocketInteraction interaction, string name,
+        public static Task<Tag> CreateTagAsync(this TagContext context, IInteraction interaction, string name,
             string content)
-        => CreateTagAsync(context, interaction.Guild.Id, interaction.Channel.Id, null, interaction.Id,
-            interaction.Member.Id, name, content);
+        => CreateTagAsync(context, interaction.GuildId!.Value, interaction.ChannelId, null, interaction.Id,
+            interaction.Author.Id, name, content);
 
         public static void RemoveTag(this TagContext context, Tag tag)
             => context.Tags.Remove(tag);
@@ -79,15 +77,15 @@ namespace Conbot.TagPlugin
             return use;
         }
 
-        public static Task<TagUse> AddTagUseAsync(this TagContext context, Tag tag, ITextChannel channel,
+        public static Task<TagUse> AddTagUseAsync(this TagContext context, Tag tag, IMessageGuildChannel channel,
             IMessage message, TagAlias? usedAlias = null)
             => AddTagUseAsync(
-                context, tag, channel.Guild.Id, message.Channel.Id, message.Id, null, message.Author.Id, usedAlias);
+                context, tag, channel.GuildId, message.ChannelId, message.Id, null, message.Author.Id, usedAlias);
 
-        public static Task<TagUse> AddTagUseAsync(this TagContext context, Tag tag, SocketInteraction interaction,
+        public static Task<TagUse> AddTagUseAsync(this TagContext context, Tag tag, IInteraction interaction,
             TagAlias? usedAlias = null)
-            => AddTagUseAsync(context, tag, interaction.Guild.Id, interaction.Channel.Id, null, interaction.Id,
-                interaction.Member.Id, usedAlias);
+            => AddTagUseAsync(context, tag, interaction.GuildId!.Value, interaction.ChannelId, null, interaction.Id,
+                interaction.Author.Id, usedAlias);
 
         public static async Task<TagModification> ModifyTagAsync(this TagContext context, Tag tag, ulong guildId,
             ulong channelId, ulong? messageId, ulong? interactionId, ulong userId, string newContent)
@@ -102,15 +100,14 @@ namespace Conbot.TagPlugin
         }
 
         public static Task<TagModification> ModifyTagAsync(this TagContext context, Tag tag,
-            ITextChannel channel, IMessage message,
-            string newContent)
-            => ModifyTagAsync(context, tag, channel.Guild.Id, message.Channel.Id, message.Id, null, message.Author.Id,
+            IMessageGuildChannel channel, IMessage message, string newContent)
+            => ModifyTagAsync(context, tag, channel.GuildId, message.ChannelId, message.Id, null, message.Author.Id,
                 newContent);
 
         public static Task<TagModification> ModifyTagAsync(this TagContext context, Tag tag,
-            SocketInteraction interaction, string newContent)
-            => ModifyTagAsync(context, tag, interaction.Guild.Id, interaction.Channel.Id, null, interaction.Id,
-                interaction.Member.Id, newContent);
+            IInteraction interaction, string newContent)
+            => ModifyTagAsync(context, tag, interaction.GuildId!.Value, interaction.ChannelId, null, interaction.Id,
+                interaction.Author.Id, newContent);
 
         public static async Task<TagOwnerChange> ChangeTagOwnerAsync(this TagContext context, Tag tag,
             ulong guildId, ulong channelId, ulong? messageId, ulong? interactionId, ulong userId, ulong newOwnerId,
@@ -126,14 +123,14 @@ namespace Conbot.TagPlugin
         }
 
         public static Task<TagOwnerChange> ChangeTagOwnerAsync(this TagContext context, Tag tag,
-            ITextChannel channel, IMessage message, ulong newOwnerId, OwnerChangeType type)
-            => ChangeTagOwnerAsync(context, tag, channel.Guild.Id, message.Channel.Id, message.Id, null,
+            IMessageGuildChannel channel, IMessage message, ulong newOwnerId, OwnerChangeType type)
+            => ChangeTagOwnerAsync(context, tag, channel.GuildId, message.ChannelId, message.Id, null,
                 message.Author.Id, newOwnerId, type);
 
         public static Task<TagOwnerChange> ChangeTagOwnerAsync(this TagContext context, Tag tag,
-            SocketInteraction interaction, ulong newOwnerId, OwnerChangeType type)
-            => ChangeTagOwnerAsync(context, tag, interaction.Guild.Id, interaction.Channel.Id, null, interaction.Id,
-            interaction.Member.Id, newOwnerId, type);
+            IInteraction interaction, ulong newOwnerId, OwnerChangeType type)
+            => ChangeTagOwnerAsync(context, tag, interaction.GuildId!.Value, interaction.ChannelId, null,
+                interaction.Id, interaction.Author.Id, newOwnerId, type);
 
         public static IAsyncEnumerable<TagAlias> GetTagAliasesAsync(this TagContext context, Tag tag)
             => context.TagAliases.AsNoTracking().Where(x => x.TagId == tag.Id).AsAsyncEnumerable();
@@ -142,15 +139,15 @@ namespace Conbot.TagPlugin
             => await context.TagAliases.AsAsyncEnumerable().FirstOrDefaultAsync(
                 x => x.GuildId == guild.Id && string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
 
-        public static Task<TagAlias> CreateTagAliasAsync(this TagContext context, Tag tag, ITextChannel channel,
+        public static Task<TagAlias> CreateTagAliasAsync(this TagContext context, Tag tag, IMessageGuildChannel channel,
             IMessage message, string name)
         => CreateTagAliasAsync(
-            context, tag, channel.Guild.Id, message.Channel.Id, message.Id, null, message.Author.Id, name);
+            context, tag, channel.GuildId, message.ChannelId, message.Id, null, message.Author.Id, name);
 
-        public static Task<TagAlias> CreateTagAliasAsync(this TagContext context, Tag tag,
-            SocketInteraction interaction, string name)
-        => CreateTagAliasAsync(context, tag, interaction.Guild.Id, interaction.Channel.Id, null, interaction.Id,
-            interaction.Member.Id, name);
+        public static Task<TagAlias> CreateTagAliasAsync(this TagContext context, Tag tag, IInteraction interaction,
+            string name)
+        => CreateTagAliasAsync(context, tag, interaction.GuildId!.Value, interaction.ChannelId, null, interaction.Id,
+            interaction.Author.Id, name);
 
         public static async Task<TagAlias> CreateTagAliasAsync(this TagContext context, Tag tag, ulong guildId,
             ulong channelId, ulong? messageId, ulong? interactionId, ulong userId, string name)
@@ -180,13 +177,13 @@ namespace Conbot.TagPlugin
         }
 
         public static Task<TagAliasOwnerChange> ChangeTagAliasOwnerAsync(this TagContext context, TagAlias alias,
-            ITextChannel channel, IMessage message, ulong newOwnerId, OwnerChangeType type)
-            => ChangeTagAliasOwnerAsync(context, alias, channel.Guild.Id, message.Channel.Id, message.Id, null,
+            IMessageGuildChannel channel, IMessage message, ulong newOwnerId, OwnerChangeType type)
+            => ChangeTagAliasOwnerAsync(context, alias, channel.GuildId, message.ChannelId, message.Id, null,
                 message.Author.Id, newOwnerId, type);
 
         public static Task<TagAliasOwnerChange> ChangeTagAliasOwnerAsync(this TagContext context, TagAlias alias,
-            SocketInteraction interaction, ulong newOwnerId, OwnerChangeType type)
-            => ChangeTagAliasOwnerAsync(context, alias, interaction.Guild.Id, interaction.Channel.Id, null,
-                interaction.Id, interaction.Member.Id, newOwnerId, type);
+            IInteraction interaction, ulong newOwnerId, OwnerChangeType type)
+            => ChangeTagAliasOwnerAsync(context, alias, interaction.GuildId!.Value, interaction.ChannelId, null,
+                interaction.Id, interaction.Author.Id, newOwnerId, type);
     }
 }

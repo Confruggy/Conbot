@@ -2,30 +2,32 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Discord;
+using Microsoft.EntityFrameworkCore;
+
+using Disqord;
 
 namespace Conbot.PrefixPlugin
 {
     public static class PrefixExtensions
     {
-        public static ValueTask<List<Prefix>> GetPrefixesAsync(this PrefixContext context, ulong? guildId = null)
+        public static Task<List<Prefix>> GetPrefixesAsync(this PrefixContext context, ulong? guildId = null)
         {
-            if (guildId == null)
-                return context.Prefixes.ToListAsync();
+            if (guildId is null)
+                return context.Prefixes.AsQueryable().ToListAsync();
 
-            return context.Prefixes.ToAsyncEnumerable().Where(x => x.GuildId == guildId).ToListAsync();
+            return context.Prefixes.AsQueryable().Where(x => x.GuildId == guildId).ToListAsync();
         }
 
-        public static ValueTask<List<Prefix>> GetPrefixesAsync(this PrefixContext context, IGuild guild)
+        public static Task<List<Prefix>> GetPrefixesAsync(this PrefixContext context, IGuild guild)
             => GetPrefixesAsync(context, guild.Id);
 
-        public static ValueTask<Prefix> GetPrefixAsync(this PrefixContext context, ulong guildId, string text)
-            => context.Prefixes.FirstOrDefaultAsync(x => x.GuildId == guildId && x.Text == text);
+        public static Task<Prefix> GetPrefixAsync(this PrefixContext context, ulong guildId, string text)
+            => context.Prefixes.AsQueryable().FirstOrDefaultAsync(x => x.GuildId == guildId && x.Text == text);
 
-        public static ValueTask<Prefix> GetPrefixAsync(this PrefixContext context, IGuild guild, string text)
+        public static Task<Prefix> GetPrefixAsync(this PrefixContext context, IGuild guild, string text)
             => GetPrefixAsync(context, guild.Id, text);
 
-        public static async ValueTask<Prefix> AddPrefixAsync(this PrefixContext context, ulong guildId, string text)
+        public static async Task<Prefix> AddPrefixAsync(this PrefixContext context, ulong guildId, string text)
         {
             var prefix = new Prefix(guildId, text);
 
@@ -33,7 +35,7 @@ namespace Conbot.PrefixPlugin
             return prefix;
         }
 
-        public static ValueTask<Prefix> AddPrefixAsync(this PrefixContext context, IGuild guild, string text)
+        public static Task<Prefix> AddPrefixAsync(this PrefixContext context, IGuild guild, string text)
             => AddPrefixAsync(context, guild.Id, text);
 
         public static void RemovePrefix(this PrefixContext context, Prefix prefix)

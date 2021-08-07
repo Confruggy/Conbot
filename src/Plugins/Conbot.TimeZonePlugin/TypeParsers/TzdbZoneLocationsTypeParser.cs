@@ -22,7 +22,7 @@ namespace Conbot.TimeZonePlugin
                     source.CanonicalIdMap[x.ZoneId] == x.ZoneId);
 
             if (!locations.Any())
-                return TypeParserResult<IList<TzdbZoneLocation>>.Unsuccessful("Country hasn't been found.");
+                return TypeParserResult<IList<TzdbZoneLocation>>.Failed("Country hasn't been found.");
 
             return TypeParserResult<IList<TzdbZoneLocation>>.Successful(locations.ToList());
         }

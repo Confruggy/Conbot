@@ -25,14 +25,14 @@ namespace Conbot.Commands
                     _ => "ID"
                 };
 
-                return TypeParserResult<ulong>.Unsuccessful(
+                return TypeParserResult<ulong>.Failed(
                     $"Parameter **{parameter.Name}** must be a valid {type}.");
             }
 
             if (ulong.TryParse(value, out ulong output))
                 return TypeParserResult<ulong>.Successful(output);
 
-            return TypeParserResult<ulong>.Unsuccessful($"Parameter **{parameter.Name}** must be a valid integer.");
+            return TypeParserResult<ulong>.Failed($"Parameter **{parameter.Name}** must be a valid integer.");
         }
     }
 }

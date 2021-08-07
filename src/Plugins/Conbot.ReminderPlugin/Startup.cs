@@ -11,9 +11,7 @@ namespace Conbot.ReminderPlugin
         public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
         {
             services
-                .AddHostedService<ReminderPluginService>()
-                .AddDbContext<ReminderContext>()
-                .AddHostedService<ReminderService>();
+                .AddDbContext<ReminderContext>();
         }
 
         public void BuildConfiguration(IConfigurationBuilder builder) { }

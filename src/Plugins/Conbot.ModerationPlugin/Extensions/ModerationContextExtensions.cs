@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Discord;
-
 using Microsoft.EntityFrameworkCore;
+
+using Disqord;
 
 namespace Conbot.ModerationPlugin
 {
@@ -50,8 +50,8 @@ namespace Conbot.ModerationPlugin
                 .FirstOrDefaultAsync(x => x.GuildId == guildId && x.UserId == userId);
 
         public static Task<TemporaryMutedUser?> GetTemporaryMutedUserAsync(this ModerationContext context,
-            IGuildUser user)
-            => GetTemporaryMutedUserAsync(context, user.Guild.Id, user.Id);
+            IMember member)
+            => GetTemporaryMutedUserAsync(context, member.GuildId, member.Id);
 
         public static async Task<TemporaryMutedUser> CreateOrUpdateTemporaryMutedUserAsync(
             this ModerationContext context, ulong guildId, ulong userId, ulong roleId, DateTime startedAt,
@@ -75,8 +75,8 @@ namespace Conbot.ModerationPlugin
         }
 
         public static Task<TemporaryMutedUser> CreateOrUpdateTemporaryMutedUserAsync(this ModerationContext context,
-            IGuildUser user, IRole role, DateTime startedAt, DateTime endsAt)
-            => CreateOrUpdateTemporaryMutedUserAsync(context, user.Guild.Id, user.Id, role.Id, startedAt, endsAt);
+            IMember member, IRole role, DateTime startedAt, DateTime endsAt)
+            => CreateOrUpdateTemporaryMutedUserAsync(context, member.GuildId, member.Id, role.Id, startedAt, endsAt);
 
         public static void RemoveTemporaryMutedUser(this ModerationContext context, TemporaryMutedUser user)
             => context.TemporaryMutedUsers.Remove(user);
@@ -93,8 +93,8 @@ namespace Conbot.ModerationPlugin
         }
 
         public static Task<TemporaryMutedUser?> TryRemoveTemporaryMutedUserAsync(this ModerationContext context,
-            IGuildUser user)
-            => TryRemoveTemporaryMutedUserAsync(context, user.Guild.Id, user.Id);
+            IMember member)
+            => TryRemoveTemporaryMutedUserAsync(context, member.GuildId, member.Id);
 
         public static IAsyncEnumerable<PreconfiguredMutedRole> GetPreconfiguredMutedRolesAsync(
             this ModerationContext context, ulong guildId)
@@ -112,6 +112,6 @@ namespace Conbot.ModerationPlugin
             => context.PreconfiguredMutedRoles.Add(new PreconfiguredMutedRole(roleId, guildId));
 
         public static void AddPreconfiguredMutedRole(this ModerationContext context, IRole role)
-            => AddPreconfiguredMutedRole(context, role.Id, role.Guild.Id);
+            => AddPreconfiguredMutedRole(context, role.Id, role.GuildId);
     }
 }

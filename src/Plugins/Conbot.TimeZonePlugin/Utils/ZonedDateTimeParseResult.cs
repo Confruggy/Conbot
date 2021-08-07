@@ -8,7 +8,7 @@ namespace Conbot.TimeZonePlugin
     {
         public ZonedDateTime Now { get; }
         public ZonedDateTime? Then { get; }
-        public bool IsSuccessful => Then != null;
+        public bool IsSuccessful => Then is not null;
         public string? Reason { get; }
 
         public ZonedDateTimeParseResult(ZonedDateTime now, ZonedDateTime? then = null,

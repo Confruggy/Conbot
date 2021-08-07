@@ -1,8 +1,9 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
-using Discord;
+using Microsoft.EntityFrameworkCore;
+
+using Disqord;
 
 using NodaTime;
 
@@ -10,22 +11,22 @@ namespace Conbot.TimeZonePlugin
 {
     public static class TimeZoneExtensions
     {
-        public static ValueTask<List<UserTimeZone>> GetUserTimeZonesAsync(this TimeZoneContext context)
+        public static Task<List<UserTimeZone>> GetUserTimeZonesAsync(this TimeZoneContext context)
             => context.UserTimeZones.ToListAsync();
 
-        public static ValueTask<List<GuildTimeZone>> GetGuildTimeZonesAsync(this TimeZoneContext context)
+        public static Task<List<GuildTimeZone>> GetGuildTimeZonesAsync(this TimeZoneContext context)
             => context.GuildTimeZones.ToListAsync();
 
-        public static ValueTask<UserTimeZone> GetUserTimeZoneAsync(this TimeZoneContext context, ulong userId)
+        public static Task<UserTimeZone> GetUserTimeZoneAsync(this TimeZoneContext context, ulong userId)
             => context.UserTimeZones.FirstOrDefaultAsync(x => x.UserId == userId);
 
-        public static ValueTask<UserTimeZone> GetUserTimeZoneAsync(this TimeZoneContext context, IUser user)
+        public static Task<UserTimeZone> GetUserTimeZoneAsync(this TimeZoneContext context, IUser user)
             => GetUserTimeZoneAsync(context, user.Id);
 
-        public static ValueTask<GuildTimeZone> GetGuildTimeZoneAsync(this TimeZoneContext context, ulong guildId)
+        public static Task<GuildTimeZone> GetGuildTimeZoneAsync(this TimeZoneContext context, ulong guildId)
             => context.GuildTimeZones.FirstOrDefaultAsync(x => x.GuildId == guildId);
 
-        public static ValueTask<GuildTimeZone> GetGuildTimeZoneAsync(this TimeZoneContext context, IGuild guild)
+        public static Task<GuildTimeZone> GetGuildTimeZoneAsync(this TimeZoneContext context, IGuild guild)
             => GetGuildTimeZoneAsync(context, guild.Id);
 
         public static async ValueTask<UserTimeZone> ModifyUserTimeZoneAsync(this TimeZoneContext context, ulong userId,
@@ -33,7 +34,7 @@ namespace Conbot.TimeZonePlugin
         {
             var userTimeZone = await context.UserTimeZones.FirstOrDefaultAsync(x => x.UserId == userId);
 
-            if (userTimeZone == null)
+            if (userTimeZone is null)
             {
                 userTimeZone = new UserTimeZone(userId, timeZone.Id);
                 await context.UserTimeZones.AddAsync(userTimeZone);
@@ -55,7 +56,7 @@ namespace Conbot.TimeZonePlugin
         {
             var guildTimeZone = await context.GuildTimeZones.FirstOrDefaultAsync(x => x.TimeZoneId == timeZone.Id);
 
-            if (guildTimeZone == null)
+            if (guildTimeZone is null)
             {
                 guildTimeZone = new GuildTimeZone(guildId, timeZone.Id);
                 await context.GuildTimeZones.AddAsync(guildTimeZone);

@@ -19,14 +19,14 @@ namespace Conbot.Commands
             {
                 return text.Length >= Length
                     ? CheckResult.Successful
-                    : CheckResult.Unsuccessful(
+                    : CheckResult.Failed(
                         $"{Parameter.Name.Humanize()} must have at least {"character".ToQuantity(Length)}.");
             }
             else
             {
                 return argument is Array array && array.Length >= Length
                     ? CheckResult.Successful
-                    : CheckResult.Unsuccessful(
+                    : CheckResult.Failed(
                         $"You must enter at least {Parameter.Name.ToQuantity(Length)}.");
             }
         }

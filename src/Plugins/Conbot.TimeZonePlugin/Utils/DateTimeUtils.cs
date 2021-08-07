@@ -149,7 +149,7 @@ namespace Conbot.TimeZonePlugin
                         }
                     }
 
-                    if (localDate == null)
+                    if (localDate is null)
                     {
                         var dayYearPatterns = new[] {
                             LocalDatePattern.Create("d/M/yy", CultureInfo.InvariantCulture),
@@ -213,11 +213,11 @@ namespace Conbot.TimeZonePlugin
                 }
             }
 
-            if (localDate != null)
+            if (localDate is not null)
             {
                 LocalDateTime dateTime;
 
-                if (localTime != null)
+                if (localTime is not null)
                     dateTime = localDate.Value.At(localTime.Value);
                 else
                     dateTime = localDate.Value.AtMidnight().PlusHours(12);
@@ -226,7 +226,7 @@ namespace Conbot.TimeZonePlugin
                 return new ZonedDateTimeParseResult(now, zonedDateTime);
             }
 
-            if (localTime != null)
+            if (localTime is not null)
             {
                 var dateTime = new LocalDate(
                     now.Year,

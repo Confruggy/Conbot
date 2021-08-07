@@ -11,9 +11,8 @@ namespace Conbot.HelpPlugin
         public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
         {
             services
-                .AddHostedService<HelpPluginService>()
-                .AddSingleton<HelpService>()
-                .AddHostedService<BackgroundServiceStarter<HelpService>>();
+                .AddSingleton<HelpPluginCommandFailedHandler>()
+                .AddSingleton<ICommandFailedHandler>(x => x.GetRequiredService<HelpPluginCommandFailedHandler>());
         }
 
         public void BuildConfiguration(IConfigurationBuilder builder) { }

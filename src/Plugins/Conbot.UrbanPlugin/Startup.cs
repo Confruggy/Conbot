@@ -1,9 +1,10 @@
+using System.IO;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using Conbot.Plugins;
-using System.IO;
 
 namespace Conbot.UrbanPlugin
 {
@@ -12,7 +13,6 @@ namespace Conbot.UrbanPlugin
         public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
         {
             services
-                .AddHostedService<UrbanPluginService>()
                 .AddSingleton<UrbanService>();
         }
 

@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
 using Conbot.Commands;
 using Conbot.Extensions;
 
-using Discord;
-using Discord.Net;
-using Discord.WebSocket;
+using Disqord;
+using Disqord.Bot;
+using Disqord.Gateway;
+using Disqord.Http;
+using Disqord.Rest;
 
 using Humanizer;
 
@@ -20,7 +21,7 @@ namespace Conbot.ModerationPlugin
 {
     [Name("Moderation")]
     [Description("Moderation related commands.")]
-    public class ModerationModule : DiscordModuleBase
+    public class ModerationModule : ConbotGuildModuleBase
     {
         private readonly ModerationContext _db;
 
@@ -29,18 +30,18 @@ namespace Conbot.ModerationPlugin
         [Command("prune", "purge", "clean", "clear")]
         [Description("Deletes messages in a channel.")]
         [Remarks("Only up to 100 of the latest 1.000 messages in the executing channel will be deleted.")]
-        [RequireUserPermission(ChannelPermission.ManageMessages)]
-        [RequireBotPermission(ChannelPermission.ManageMessages)]
-        public async Task PruneAsync(
-            [Description("The member to delete messages from.")] IGuildUser? member = null,
+        [Commands.RequireAuthorChannelPermissions(Permission.ManageMessages)]
+        [Commands.RequireBotChannelPermissions(Permission.ManageMessages)]
+        public async Task<DiscordCommandResult> PruneAsync(
+            [Description("The member to delete messages from.")] IMember? member = null,
             [Description("The maximal amount of messages to delete."), MinValue(1), MaxValue(100)] int limit = 10)
         {
-            int count = await DeleteMessagesAsync(msg => member == null || msg.Author.Id == member.Id, limit);
+            int count = await DeleteMessagesAsync(msg => member is null || msg.Author.Id == member.Id, limit);
 
             var text = new StringBuilder()
-                .Append("messages".ToQuantity(count, Format.Bold("#")));
+                .Append("messages".ToQuantity(count, "**#**"));
 
-            if (member != null)
+            if (member is not null)
             {
                 text
                     .Append(" from ")
@@ -53,42 +54,41 @@ namespace Conbot.ModerationPlugin
                 .Append(count == 1 ? "s" : "ve")
                 .Append(" been deleted.");
 
-            var message = await ReplyAsync(text.ToString());
-            await Task.Delay(10000);
-            await message.TryDeleteAsync();
+            return Reply(text.ToString()).DeleteAfter(TimeSpan.FromSeconds(10));
         }
 
         public async ValueTask<int> DeleteMessagesAsync(Func<IMessage, bool> condition, int limit = 100)
         {
-            var channel = (SocketTextChannel)Context.Channel;
+            var channelId = Context.ChannelId;
 
-            var messages = new List<IMessage>();
+            var messageIds = new List<Snowflake>();
             int count = 0;
             var tasks = new List<Task>();
             var now = DateTimeOffset.UtcNow;
-            ulong minimum = SnowflakeUtils.ToSnowflake(now.Subtract(new TimeSpan(13, 23, 59, 0)));
-            await Context.Channel.GetMessagesAsync(1000)
-                .ForEachAsync(x =>
+            var minimum = Snowflake.FromDateTimeOffset(now.Subtract(new TimeSpan(13, 23, 59, 0)));
+
+            await foreach (var page in Context.Bot.EnumerateMessages(channelId, 1000))
+            {
+                foreach (var message in page)
                 {
-                    foreach (var msg in x)
-                    {
-                        if (count >= limit || msg.Id <= minimum)
-                            break;
+                    if (count >= limit || message.Id <= minimum)
+                        break;
 
-                        if (!condition(msg))
-                            continue;
+                    if (!condition(message))
+                        continue;
 
-                        messages.Add(msg);
-                        count++;
+                    messageIds.Add(message.Id);
+                    count++;
 
-                        if (count % 100 != 0)
-                            continue;
+                    if (count % 100 != 0)
+                        continue;
 
-                        tasks.Add(channel.DeleteMessagesAsync(messages));
-                        messages = new List<IMessage>();
-                    }
-                });
-            tasks.Add(channel.DeleteMessagesAsync(messages));
+                    tasks.Add(Bot.DeleteMessagesAsync(channelId, messageIds));
+                    messageIds = new List<Snowflake>();
+                }
+            }
+
+            tasks.Add(Bot.DeleteMessagesAsync(channelId, messageIds));
             await Task.WhenAll(tasks);
             return count;
         }
@@ -98,56 +98,57 @@ namespace Conbot.ModerationPlugin
         [Remarks(
             "This will assign a \"muted role\" to the member. To use this command, the server must have a muted role " +
             "configured using the **mutedrole set** command.")]
-        [RequireUserPermission(GuildPermission.ManageRoles)]
-        [RequireBotPermission(GuildPermission.ManageRoles)]
-        [RequireBotPermission(ChannelPermission.AddReactions | ChannelPermission.UseExternalEmojis)]
-        public async Task<CommandResult> MuteAsync(
+        [Commands.RequireAuthorGuildPermissions(Permission.ManageRoles)]
+        [Commands.RequireBotGuildPermissions(Permission.ManageRoles)]
+        [Commands.RequireBotChannelPermissions(Permission.AddReactions | Permission.UseExternalEmojis)]
+        public async Task<DiscordCommandResult> MuteAsync(
             [Description("The member to mute.")]
-            IGuildUser member,
+            IMember member,
             [Description("The duration for how long the member will be muted.")]
             [Remarks("If left blank, the member will be muted until someone manually unmutes them.")]
             [Remainder]
             TimeSpan? duration = null)
         {
-            var config = await _db.GetGuildConfigurationAsync(Context.Guild!);
-            IRole role;
-            if (config?.RoleId is null || (role = Context.Guild.GetRole(config.RoleId.Value)) is null)
+            var config = await _db.GetGuildConfigurationAsync(Context.GuildId);
+
+            IRole? role;
+            if (config?.RoleId is null || (role = Bot.GetRole(Context.GuildId, config.RoleId.Value)) is null)
             {
-                return Unsuccessful(
+                return Fail(
                     "There is no role for muting members configured. Please configure a muted role with the " +
                     "**mutedrole** command.");
             }
 
-            if (member.Id == Context.User.Id)
-                return Unsuccessful("You can't mute yourself.");
+            if (member.Id == Context.Author.Id)
+                return Fail("You can't mute yourself.");
 
-            if (member.Id == Context.Guild.CurrentUser.Id)
-                return Unsuccessful("You can't mute the bot.");
+            if (member.Id == Context.CurrentMember.Id)
+                return Fail("You can't mute the bot.");
+
+            if (role.Position >= Context.Author.GetHierarchy())
+                return Fail("Muted role must be lower than your highest role.");
+
+            if (role.Position >= Context.CurrentMember.GetHierarchy())
+                return Fail("Muted role must be lower than the bot's highest role.");
+
+            IUserMessage? message = null;
 
             if (member.RoleIds.Contains(config.RoleId.Value))
             {
-                var message = await ConfirmAsync("This member is already muted. Do you want to adjust the duration?");
+                var prompt = Prompt("This member is already muted. Do you want to adjust the duration?");
+                message = await prompt;
 
-                if (message.Item2 != true)
-                {
-                    await ReplyAsync("Duration for the mute hasn't been adjusted.");
-                    return Successful;
-                }
+                if (prompt.Result != true)
+                    return Modify(message, "Duration for the mute hasn't been adjusted.");
             }
-
-            if (role.Position >= ((SocketGuildUser)Context.User).Hierarchy)
-                return Unsuccessful("Muted role must be lower than your highest role.");
-
-            if (role.Position >= Context.Guild.CurrentUser.Hierarchy)
-                return Unsuccessful("Muted role must be lower than the bot's highest role.");
 
             string text;
             if (duration is null)
             {
-                string reason = $"Muted by {Context.User} (ID: {Context.User.Id})";
+                string reason = $"Muted by {Context.Author} (ID: {Context.Author.Id})";
 
                 await Task.WhenAll(
-                    member.AddRoleAsync(role, new RequestOptions { AuditLogReason = reason }),
+                    member.GrantRoleAsync(role.Id, new DefaultRestRequestOptions { Reason = reason }),
                     _db.TryRemoveTemporaryMutedUserAsync(member)
                 );
 
@@ -156,24 +157,26 @@ namespace Conbot.ModerationPlugin
             else
             {
                 string reason =
-                    $"Temporarily muted for {duration.Value.ToLongString()} by {Context.User} (ID: {Context.User.Id})";
+                    $"Temporarily muted for {duration.Value.ToLongString()} by {Context.Author} (ID: {Context.Author.Id})";
 
                 var now = DateTime.UtcNow;
 
                 await Task.WhenAll(
-                    member.AddRoleAsync(role, new RequestOptions { AuditLogReason = reason }),
+                    member.GrantRoleAsync(role.Id, new DefaultRestRequestOptions { Reason = reason }),
                     _db.CreateOrUpdateTemporaryMutedUserAsync(member, role, now, now.Add(duration.Value))
                 );
 
                 text = $"{member.Mention} is now temporarily muted for {duration.Value.ToLongFormattedString()}.";
             }
 
-            await Task.WhenAll(
-                _db.SaveChangesAsync(),
-                ReplyAsync(text, allowedMentions: AllowedMentions.None)
-            );
+            DiscordCommandResult result;
 
-            return Successful;
+            if (message is null)
+                result = Reply(text);
+            else
+                result = Modify(message, text);
+
+            return result.RunWith(_db.SaveChangesAsync());
         }
 
         [Command("unmute")]
@@ -184,46 +187,42 @@ namespace Conbot.ModerationPlugin
             "In those cases the bot might try to remove the role from the member after the mute duration expired " +
             "when the member was temporarily muted. So unmuting a member using this command is recommended. You can " +
             "use the **mutedmembers** command to check which members are currently temporarily muted.")]
-        public async Task<CommandResult> UnmuteAsync([Description("The member to unmute.")] IGuildUser member)
+        public async Task<DiscordCommandResult> UnmuteAsync([Description("The member to unmute.")] IMember member)
         {
-            var config = await _db.GetGuildConfigurationAsync(Context.Guild!);
-            IRole role;
-            if (config?.RoleId is null || (role = Context.Guild.GetRole(config.RoleId.Value)) is null)
+            var config = await _db.GetGuildConfigurationAsync(Context.GuildId);
+
+            IRole? role;
+            if (config?.RoleId is null || (role = Bot.GetRole(Context.GuildId, config.RoleId.Value)) is null)
             {
-                return Unsuccessful(
+                return Fail(
                     "There is no role for muting members configured. Please configure a muted role with the " +
                     "**mutedrole** command.");
             }
 
             if (!member.RoleIds.Contains(config.RoleId.Value))
-                return Unsuccessful("This member isn't muted.");
+                return Fail("This member isn't muted.");
 
-            if (role.Position >= ((SocketGuildUser)Context.User).Hierarchy)
-                return Unsuccessful("Muted role must be lower than your highest role.");
+            if (role.Position >= Context.Author.GetHierarchy())
+                return Fail("Muted role must be lower than your highest role.");
 
-            if (role.Position >= Context.Guild.CurrentUser.Hierarchy)
-                return Unsuccessful("Muted role must be lower than the bot's highest role.");
+            if (role.Position >= Context.CurrentMember.GetHierarchy())
+                return Fail("Muted role must be lower than the bot's highest role.");
 
-            string reason = $"Unmuted by {Context.User} (ID: {Context.User.Id})";
+            string reason = $"Unmuted by {Context.Author} (ID: {Context.Author.Id})";
 
             await Task.WhenAll(
-                member.RemoveRoleAsync(role, new RequestOptions { AuditLogReason = reason }),
+                member.RevokeRoleAsync(role.Id, new DefaultRestRequestOptions { Reason = reason }),
                 _db.TryRemoveTemporaryMutedUserAsync(member)
             );
 
-            await Task.WhenAll(
-                _db.SaveChangesAsync(),
-                ReplyAsync($"{member.Mention} has been unmuted.")
-            );
-
-            return Successful;
+            return Reply($"{member.Mention} has been unmuted.").RunWith(_db.SaveChangesAsync());
         }
 
         //TODO add mutedmembers command
 
         [Group("mutedrole")]
         [Description("Configures a muted role.")]
-        public class MutedRoleCommands : DiscordModuleBase
+        public class MutedRoleCommands : ConbotGuildModuleBase
         {
             private readonly ModerationContext _db;
 
@@ -232,8 +231,8 @@ namespace Conbot.ModerationPlugin
             [Command("set", "")]
             [Description("Sets a role for muting members.")]
             [Remarks("This will set a role which will be used by the **mute** command.")]
-            [RequireUserPermission(GuildPermission.ManageRoles)]
-            public async Task<CommandResult> SetAsync(
+            [Commands.RequireAuthorGuildPermissions(Permission.ManageRoles)]
+            public async Task<DiscordCommandResult> SetAsync(
                 [Description("The role for muting members.")]
                 [Remarks(
                     "This should optimally be a role which denies **Send Messages**, **Add Reactions**, **Speak** " +
@@ -248,16 +247,12 @@ namespace Conbot.ModerationPlugin
                 var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild!);
 
                 if (config.RoleId == role.Id)
-                    return Unsuccessful($"Role for muting members is already set to {role.Mention}.");
+                    return Fail($"Role for muting members is already set to {role.Mention}.");
 
                 config.RoleId = role.Id;
 
-                await Task.WhenAll(
-                    _db.SaveChangesAsync(),
-                    ReplyAsync($"Role for muting members has been set to {role.Mention}.")
-                );
-
-                return Successful;
+                return Reply($"Role for muting members has been set to {role.Mention}.")
+                    .RunWith(_db.SaveChangesAsync());
             }
 
             [Command("create", "generate")]
@@ -268,55 +263,58 @@ namespace Conbot.ModerationPlugin
                 "command. Keep in mind that when you create new channels, the permission overwrites for this role " +
                 "won't be automatically updated. In those cases you can use the **mutedrole update** command to " +
                 "automatically update the role.")]
-            [RequireUserPermission(GuildPermission.ManageRoles | GuildPermission.SendMessages |
-                GuildPermission.AddReactions | GuildPermission.Speak | GuildPermission.Stream)]
-            [RequireBotPermission(GuildPermission.ManageRoles | GuildPermission.SendMessages |
-                GuildPermission.AddReactions | GuildPermission.Speak | GuildPermission.Stream)]
-            public async Task<CommandResult> CreateAsync(
+            [Commands.RequireAuthorGuildPermissions(Permission.ManageRoles | Permission.SendMessages | Permission.AddReactions |
+                Permission.Speak | Permission.Stream)]
+            [Commands.RequireBotGuildPermissions(Permission.ManageRoles | Permission.SendMessages | Permission.AddReactions |
+                Permission.Speak | Permission.Stream)]
+            public async Task<DiscordCommandResult> CreateAsync(
                 [Description("The name of the muted role."), Remainder] string name = "Muted")
             {
-                var message = await ReplyAsync("Creating muted role. This may take a while …");
+                var message = await Reply("Creating muted role. This may take a while …");
+
                 IRole role;
                 try
                 {
-                    role = await Context.Guild!.CreateRoleAsync(name, GuildPermissions.None,
-                        isMentionable: false);
-
-                    var user = (SocketGuildUser)Context.User;
-                    var currentUser = Context.Guild.CurrentUser;
-
-                    if (user.Hierarchy > currentUser.Hierarchy)
-                        await role.ModifyAsync(x => x.Position = currentUser.Hierarchy);
-                    else
-                        await role.ModifyAsync(x => x.Position = user.Hierarchy);
-
-                    var overwritePermissions = new OverwritePermissions(sendMessages: PermValue.Deny,
-                        addReactions: PermValue.Deny, speak: PermValue.Deny, stream: PermValue.Deny);
-
-                    foreach (var channel in Context.Guild.Channels)
+                    role = await Context.Guild!.CreateRoleAsync(x =>
                     {
-                        var permissions = currentUser.GetPermissions(channel);
-                        if (!permissions.ManageRoles || !permissions.ViewChannel)
+                        x.Name = name;
+                        x.Permissions = GuildPermissions.None;
+                        x.IsMentionable = false;
+                    });
+
+                    var author = Context.Author;
+                    var currentMember = Context.CurrentMember;
+
+                    if (author.GetHierarchy() > currentMember.GetHierarchy())
+                        await role.ModifyAsync(x => x.Position = currentMember.GetHierarchy());
+                    else
+                        await role.ModifyAsync(x => x.Position = author.GetHierarchy());
+
+                    var overwritePermissions = new OverwritePermissions()
+                        .Deny(Permission.SendMessages)
+                        .Deny(Permission.AddReactions)
+                        .Deny(Permission.Speak)
+                        .Deny(Permission.Stream);
+
+                    var overwrite = new LocalOverwrite(role.Id, OverwriteTargetType.Role, overwritePermissions);
+
+                    foreach (var channel in Context.Guild.GetChannels())
+                    {
+                        var permissions = currentMember.GetPermissions(channel.Value);
+                        if (!permissions.ManageRoles || !permissions.ViewChannels)
                             continue;
 
-                        await channel.AddPermissionOverwriteAsync(role, overwritePermissions);
+                        await channel.Value.SetOverwriteAsync(overwrite);
                     }
                 }
                 catch
                 {
-                    await message.ModifyAsync(x => x.Content =
-                        "An error occurred while creating the muted role. Please try again.");
-                    return Unsuccessful(message);
+                    return Fail("An error occurred while creating the muted role. Please try again.");
                 }
 
                 _db.AddPreconfiguredMutedRole(role);
 
-                await Task.WhenAll(
-                    message.ModifyAsync(x => x.Content = $"Muted role {role.Mention} has been created."),
-                    _db.SaveChangesAsync()
-                );
-
-                return Successful;
+                return Modify(message, $"Muted role {role.Mention} has been created.").RunWith(_db.SaveChangesAsync());
             }
 
             [Command("update")]
@@ -324,11 +322,11 @@ namespace Conbot.ModerationPlugin
             [Remarks(
                 "This will reset all permissions of the role and denies **Send Messages**, **Add Reactions**, " +
                 "**Speak** and **Video** permissions in all existing channels.")]
-            [RequireUserPermission(GuildPermission.ManageRoles | GuildPermission.SendMessages |
-                GuildPermission.AddReactions | GuildPermission.Speak | GuildPermission.Stream)]
-            [RequireBotPermission(GuildPermission.ManageRoles | GuildPermission.SendMessages |
-                GuildPermission.AddReactions | GuildPermission.Speak | GuildPermission.Stream)]
-            public async Task<CommandResult> UpdateAsync(
+            [Commands.RequireAuthorGuildPermissions(Permission.ManageRoles | Permission.SendMessages | Permission.AddReactions |
+                Permission.Speak | Permission.Stream)]
+            [Commands.RequireBotGuildPermissions(Permission.ManageRoles | Permission.SendMessages | Permission.AddReactions |
+                Permission.Speak | Permission.Stream)]
+            public async Task<DiscordCommandResult> UpdateAsync(
                 [Description("The role to update")]
                 [Remarks("This must be a role which has been created using the **mutedrole create** command.")]
                 [Remainder]
@@ -338,61 +336,65 @@ namespace Conbot.ModerationPlugin
                 var mutedRole = await _db.GetPreconfiguredMutedRoleAsync(role);
                 if (mutedRole is null)
                 {
-                    return Unsuccessful(
+                    return Fail(
                         "You can only update roles which have been created using the **mutedrole create** command.");
                 }
 
-                var message = await ReplyAsync($"Updating muted role {role.Mention}. This may take a while …",
-                    allowedMentions: AllowedMentions.None);
+                var message = await Reply($"Updating muted role {role.Mention}. This may take a while …");
+
                 try
                 {
-                    var user = (SocketGuildUser)Context.User;
-                    var currentUser = Context.Guild!.CurrentUser;
+                    var author = Context.Author;
+                    var currentMember = Context.CurrentMember;
 
                     await role.ModifyAsync(x =>
                     {
                         x.Permissions = GuildPermissions.None;
-                        x.Hoist = false;
-                        x.Mentionable = false;
+                        x.IsHoisted = false;
+                        x.IsMentionable = false;
 
-                        if (user.Hierarchy > currentUser.Hierarchy)
-                            x.Position = Context.Guild.CurrentUser.Hierarchy;
+                        if (author.GetHierarchy() > currentMember.GetHierarchy())
+                            x.Position = currentMember.GetHierarchy();
                         else
-                            x.Position = user.Hierarchy;
+                            x.Position = author.GetHierarchy();
                     });
 
-                    var overwritePermissions = new OverwritePermissions(sendMessages: PermValue.Deny,
-                        addReactions: PermValue.Deny, speak: PermValue.Deny, stream: PermValue.Deny);
+                    var overwritePermissions = new OverwritePermissions()
+                        .Deny(Permission.SendMessages)
+                        .Deny(Permission.AddReactions)
+                        .Deny(Permission.Speak)
+                        .Deny(Permission.Stream);
 
-                    foreach (var channel in Context.Guild.Channels)
+                    var overwrite = new LocalOverwrite(role.Id, OverwriteTargetType.Role, overwritePermissions);
+
+                    foreach (var channel in Context.Guild.GetChannels())
                     {
-                        var permissions = currentUser.GetPermissions(channel);
-                        if (!permissions.ManageRoles || !permissions.ViewChannel)
+                        var permissions = currentMember.GetPermissions(channel.Value);
+                        if (!permissions.ManageRoles || !permissions.ViewChannels)
                             continue;
 
-                        await channel.AddPermissionOverwriteAsync(role, overwritePermissions);
+                        await channel.Value.SetOverwriteAsync(overwrite);
                     }
                 }
                 catch
                 {
-                    await message.ModifyAsync(x => x.Content =
-                        "An error occurred while creating the muted role. Please try again.");
-                    return Unsuccessful(message);
+                    return Fail("An error occurred while creating the muted role. Please try again.");
                 }
 
-                await message.ModifyAsync(x => x.Content = $"Muted role {role.Mention} has been updated.");
-                return Successful;
+                return Modify(message, $"Muted role {role.Mention} has been updated.");
             }
 
             [Command("settings")]
             [Description("Shows the current settings for the muted role.")]
-            [RequireUserPermission(GuildPermission.ManageRoles)]
-            [RequireBotPermission(GuildPermission.EmbedLinks)]
-            public async Task SettingsAsync()
+            [Commands.RequireAuthorGuildPermissions(Permission.ManageRoles)]
+            [Commands.RequireBotChannelPermissions(Permission.SendEmbeds)]
+            public async Task<DiscordCommandResult> SettingsAsync()
             {
-                var config = await _db.GetGuildConfigurationAsync(Context.Guild!);
+                var config = await _db.GetGuildConfigurationAsync(Context.Guild);
 
-                var mutedRole = config?.RoleId is not null ? Context.Guild.GetRole(config.RoleId.Value) : null;
+                var mutedRole = config?.RoleId is not null
+                    ? Context.Guild.Roles.Values.FirstOrDefault(x => x.Id == config.RoleId.Value) : null;
+
                 string mutedRoleText = mutedRole?.Mention ?? "None";
 
                 var embed = new SettingsEmbedBuilder(Context)
@@ -401,19 +403,19 @@ namespace Conbot.ModerationPlugin
                     .AddSetting("Muted Role", mutedRoleText, "set")
                     .Build();
 
-                await ReplyAsync(embed: embed);
+                return Reply(embed);
             }
         }
 
         [Command("ban")]
         [Description("Bans a member.")]
-        [RequireUserPermission(GuildPermission.BanMembers)]
-        [RequireBotPermission(GuildPermission.BanMembers)]
+        [Commands.RequireAuthorGuildPermissions(Permission.BanMembers)]
+        [Commands.RequireBotGuildPermissions(Permission.BanMembers)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task<CommandResult> BanAsync(
+        public async Task<DiscordCommandResult> BanAsync(
             [Description("The member to ban.")]
             [LowerHierarchy]
-            SocketGuildUser member,
+            IMember member,
             [Name("prune days")]
             [Description("The amount of days to prune messages from the member.")]
             [MinValue(0), MaxValue(7)]
@@ -423,21 +425,20 @@ namespace Conbot.ModerationPlugin
             [Remainder]
             string? reason = null)
         {
-            if (member.Id == Context.User.Id)
-                return Unsuccessful("You can't ban yourself.");
+            if (member.Id == Context.Author.Id)
+                return Fail("You can't ban yourself.");
 
-            await Context.Guild!.AddBanAsync(member, pruneDays, reason);
-            await ReplyAsync($"**{Format.Sanitize(member.ToString())}** has been banned.");
-            return Successful;
+            await Context.Guild.CreateBanAsync(member.Id, reason, pruneDays);
+            return Reply($"**{Markdown.Escape(member.ToString())}** has been banned.");
         }
 
         [Command("hackban")]
         [Description("Bans a user by ID.")]
         [Remarks("This is useful to ban a user that isn't in the server.")]
-        [RequireUserPermission(GuildPermission.BanMembers)]
-        [RequireBotPermission(GuildPermission.BanMembers)]
+        [Commands.RequireAuthorGuildPermissions(Permission.BanMembers)]
+        [Commands.RequireBotGuildPermissions(Permission.BanMembers)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task<CommandResult> HackbanAsync(
+        public async Task<DiscordCommandResult> HackbanAsync(
             [Description("The ID of the user to ban.")]
             [Snowflake(SnowflakeType.User)]
             ulong id,
@@ -450,44 +451,42 @@ namespace Conbot.ModerationPlugin
             [Remainder]
             string? reason = null)
         {
-            if (id == Context.User.Id)
-                return Unsuccessful("You can't ban yourself.");
+            if (id == Context.Author.Id)
+                return Fail("You can't ban yourself.");
 
             try
             {
-                await Context.Guild!.AddBanAsync(id, pruneDays, reason);
+                await Context.Guild.CreateBanAsync(id, reason, pruneDays);
             }
-            catch (HttpException e)
+            catch (RestApiException e)
             {
-                if (e.HttpCode == HttpStatusCode.NotFound)
-                    return Unsuccessful("User hasn't been found.");
+                if (e.StatusCode == HttpResponseStatusCode.NotFound)
+                    return Fail("User hasn't been found.");
 
-                return Unsuccessful("The bot isn't able to ban this user.");
+                return Fail("The bot isn't able to ban this user.");
             }
 
-            await ReplyAsync($"User with ID **{id}** has been banned.");
-            return Successful;
+            return Reply($"User with ID **{id}** has been banned.");
         }
 
         [Command("unban")]
         [Description("Revokes a ban from a user.")]
-        [RequireUserPermission(GuildPermission.BanMembers)]
-        [RequireBotPermission(GuildPermission.BanMembers)]
+        [Commands.RequireAuthorGuildPermissions(Permission.BanMembers)]
+        [Commands.RequireBotGuildPermissions(Permission.BanMembers)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task<CommandResult> UnbanAsync(
-            [Description("The user to revoke the ban from.")] SocketGuildUser user)
+        public async Task<DiscordCommandResult> UnbanAsync(
+            [Description("The user to revoke the ban from.")] IMember user)
         {
             try
             {
-                await Context.Guild!.RemoveBanAsync(user);
+                await Context.Guild.DeleteBanAsync(user.Id);
             }
-            catch (HttpException)
+            catch (RestApiException)
             {
-                return Unsuccessful("User hasn't been found in the ban list.");
+                return Fail("User hasn't been found in the ban list.");
             }
 
-            await ReplyAsync($"**{Format.Sanitize(user.ToString())}** has been unbanned.");
-            return Successful;
+            return Reply($"**{Markdown.Escape(user.ToString())}** has been unbanned.");
         }
 
         [Command("softban")]
@@ -496,13 +495,13 @@ namespace Conbot.ModerationPlugin
             "A soft ban is like a kick but instead kicking the member, " +
             "the member will be banned and directly unbanned. " +
             "This is useful for pruning messages from the member.")]
-        [RequireUserPermission(GuildPermission.BanMembers, GuildPermission.KickMembers)]
-        [RequireBotPermission(GuildPermission.BanMembers)]
+        [Commands.RequireAuthorGuildPermissions(Permission.BanMembers, Permission.KickMembers)]
+        [Commands.RequireBotGuildPermissions(Permission.BanMembers)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task<CommandResult> SoftBanAsync(
+        public async Task<DiscordCommandResult> SoftBanAsync(
             [Description("The member to soft ban.")]
             [LowerHierarchy]
-            SocketGuildUser member,
+            IMember member,
             [Name("prune days")]
             [Description("The amount of days to prune messages from the member.")]
             [MinValue(0), MaxValue(7)]
@@ -512,36 +511,34 @@ namespace Conbot.ModerationPlugin
             [Remainder]
             string? reason = null)
         {
-            if (member.Id == Context.User.Id)
-                return Unsuccessful("You can't soft ban yourself.");
+            if (member.Id == Context.Author.Id)
+                return Fail("You can't soft ban yourself.");
 
-            await Context.Guild!.AddBanAsync(member, pruneDays, reason);
-            await Context.Guild.RemoveBanAsync(member);
+            await Context.Guild.CreateBanAsync(member.Id, reason, pruneDays);
+            await Context.Guild.DeleteBanAsync(member.Id);
 
-            await ReplyAsync($"**{Format.Sanitize(member.ToString())}** has been soft banned.");
-            return Successful;
+            return Reply($"**{Markdown.Escape(member.ToString())}** has been soft banned.");
         }
 
         [Command("kick")]
         [Description("Kicks a member.")]
-        [RequireUserPermission(GuildPermission.BanMembers, GuildPermission.KickMembers)]
-        [RequireBotPermission(GuildPermission.KickMembers)]
+        [Commands.RequireAuthorGuildPermissions(Permission.BanMembers, Permission.KickMembers)]
+        [Commands.RequireBotGuildPermissions(Permission.KickMembers)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-        public async Task<CommandResult> KickAsync(
+        public async Task<DiscordCommandResult> KickAsync(
             [Description("The member to kick.")]
             [LowerHierarchy]
-            SocketGuildUser user,
+            IMember member,
             [Description("The reason for the kick.")]
             [Remarks("The reason will show up in the audit log.")]
             [Remainder]
             string? reason = null)
         {
-            if (user.Id == Context.User.Id)
-                return Unsuccessful("You can't kick yourself.");
+            if (member.Id == Context.Author.Id)
+                return Fail("You can't kick yourself.");
 
-            await user.KickAsync(reason);
-            await ReplyAsync($"**{Format.Sanitize(user.ToString())}** has been kicked.");
-            return Successful;
+            await member.KickAsync(new DefaultRestRequestOptions { Reason = reason });
+            return Reply($"**{Markdown.Escape(member.ToString())}** has been kicked.");
         }
     }
 }

@@ -11,12 +11,12 @@ namespace Conbot.SplatoonPlugin
         private readonly IEnumerable<SalmonRunRotation>? _detailedRotations;
 
         public IEnumerable<SalmonRunRotation> DetailedRotations
-            => _detailedRotations is not null ? _detailedRotations : Enumerable.Empty<SalmonRunRotation>();
+            => _detailedRotations ?? Enumerable.Empty<SalmonRunRotation>();
 
         [JsonProperty("schedules")]
         private readonly IEnumerable<SalmonRunRotation>? _rotations;
 
         public IEnumerable<SalmonRunRotation> Rotations
-            => _rotations is not null ? _rotations : Enumerable.Empty<SalmonRunRotation>();
+            => _rotations ?? Enumerable.Empty<SalmonRunRotation>();
     }
 }

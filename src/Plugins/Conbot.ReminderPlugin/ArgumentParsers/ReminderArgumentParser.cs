@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.DependencyInjection;
-
 using Conbot.Commands;
+
+using Disqord.Bot;
 
 using Qmmands;
 
@@ -17,9 +17,9 @@ namespace Conbot.ReminderPlugin
             if (context is not DiscordCommandContext discordCommandContext)
                 return ConbotArgumentParserResult.Failed("Invalid context.");
 
-            if (discordCommandContext.Interaction != null || string.IsNullOrEmpty(context.RawArguments))
+            if (string.IsNullOrEmpty(context.RawArguments))
             {
-                var commandService = context.ServiceProvider.GetRequiredService<CommandService>();
+                var commandService = discordCommandContext.Bot.Commands;
                 return await commandService.DefaultArgumentParser.ParseAsync(context);
             }
 

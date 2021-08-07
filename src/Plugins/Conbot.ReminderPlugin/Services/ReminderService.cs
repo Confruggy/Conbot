@@ -5,54 +5,37 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Conbot.TimeZonePlugin;
 using Conbot.TimeZonePlugin.Extensions;
 
-using Discord;
-using Discord.WebSocket;
+using Disqord;
+using Disqord.Bot.Hosting;
+using Disqord.Gateway;
+using Disqord.Rest;
 
 using Humanizer;
 
 using NodaTime;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Conbot.ReminderPlugin
 {
-    public class ReminderService : IHostedService
+    public class ReminderService : DiscordBotService
     {
-        private readonly ILogger<ReminderService> _logger;
-        private readonly DiscordShardedClient _client;
         private readonly IDateTimeZoneProvider _provider;
         private readonly IConfiguration _config;
         private readonly IServiceScopeFactory _scopeFactory;
-        private Task? _task;
 
-        public ReminderService(ILogger<ReminderService> logger, DiscordShardedClient client,
-            IDateTimeZoneProvider provider, IConfiguration config, IServiceScopeFactory scopeFactory)
+        public ReminderService(IDateTimeZoneProvider provider, IConfiguration config, IServiceScopeFactory scopeFactory)
         {
-            _logger = logger;
-            _client = client;
             _provider = provider;
             _config = config;
             _scopeFactory = scopeFactory;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            _task = RunAsync(cancellationToken);
-            return Task.CompletedTask;
-        }
-
-        public async Task StopAsync(CancellationToken cancellationToken)
-        {
-            if (_task != null)
-                await _task;
-        }
-
-        public async Task RunAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -74,33 +57,33 @@ namespace Conbot.ReminderPlugin
 
                 foreach (var reminder in reminders)
                 {
-                    var toSendChannel = _client.GetChannel(reminder.ChannelId) as IMessageChannel;
+                    IMessageChannel? toSendChannel = null;
 
-                    if (toSendChannel is ITextChannel textChannel)
+                    if (reminder.GuildId is not null)
                     {
-                        var guild = (toSendChannel as IGuildChannel)?.Guild;
+                        toSendChannel = Bot.GetChannel(reminder.GuildId.Value, reminder.ChannelId) as IMessageChannel;
 
-                        if (guild != null)
+                        if (toSendChannel is IGuildChannel guildChannel)
                         {
-                            var botUser = await guild.GetCurrentUserAsync();
+                            var botUser = Bot.GetMember(reminder.GuildId.Value, Bot.CurrentUser.Id);
 
-                            if (!botUser.GetPermissions(textChannel).SendMessages)
+                            if (!botUser.GetPermissions(guildChannel).SendMessages)
                                 toSendChannel = null;
                         }
                     }
 
-                    if (toSendChannel == null)
+                    if (toSendChannel is null)
                     {
-                        var user = _client.GetUser(reminder.UserId);
+                        var user = Bot.GetUser(reminder.UserId);
 
-                        if (user != null)
-                            toSendChannel = await user.GetOrCreateDMChannelAsync();
+                        if (user is not null)
+                            toSendChannel = await user.CreateDirectChannelAsync();
                     }
 
-                    if (toSendChannel != null)
+                    if (toSendChannel is not null)
                     {
                         var userTimeZone = await timeZoneContext.GetUserTimeZoneAsync(reminder.UserId);
-                        var timeZone = userTimeZone != null
+                        var timeZone = userTimeZone is not null
                             ? _provider.GetZoneOrNull(userTimeZone.TimeZoneId)!
                             : _provider.GetSystemDefault();
 
@@ -112,56 +95,64 @@ namespace Conbot.ReminderPlugin
                                 formatted: true);
 
                         string text;
-                        MessageReference? reference = null;
+                        LocalMessageReference? reference = null;
                         IMessage? message = null;
 
                         if (toSendChannel.Id == reminder.ChannelId)
                         {
-                            message = await toSendChannel.GetMessageAsync(reminder.MessageId);
+                            message = await toSendChannel.FetchMessageAsync(reminder.MessageId);
 
                             if (message is IUserMessage)
                             {
                                 text = $"You've set a reminder {time}.";
-                                reference = new MessageReference(
-                                    reminder.MessageId, reminder.ChannelId, reminder.GuildId);
+                                reference = new LocalMessageReference()
+                                {
+                                    MessageId = reminder.MessageId,
+                                    ChannelId = reminder.ChannelId,
+                                    GuildId = reminder.GuildId
+                                };
                             }
                             else
                             {
-                                text = $"{MentionUtils.MentionUser(reminder.UserId)}, you've set a reminder {time}.";
+                                text = $"{Mention.User(reminder.UserId)}, you've set a reminder {time}.";
                             }
                         }
                         else
                         {
-                            text = $"You've set a reminder in {MentionUtils.MentionChannel(reminder.ChannelId)} {time}.";
+                            text = $"You've set a reminder in {Mention.Channel(reminder.ChannelId)} {time}.";
                         }
 
-                        Embed? embed;
-                        if (reference != null)
+                        LocalEmbed? embed;
+                        if (reference is not null)
                         {
                             embed = !string.IsNullOrEmpty(reminder.Message)
-                                ? new EmbedBuilder()
-                                    .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
+                                ? new LocalEmbed()
+                                    .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")))
                                     .WithDescription(reminder.Message)
-                                    .Build()
                                 : null;
                         }
                         else
                         {
                             string hyperLink = $"[jump to message]({reminder.Url})";
 
-                            embed = new EmbedBuilder()
-                                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
+                            embed = new LocalEmbed()
+                                .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")))
                                 .WithDescription(
                                     string.IsNullOrEmpty(reminder.Message)
                                         ? hyperLink
-                                        : $"{reminder.Message.Truncate(2021 - hyperLink.Length)} ({hyperLink})")
-                                .Build();
+                                        : $"{reminder.Message.Truncate(2021 - hyperLink.Length)} ({hyperLink})");
                         }
 
                         tasks.Add(Task.Run(async () =>
                         {
-                            try { await toSendChannel.SendMessageAsync(text, embed: embed, messageReference: reference); }
-                            catch (Exception e) { _logger.LogError(e, "Failed sending reminder message"); }
+                            try
+                            {
+                                await toSendChannel.SendMessageAsync(new LocalMessage()
+                                    .WithContent(text)
+                                    .WithEmbeds(embed)
+                                    .WithReference(reference));
+                            }
+                            catch (Exception e) { Logger.LogError(e, "Failed sending reminder message"); }
                         }, cancellationToken));
                     }
                 }

@@ -17,7 +17,7 @@ namespace Conbot.Commands
         {
             return (argument as IComparable)?.CompareTo(MaxValue) <= 0
                 ? CheckResult.Successful
-                : CheckResult.Unsuccessful($"{Parameter.Name.Humanize()} must be less than or equal to {MaxValue}.");
+                : CheckResult.Failed($"{Parameter.Name.Humanize()} must be less than or equal to {MaxValue}.");
         }
     }
 }

@@ -1,29 +1,29 @@
 using System.Threading.Tasks;
 
-using Conbot.Commands;
 using Conbot.TimeZonePlugin.Extensions;
+
+using Disqord.Bot;
 
 using Qmmands;
 
 namespace Conbot.TimeZonePlugin
 {
-    public class ZonedDateTimeTypeParser : TypeParser<ZonedDateTimeParseResult>
+    public class ZonedDateTimeTypeParser : DiscordTypeParser<ZonedDateTimeParseResult>
     {
-        public override async ValueTask<TypeParserResult<ZonedDateTimeParseResult>> ParseAsync(Parameter parameter, string value,
-            CommandContext context)
+        public override async ValueTask<TypeParserResult<ZonedDateTimeParseResult>> ParseAsync(Parameter parameter,
+            string value, DiscordCommandContext context)
         {
-            var discordCommandContext = (DiscordCommandContext)context;
-            var timeZone = await discordCommandContext.GetUserTimeZoneAsync();
+            var timeZone = await context.GetUserTimeZoneAsync();
 
-            if (timeZone == null)
-                return TypeParserResult<ZonedDateTimeParseResult>.Unsuccessful("Time zone hasn't been set.");
+            if (timeZone is null)
+                return TypeParserResult<ZonedDateTimeParseResult>.Failed("Time zone hasn't been set.");
 
             var result = DateTimeUtils.ParseHumanReadableDateTime(value, timeZone);
 
             if (result.IsSuccessful)
                 return TypeParserResult<ZonedDateTimeParseResult>.Successful(result);
 
-            return TypeParserResult<ZonedDateTimeParseResult>.Unsuccessful(result.Reason);
+            return TypeParserResult<ZonedDateTimeParseResult>.Failed(result.Reason);
         }
     }
 }

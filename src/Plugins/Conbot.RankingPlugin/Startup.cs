@@ -13,10 +13,7 @@ namespace Conbot.RankingPlugin
         public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
         {
             services
-                .AddDbContext<RankingContext>()
-                .AddHostedService<RankingPluginService>()
-                .AddSingleton<RankingService>()
-                .AddHostedService<BackgroundServiceStarter<RankingService>>();
+                .AddDbContext<RankingContext>();
         }
 
         public void BuildConfiguration(IConfigurationBuilder builder)

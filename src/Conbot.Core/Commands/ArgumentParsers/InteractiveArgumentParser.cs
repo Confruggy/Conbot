@@ -8,7 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Conbot.Interactive;
 
-using Discord;
+using Disqord;
+using Disqord.Bot;
 
 using Humanizer;
 
@@ -20,17 +21,17 @@ namespace Conbot.Commands
     {
         public async ValueTask<ArgumentParserResult> ParseAsync(CommandContext context)
         {
-            if (context is not DiscordCommandContext discordCommandContext)
+            if (context is not ConbotCommandContext conbotCommandContext)
                 return ConbotArgumentParserResult.Failed("Invalid context.");
 
-            if (discordCommandContext.Interaction != null || !string.IsNullOrEmpty(context.RawArguments))
+            if (!string.IsNullOrEmpty(context.RawArguments))
             {
-                var commandService = context.ServiceProvider.GetRequiredService<CommandService>();
-                return await commandService.DefaultArgumentParser.ParseAsync(context);
+                var bot = context.Services.GetRequiredService<DiscordBot>();
+                return await bot.Commands.DefaultArgumentParser.ParseAsync(context);
             }
 
-            var config = context.ServiceProvider.GetRequiredService<IConfiguration>();
-            var interactiveService = context.ServiceProvider.GetRequiredService<InteractiveService>();
+            var config = context.Services.GetRequiredService<IConfiguration>();
+            var interactiveService = context.Services.GetRequiredService<InteractiveService>();
 
             var arguments = new Dictionary<Parameter, object?>();
 
@@ -40,7 +41,7 @@ namespace Conbot.Commands
 
                 var lastEntered = arguments.Keys.LastOrDefault();
 
-                if (lastEntered != null)
+                if (lastEntered is not null)
                 {
                     text
                         .Append(lastEntered.Name.Humanize())
@@ -67,9 +68,12 @@ namespace Conbot.Commands
                 string? argument = null;
                 bool skipped = false;
 
-                var interactiveMessage =
-                    new InteractiveMessageBuilder()
-                        .WithPrecondition(x => x.Id == discordCommandContext.User.Id);
+                var message = new LocalInteractiveMessage()
+                    .WithContent(text.ToString())
+                    .WithReply(conbotCommandContext.Message!.Id, conbotCommandContext.Message.ChannelId,
+                        conbotCommandContext.Message.GuildId)
+                    .WithAllowedMentions(LocalAllowedMentions.None)
+                    .WithPrecondition(x => x.Id == conbotCommandContext.Author.Id);
 
                 if (parameter.IsOptional)
                 {
@@ -80,9 +84,12 @@ namespace Conbot.Commands
                         .Append(config.GetValue<string>("Emotes:MediumCrossMark"))
                         .Append("> to cancel the command.");
 
-                    interactiveMessage.AddReactionCallback(config.GetValue<string>("Emotes:Skip"), x => x
-                        .ShouldResumeAfterExecution(false)
-                        .WithCallback(_ => skipped = true));
+                    message.AddReactionCallback(config.GetValue<string>("Emotes:Skip"), x => x
+                        .WithCallback((msg, _) =>
+                        {
+                            skipped = true;
+                            msg.Stop();
+                        }));
                 }
                 else
                 {
@@ -92,24 +99,20 @@ namespace Conbot.Commands
                         .Append("> to cancel the command.");
                 }
 
-                interactiveMessage
+                message
                     .AddReactionCallback(config.GetValue<string>("Emotes:CrossMark"), x => x
-                        .ShouldResumeAfterExecution(false))
+                        .WithCallback((msg, _) => msg.Stop()))
                     .AddMessageCallback(x => x
-                        .WithCallback(message =>
+                        .WithCallback((msg, e) =>
                         {
-                            argument = message.Content;
-                            discordCommandContext.AddMessage(message);
-                        })
-                        .ShouldResumeAfterExecution(false));
+                            conbotCommandContext.AddMessage((IUserMessage)e.Message);
+                            argument = e.Message.Content;
+                            msg.Stop();
+                        }));
 
-                var message = await discordCommandContext
-                    .ReplyAsync(text.ToString(), allowedMentions: AllowedMentions.None);
+                var response = await interactiveService.ExecuteInteractiveMessageAsync(message, conbotCommandContext);
 
-                await interactiveService.ExecuteInteractiveMessageAsync(
-                    interactiveMessage.Build(), message, discordCommandContext.User);
-
-                if (argument == null && !skipped)
+                if (argument is null && !skipped)
                     return ConbotArgumentParserResult.Failed("Aborted");
 
                 arguments.Add(parameter, argument);

@@ -1,51 +1,41 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
-using Conbot.Commands;
+using Disqord.Bot.Hosting;
 
 using Qmmands;
 
 namespace Conbot.ReminderPlugin
 {
-    public class ReminderPluginService : IHostedService
+    public class ReminderPluginService : DiscordBotService
     {
-        private readonly IServiceProvider _provider;
-        private readonly CommandService _commandService;
-        private readonly SlashCommandService _slashCommandService;
+        private Module? _module;
 
-        public ReminderPluginService(IServiceProvider provider, CommandService commandService,
-            SlashCommandService slashCommandService)
-        {
-            _provider = provider;
-            _commandService = commandService;
-            _slashCommandService = slashCommandService;
-        }
-
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
             await UpdateDatabaseAsync();
-            _commandService.AddArgumentParser(new ReminderArgumentParser());
-            await _slashCommandService.RegisterModuleAsync<ReminderModule>();
+            Bot.Commands.AddArgumentParser(new ReminderArgumentParser());
+            _module = Bot.Commands.AddModule<ReminderModule>();
+
+            await base.StartAsync(cancellationToken);
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public override Task StopAsync(CancellationToken cancellationToken)
         {
-            _commandService.RemoveArgumentParser<ReminderArgumentParser>();
-            return Task.CompletedTask;
+            Bot.Commands.RemoveModule(_module);
+            Bot.Commands.RemoveArgumentParser<ReminderArgumentParser>();
+
+            return base.StopAsync(cancellationToken);
         }
 
         private async Task UpdateDatabaseAsync()
         {
-            using var serviceScope = _provider
-                .GetRequiredService<IServiceScopeFactory>()
-                .CreateScope();
-
+            using var serviceScope = Bot.Services.CreateScope();
             using var context = serviceScope.ServiceProvider.GetRequiredService<ReminderContext>();
+
             await context.Database.MigrateAsync();
         }
     }

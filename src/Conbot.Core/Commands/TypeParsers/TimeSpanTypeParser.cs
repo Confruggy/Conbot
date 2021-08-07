@@ -16,7 +16,7 @@ namespace Conbot.Commands
             var durationMatch = durationRegex.Match(value.ToLowerInvariant());
 
             if (!durationMatch.Success || durationMatch.Groups.Values.Skip(1).Sum(x => x.Length) == 0)
-                return TypeParserResult<TimeSpan>.Unsuccessful("Enter a valid duration.");
+                return TypeParserResult<TimeSpan>.Failed("Enter a valid duration.");
 
             int weeks = !string.IsNullOrEmpty(durationMatch.Groups[1].Value)
                 ? int.Parse(durationMatch.Groups[1].Value)

@@ -2,7 +2,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Discord;
+using Disqord;
+using Disqord.Gateway;
 
 using Humanizer;
 
@@ -12,41 +13,43 @@ namespace Conbot.Commands
 {
     public static class RequirePermissionUtils
     {
-        public static ValueTask<CheckResult> CheckPermissionsAsync(IGuildUser user, IMessageChannel channel,
-            GuildPermission[] guildPermissions, ChannelPermission[] channelPermissions)
+        public static ValueTask<CheckResult> CheckPermissionsAsync(IMember member, IMessageChannel channel,
+            Permission[] guildPermissions, Permission[] channelPermissions)
         {
             if (guildPermissions.Length != 0)
-                return CheckPermissionsAsync(user, guildPermissions);
+                return CheckGuildPermissionsAsync(member, guildPermissions);
 
             if (channelPermissions.Length != 0)
-                return CheckPermissionsAsync(user, channel, channelPermissions);
+                return CheckChannelPermissionsAsync(member, channel, channelPermissions);
 
             return CheckResult.Successful;
         }
 
-        public static ValueTask<CheckResult> CheckPermissionsAsync(IGuildUser user,
-            GuildPermission[] permissions)
+        public static ValueTask<CheckResult> CheckGuildPermissionsAsync(IMember member,
+            Permission[] permissions)
         {
-            if (permissions.Any(x => user.GuildPermissions.Has(x)))
+            var guildPermissions = member.GetPermissions();
+
+            if (permissions.Any(x => guildPermissions.Has(x)))
                 return CheckResult.Successful;
 
-            return CheckResult.Unsuccessful(CreateRequirePermissionErrorReason(permissions, user.IsBot));
+            return CheckResult.Failed(CreateRequirePermissionErrorReason(permissions, member.IsBot));
         }
 
-        public static ValueTask<CheckResult> CheckPermissionsAsync(IGuildUser user, IMessageChannel channel,
-            ChannelPermission[] permissions)
+        public static ValueTask<CheckResult> CheckChannelPermissionsAsync(IMember member,
+            IMessageChannel channel, Permission[] permissions)
         {
             ChannelPermissions channelPermissions;
 
             if (channel is IGuildChannel guildChannel)
-                channelPermissions = user.GetPermissions(guildChannel);
+                channelPermissions = member.GetPermissions(guildChannel);
             else
-                channelPermissions = ChannelPermissions.All(channel);
+                channelPermissions = ChannelPermissions.All;
 
             if (permissions.Any(x => channelPermissions.Has(x)))
                 return CheckResult.Successful;
 
-            return CheckResult.Unsuccessful(CreateRequirePermissionErrorReason(permissions, user.IsBot));
+            return CheckResult.Failed(CreateRequirePermissionErrorReason(permissions, member.IsBot));
         }
 
         public static string CreateRequirePermissionErrorReason<TEnum>(TEnum[] permissions,
@@ -55,7 +58,7 @@ namespace Conbot.Commands
         {
             string permissionsText = permissions
                 .Select(x =>
-                    x.ToString()!.Split(',').Humanize(s => Format.Bold(s.Titleize())).Replace("Guild", "Server"))
+                    x.ToString()!.Split(',').Humanize(s => $"**{s.Titleize()}**").Replace("Guild", "Server"))
                 .Humanize("or");
 
             bool isPlural = permissions.Length > 1 || GetSetBitCount((ulong)(object)permissions[0]) > 1;

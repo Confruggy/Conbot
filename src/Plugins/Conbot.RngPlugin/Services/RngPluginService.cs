@@ -1,27 +1,26 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.Hosting;
+using Disqord.Bot.Hosting;
 
-using Conbot.Commands;
+using Qmmands;
 
 namespace Conbot.RngPlugin
 {
-    public class RngPluginService : IHostedService
+    public class RngPluginService : DiscordBotService
     {
-        private readonly SlashCommandService _slashCommandService;
+        private Module? _module;
 
-        public RngPluginService(SlashCommandService slashCommandService)
-            => _slashCommandService = slashCommandService;
-
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public override Task StartAsync(CancellationToken cancellationToken)
         {
-            await _slashCommandService.RegisterModuleAsync<RngModule>();
+            _module = Bot.Commands.AddModule<RngModule>();
+            return base.StartAsync(cancellationToken);
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public override Task StopAsync(CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            Bot.Commands.RemoveModule(_module);
+            return base.StopAsync(cancellationToken);
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
-using Discord;
+using Disqord;
 
 using Humanizer;
 
@@ -33,7 +33,7 @@ namespace Conbot.TimeZonePlugin.Extensions
             text.Append(" at ");
 
             var time = dateTime.TimeOfDay;
-            if (showSeconds == true || (showSeconds == null && time.Second != 0))
+            if (showSeconds == true || (showSeconds is null && time.Second != 0))
                 text.Append(time.ToString("T", CultureInfo.InvariantCulture));
             else
                 text.Append(time.ToString("t", CultureInfo.InvariantCulture));
@@ -52,21 +52,21 @@ namespace Conbot.TimeZonePlugin.Extensions
             {
                 if (now.Date == then.Date)
                 {
-                    text.Append(formatted ? Format.Bold("today") : "today");
+                    text.Append(formatted ? Markdown.Bold("today") : "today");
                 }
                 else if (now.Date.PlusDays(1) == then.Date)
                 {
-                    text.Append(formatted ? Format.Bold("tomorrow") : "tomorrow");
+                    text.Append(formatted ? Markdown.Bold("tomorrow") : "tomorrow");
                 }
                 else if (now.Date.PlusDays(-1) == then.Date)
                 {
-                    text.Append(formatted ? Format.Bold("yesterday") : "yesterday");
+                    text.Append(formatted ? Markdown.Bold("yesterday") : "yesterday");
                 }
                 else
                 {
                     text
                         .Append("on the ")
-                        .Append(then.ToString(formatted ? Format.Bold("d MMM yyyy") : "d MMM yyyy",
+                        .Append(then.ToString(formatted ? Markdown.Bold("d MMM yyyy") : "d MMM yyyy",
                             CultureInfo.InvariantCulture));
                 }
 
@@ -77,12 +77,12 @@ namespace Conbot.TimeZonePlugin.Extensions
                     if (startLevel >= DurationLevel.Minutes || then.Second == 0)
                     {
                         text.Append(then.ToString(
-                            formatted ? Format.Bold("H:mm") : "H:mm", CultureInfo.InvariantCulture));
+                            formatted ? Markdown.Bold("H:mm") : "H:mm", CultureInfo.InvariantCulture));
                     }
                     else
                     {
                         text.Append(then.ToString(
-                            formatted ? Format.Bold("H:mm:ss") : "H:mm:ss", CultureInfo.InvariantCulture));
+                            formatted ? Markdown.Bold("H:mm:ss") : "H:mm:ss", CultureInfo.InvariantCulture));
                     }
                 }
 
@@ -114,25 +114,25 @@ namespace Conbot.TimeZonePlugin.Extensions
             var strings = new List<string>();
 
             if ((accuracy == 0 || accuracy > strings.Count) && weeks > 0)
-                strings.Add("week".ToQuantity(weeks, formatted ? Format.Bold("#") : "#"));
+                strings.Add("week".ToQuantity(weeks, formatted ? Markdown.Bold("#") : "#"));
 
             if ((accuracy == 0 || accuracy > strings.Count) && days > 0)
-                strings.Add("day".ToQuantity(days, formatted ? Format.Bold("#") : "#"));
+                strings.Add("day".ToQuantity(days, formatted ? Markdown.Bold("#") : "#"));
 
             if ((accuracy == 0 || accuracy > strings.Count) && hours > 0)
-                strings.Add("hour".ToQuantity(hours, formatted ? Format.Bold("#") : "#"));
+                strings.Add("hour".ToQuantity(hours, formatted ? Markdown.Bold("#") : "#"));
 
             if ((accuracy == 0 || accuracy > strings.Count) && minutes > 0)
-                strings.Add("minute".ToQuantity(minutes, formatted ? Format.Bold("#") : "#"));
+                strings.Add("minute".ToQuantity(minutes, formatted ? Markdown.Bold("#") : "#"));
 
             if ((accuracy == 0 || accuracy > strings.Count) && seconds > 0)
-                strings.Add("second".ToQuantity(seconds, formatted ? Format.Bold("#") : "#"));
+                strings.Add("second".ToQuantity(seconds, formatted ? Markdown.Bold("#") : "#"));
 
             if ((accuracy == 0 || accuracy > strings.Count) && milliseconds > 0)
-                strings.Add("milliseconds".ToQuantity(weeks, formatted ? Format.Bold("#") : "#"));
+                strings.Add("milliseconds".ToQuantity(weeks, formatted ? Markdown.Bold("#") : "#"));
 
             if (strings.Count == 0)
-                return formatted ? Format.Bold("now") : "now";
+                return formatted ? Markdown.Bold("now") : "now";
 
             if (strings.Count == 1)
                 return strings[0];

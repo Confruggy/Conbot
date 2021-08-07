@@ -1,48 +1,41 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
-using Conbot.Commands;
+using Disqord.Bot.Hosting;
+
+using Qmmands;
 
 namespace Conbot.PrefixPlugin
 {
-    public class PrefixPluginService : IHostedService
+    public class PrefixPluginService : DiscordBotService
     {
-        private readonly IServiceProvider _services;
-        private readonly SlashCommandService _slashCommandService;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private Module? _module;
 
-        public PrefixPluginService(IServiceProvider services, SlashCommandService slashCommandService)
-        {
-            _services = services;
-            _slashCommandService = slashCommandService;
-        }
+        public PrefixPluginService(IServiceScopeFactory scopeFactory) => _scopeFactory = scopeFactory;
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
             await UpdateDatabaseAsync();
+            _module = Bot.Commands.AddModule<PrefixModule>();
 
-            var commandHandlingService = _services.GetRequiredService<CommandHandlingService>();
-            commandHandlingService.CustomPrefixHandler = new CustomPrefixHandler();
-
-            await _slashCommandService.RegisterModuleAsync<PrefixModule>();
+            await base.StartAsync(cancellationToken);
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public override Task StopAsync(CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            Bot.Commands.RemoveModule(_module);
+            return base.StopAsync(cancellationToken);
         }
 
         private async Task UpdateDatabaseAsync()
         {
-            using var serviceScope = _services
-                .GetRequiredService<IServiceScopeFactory>()
-                .CreateScope();
-
+            using var serviceScope = _scopeFactory.CreateScope();
             using var context = serviceScope.ServiceProvider.GetRequiredService<PrefixContext>();
+
             await context.Database.MigrateAsync();
         }
     }

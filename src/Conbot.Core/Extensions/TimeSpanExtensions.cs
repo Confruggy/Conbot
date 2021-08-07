@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using Discord;
-
 namespace Conbot.Extensions
 {
     public static class TimeSpanExtension
@@ -18,31 +16,31 @@ namespace Conbot.Extensions
             if (timeSpan.TotalDays >= 1)
             {
                 if ((int)timeSpan.TotalDays == 1)
-                    return $"{(formatted ? Format.Bold("1") : "1")} day";
+                    return $"{(formatted ? "**1**" : "1")} day";
                 else
-                    return $"{(formatted ? Format.Bold(((int)timeSpan.TotalDays).ToString()) : ((int)timeSpan.TotalDays).ToString())} days";
+                    return $"{(formatted ? $"**{(int)timeSpan.TotalDays}**" : ((int)timeSpan.TotalDays).ToString())} days";
             }
 
             if (timeSpan.TotalHours >= 1)
             {
                 if ((int)timeSpan.TotalHours == 1)
-                    return $"{(formatted ? Format.Bold("1") : "1")} hour";
+                    return $"{(formatted ? "**1**" : "1")} hour";
                 else
-                    return $"{(formatted ? Format.Bold(((int)timeSpan.TotalHours).ToString()) : ((int)timeSpan.TotalHours).ToString())} hours";
+                    return $"{(formatted ? $"**{(int)timeSpan.TotalHours}**" : ((int)timeSpan.TotalHours).ToString())} hours";
             }
 
             if (timeSpan.TotalMinutes >= 1)
             {
                 if ((int)timeSpan.TotalMinutes == 1)
-                    return $"{(formatted ? Format.Bold("1") : "1")} minute";
+                    return $"{(formatted ? "**1**" : "1")} minute";
                 else
-                    return $"{(formatted ? Format.Bold(((int)timeSpan.TotalMinutes).ToString()) : ((int)timeSpan.TotalMinutes).ToString())} minutes";
+                    return $"{(formatted ? $"**{(int)timeSpan.TotalMinutes}**" : ((int)timeSpan.TotalMinutes).ToString())} minutes";
             }
 
             if ((int)timeSpan.TotalSeconds == 1)
-                return $"{(formatted ? Format.Bold("1") : "1")} second";
+                return $"{(formatted ? "**1**" : "1")} second";
 
-            return $"{(formatted ? Format.Bold(((int)timeSpan.TotalSeconds).ToString()) : ((int)timeSpan.TotalSeconds).ToString())} seconds";
+            return $"{(formatted ? $"**{(int)timeSpan.TotalSeconds}**" : ((int)timeSpan.TotalSeconds).ToString())} seconds";
         }
 
         public static string ToLongFormattedString(this TimeSpan timeSpan) => ToLongStringInternal(timeSpan, true);
@@ -57,29 +55,29 @@ namespace Conbot.Extensions
             int days = timeSpan.Days - (weeks * 7);
 
             if (weeks == 1)
-                strings.Add($"{(formatted ? Format.Bold("1") : "1")} week");
+                strings.Add($"{(formatted ? "**1**" : "1")} week");
             else if (weeks >= 1)
-                strings.Add($"{(formatted ? Format.Bold(weeks.ToString()) : weeks.ToString())} weeks");
+                strings.Add($"{(formatted ? $"**{weeks}**" : weeks.ToString())} weeks");
 
             if (days == 1)
-                strings.Add($"{(formatted ? Format.Bold("1") : "1")} day");
+                strings.Add($"{(formatted ? "**1**" : "1")} day");
             else if (days >= 1)
-                strings.Add($"{(formatted ? Format.Bold(days.ToString()) : days.ToString())} days");
+                strings.Add($"{(formatted ? $"**{days}**" : days.ToString())} days");
 
             if (timeSpan.Hours == 1)
-                strings.Add($"{(formatted ? Format.Bold("1") : "1")} hour");
+                strings.Add($"{(formatted ? "**1**" : "1")} hour");
             else if (timeSpan.Hours >= 1)
-                strings.Add($"{(formatted ? Format.Bold(timeSpan.Hours.ToString()) : timeSpan.Hours.ToString())} hours");
+                strings.Add($"{(formatted ? $"**{timeSpan.Hours}**" : timeSpan.Hours.ToString())} hours");
 
             if (timeSpan.Minutes == 1)
-                strings.Add($"{(formatted ? Format.Bold("1") : "1")} minute");
+                strings.Add($"{(formatted ? "**1**" : "1")} minute");
             else if (timeSpan.Minutes >= 1)
-                strings.Add($"{(formatted ? Format.Bold(timeSpan.Minutes.ToString()) : timeSpan.Minutes.ToString())} minutes");
+                strings.Add($"{(formatted ? $"**{timeSpan.Minutes}**" : timeSpan.Minutes.ToString())} minutes");
 
             if (timeSpan.Seconds == 1)
-                strings.Add($"{(formatted ? Format.Bold("1") : "1")} second");
+                strings.Add($"{(formatted ? "**1**" : "1")} second");
             else if (timeSpan.Seconds >= 1 || strings.Count == 0)
-                strings.Add($"{(formatted ? Format.Bold(timeSpan.Seconds.ToString()) : timeSpan.Seconds.ToString())} seconds");
+                strings.Add($"{(formatted ? $"**{timeSpan.Seconds}**" : timeSpan.Seconds.ToString())} seconds");
 
             if (strings.Count == 1)
                 return strings[0];

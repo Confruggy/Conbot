@@ -12,7 +12,7 @@ namespace Conbot.Commands
             if (int.TryParse(value, out int output))
                 return TypeParserResult<int>.Successful(output);
 
-            return TypeParserResult<int>.Unsuccessful($"Parameter **{parameter.Name}** must be a valid integer.");
+            return TypeParserResult<int>.Failed($"Parameter **{parameter.Name}** must be a valid integer.");
         }
     }
 }

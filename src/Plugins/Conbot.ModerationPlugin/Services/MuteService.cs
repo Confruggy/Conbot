@@ -4,36 +4,22 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Discord;
-using Discord.WebSocket;
-
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
+using Disqord.Bot.Hosting;
+using Disqord.Rest;
 
 namespace Conbot.ModerationPlugin
 {
-    public class MuteService : BackgroundService
+    public class MuteService : DiscordBotService
     {
         private readonly ILogger<MuteService> _logger;
-        private readonly object _apiClient;
-        private readonly MethodInfo _removeRoleAsyncMethodInfo;
         private readonly IServiceScopeFactory _scopeFactory;
 
-        public MuteService(ILogger<MuteService> logger, DiscordShardedClient client,
-            IServiceScopeFactory scopeFactory)
+        public MuteService(ILogger<MuteService> logger, IServiceScopeFactory scopeFactory)
         {
             _logger = logger;
-
-            _apiClient = client
-                .GetType()
-                .GetProperty("ApiClient", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)!
-                .GetValue(client)!;
-
-            _removeRoleAsyncMethodInfo = _apiClient
-                .GetType()
-                .GetMethod("RemoveRoleAsync")!;
-
             _scopeFactory = scopeFactory;
         }
 
@@ -51,12 +37,8 @@ namespace Conbot.ModerationPlugin
                 {
                     try
                     {
-                        await RemoveRoleAsync(user.GuildId, user.UserId, user.RoleId,
-                            new RequestOptions
-                            {
-                                AuditLogReason = "Temporary mute duration expired",
-                                RetryMode = RetryMode.AlwaysRetry
-                            });
+                        await Bot.RevokeRoleAsync(user.GuildId, user.UserId, user.RoleId,
+                            new DefaultRestRequestOptions { Reason = "Temporary mute duration expired" });
                     }
                     catch (Exception exception)
                     {
@@ -76,10 +58,5 @@ namespace Conbot.ModerationPlugin
                 await Task.Delay(1000, stoppingToken);
             }
         }
-
-        private Task RemoveRoleAsync(ulong guildId, ulong userId, ulong roleId,
-            RequestOptions? requestOptions = null)
-            => (Task)_removeRoleAsyncMethodInfo.Invoke(_apiClient,
-                new object?[] { guildId, userId, roleId, requestOptions })!;
     }
 }

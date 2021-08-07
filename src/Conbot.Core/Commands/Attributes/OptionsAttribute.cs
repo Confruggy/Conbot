@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using Discord;
-
 using Humanizer;
 
 using Qmmands;
@@ -20,7 +18,7 @@ namespace Conbot.Commands
 
         public override ValueTask<CheckResult> CheckAsync(object argument, CommandContext context)
         {
-            var commandService = context.ServiceProvider.GetRequiredService<CommandService>();
+            var commandService = context.Services.GetRequiredService<CommandService>();
 
             bool contains = (argument is string argumentString)
                 ? Choices.Any(x => x.ToString()!.Equals(argumentString, commandService.StringComparison))
@@ -29,8 +27,8 @@ namespace Conbot.Commands
             if (contains)
                 return CheckResult.Successful;
 
-            return CheckResult.Unsuccessful(
-                $"The available choices are {Choices.Select(x => Format.Bold(x.ToString())).Humanize("and")}.");
+            return CheckResult.Failed(
+                $"The available choices are {Choices.Select(x => $"**{x}**").Humanize("and")}.");
         }
     }
 }

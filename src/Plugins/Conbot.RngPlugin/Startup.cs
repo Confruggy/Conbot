@@ -8,10 +8,7 @@ namespace Conbot.RngPlugin
 {
     public class Startup : IPluginStartup
     {
-        public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
-        {
-            services.AddHostedService<RngPluginService>();
-        }
+        public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services) { }
 
         public void BuildConfiguration(IConfigurationBuilder builder) { }
     }

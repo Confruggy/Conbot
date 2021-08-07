@@ -1,44 +1,38 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
-using Conbot.Commands;
+using Disqord.Bot.Hosting;
+
+using Qmmands;
 
 namespace Conbot.TagPlugin
 {
-    public class TagPluginService : IHostedService
+    public class TagPluginService : DiscordBotService
     {
-        private readonly IServiceProvider _services;
-        private readonly SlashCommandService _slashCommandService;
+        private Module? _module;
 
-        public TagPluginService(IServiceProvider services, SlashCommandService slashCommandService)
-        {
-            _services = services;
-            _slashCommandService = slashCommandService;
-        }
-
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
             await UpdateDatabaseAsync();
-            await _slashCommandService.RegisterModuleAsync<TagModule>();
+            _module = Bot.Commands.AddModule<TagModule>();
+
+            await base.StartAsync(cancellationToken);
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public override Task StopAsync(CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            Bot.Commands.RemoveModule(_module);
+            return base.StopAsync(cancellationToken);
         }
 
         private async Task UpdateDatabaseAsync()
         {
-            using var serviceScope = _services
-                .GetRequiredService<IServiceScopeFactory>()
-                .CreateScope();
-
+            using var serviceScope = Bot.Services.CreateScope();
             using var context = serviceScope.ServiceProvider.GetRequiredService<TagContext>();
+
             await context.Database.MigrateAsync();
         }
     }

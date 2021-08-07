@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 
 using Conbot.Commands;
-using Conbot.Extensions;
 using Conbot.Interactive;
 using Conbot.TimeZonePlugin;
 using Conbot.TimeZonePlugin.Extensions;
 
-using Discord;
+using Disqord;
+using Disqord.Bot;
 
 using Humanizer;
 
@@ -25,16 +25,14 @@ namespace Conbot.ReminderPlugin
     [Description("Create scheduled reminders.")]
     [Group("reminder", "remind", "timer")]
     [RequireTimeZone]
-    public class ReminderModule : DiscordModuleBase
+    public class ReminderModule : ConbotModuleBase
     {
         private readonly ReminderContext _db;
-        private readonly InteractiveService _interactiveService;
         private readonly IConfiguration _config;
 
-        public ReminderModule(ReminderContext context, InteractiveService interactiveService, IConfiguration config)
+        public ReminderModule(ReminderContext context, IConfiguration config)
         {
             _db = context;
-            _interactiveService = interactiveService;
             _config = config;
         }
 
@@ -52,7 +50,7 @@ namespace Conbot.ReminderPlugin
             "• \"in 5 hours 30 min do laundry\"\n" +
             "• \"2h unmute someone\"")]
         [OverrideArgumentParser(typeof(ReminderArgumentParser))]
-        public async Task<CommandResult> ReminderAsync(
+        public async Task<DiscordCommandResult> ReminderAsync(
             [Description("The time when you want to be reminded.")]
             [Remarks(
                 "It can be either a human readable time and/or date or a duration. " +
@@ -65,7 +63,7 @@ namespace Conbot.ReminderPlugin
             string? message = null)
         {
             if (time.Then!.Value.LocalDateTime < time.Now.LocalDateTime)
-                return Unsuccessful("This time is in the past.");
+                return Fail("This time is in the past.");
 
             await _db.AddReminderAsync(Context, time.Now.ToDateTimeUtc(), time.Then.Value.ToDateTimeUtc(),
                 message?.Trim());
@@ -76,79 +74,59 @@ namespace Conbot.ReminderPlugin
                     showDateAt: Duration.FromDays(1), formatted: true))
                 .Append('.');
 
-            await Task.WhenAll(
-                ReplyAsync(text.ToString()),
-                _db.SaveChangesAsync()
-            );
-
-            return Successful;
+            return Reply(text.ToString()).RunWith(_db.SaveChangesAsync());
         }
 
         [Command("delete", "remove", "cancel")]
         [Description("Deletes a reminder you created.")]
-        public async Task<CommandResult> DeleteAsync(
+        public async Task<DiscordCommandResult> DeleteAsync(
             [Description("The ID of the reminder.")]
             [Remarks("You can find the ID by using the **reminder list** command.")] int id)
         {
             var reminder = await _db.GetReminderAsync(id);
 
-            if (reminder == null)
-                return Unsuccessful("This reminder doesn't exist.");
+            if (reminder is null)
+                return Fail("This reminder doesn't exist.");
 
-            if (reminder.UserId != Context.User.Id)
-                return Unsuccessful("You can only delete reminders you created.");
+            if (reminder.UserId != Context.Author.Id)
+                return Fail("You can only delete reminders you created.");
 
             _db.RemoveReminder(reminder);
 
-            await Task.WhenAll(
-                ReplyAsync($"Reminder with ID **{id}** has been deleted."),
-                _db.SaveChangesAsync()
-            );
-
-            return Successful;
+            return Reply($"Reminder with ID **{id}** has been deleted.").RunWith(_db.SaveChangesAsync());
         }
 
         [Command("clear")]
         [Description("Clears all reminders you have set.")]
-        [RequireBotPermission(ChannelPermission.AddReactions | ChannelPermission.UseExternalEmojis)]
-        public async Task<CommandResult> ClearAsync()
+        [Commands.RequireBotChannelPermissions(Permission.AddReactions | Permission.UseExternalEmojis)]
+        public async Task<DiscordCommandResult> ClearAsync()
         {
-            var reminders = await _db.GetRemindersAsync(Context.User).ToArrayAsync();
+            var reminders = await _db.GetRemindersAsync(Context.Author).ToArrayAsync();
 
             if (reminders.Length == 0)
-                return Unsuccessful("You don't have any reminders.");
+                return Fail("You don't have any reminders.");
 
-            var message = await ConfirmAsync(
-                $"Do you really want to delete {"reminder".ToQuantity(reminders.Length, Format.Bold("#"))}?");
+            var prompt = Prompt(
+                $"Do you really want to delete {"reminder".ToQuantity(reminders.Length, Markdown.Bold("#"))}?");
 
-            if (message.Item2 == true)
+            var message = await prompt;
+
+            if (prompt.Result == true)
             {
                 _db.RemoveRange(reminders);
-
-                await Task.WhenAll(
-                    ReplyAsync("Reminders have been cleared."),
-                    message.Item1.TryDeleteAsync(),
-                    _db.SaveChangesAsync()
-                );
-            }
-            else
-            {
-                await Task.WhenAll(
-                    ReplyAsync("No reminders have been deleted."),
-                    message.Item1.TryDeleteAsync()
-                );
+                return Modify(message, "Reminders have been cleared.").RunWith(_db.SaveChangesAsync());
             }
 
-            return Successful;
+            return Modify(message, "No reminders have been deleted.");
         }
 
         [Command("list", "all")]
         [Description("Lists all your upcoming reminders.")]
-        [RequireBotPermission(
-            ChannelPermission.AddReactions |
-            ChannelPermission.EmbedLinks |
-            ChannelPermission.UseExternalEmojis)]
-        public async Task<CommandResult> ListAsync(
+        [Commands.RequireBotChannelPermissions(
+            Permission.AddReactions |
+            Permission.SendEmbeds |
+            Permission.UseExternalEmojis)]
+        public async Task<DiscordCommandResult> ListAsync(
             [Description("Wether reminders should be displayed in a compact or detailed view.")]
             [Choices("compact", "detailed")]
             [Remainder]
@@ -158,16 +136,13 @@ namespace Conbot.ReminderPlugin
             var now = SystemClock.Instance.InZone(timeZone)
                 .GetCurrentZonedDateTime();
 
-            var reminders = await _db.GetRemindersAsync(Context.User)
+            var reminders = await _db.GetRemindersAsync(Context.Author)
                 .Where(x => x.EndsAt > now.ToDateTimeUtc())
                 .OrderBy(x => x.EndsAt)
                 .ToArrayAsync();
 
             if (reminders.Length == 0)
-            {
-                await ReplyAsync("You don't have any upcoming reminders.");
-                return Successful;
-            }
+                return Reply("You don't have any upcoming reminders.");
 
             int count = reminders.Length;
 
@@ -182,7 +157,7 @@ namespace Conbot.ReminderPlugin
                 if (count % 5 != 0)
                     pageCount++;
 
-                var page = new EmbedBuilder();
+                var page = new LocalEmbed();
 
                 foreach (var reminder in reminders)
                 {
@@ -194,13 +169,13 @@ namespace Conbot.ReminderPlugin
                     if (entryPos % 5 == 0 || entryPos == count)
                     {
                         page
-                            .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
-                            .WithAuthor(Context.User.Username, Context.User.GetAvatarUrl())
+                            .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")))
+                            .WithAuthor(Context.Author.Name, Context.Author.GetAvatarUrl())
                             .WithTitle("Reminders")
                             .WithFooter($"Page {pageIndex + 1}/{pageCount} ({"entry".ToQuantity(count)})");
 
-                        paginator.AddPage(page.Build());
-                        page = new EmbedBuilder();
+                        paginator.AddPage(page);
+                        page = new LocalEmbed();
                         pageIndex++;
                     }
 
@@ -213,36 +188,35 @@ namespace Conbot.ReminderPlugin
                     paginator.AddPage(CreateReminderEmbed(reminders[i], now, i, count));
             }
 
-            await paginator.RunAsync(_interactiveService, Context);
-            return Successful;
+            return Paginate(paginator);
         }
 
-        private Embed CreateReminderEmbed(Reminder reminder, ZonedDateTime now, int? index, int? total)
+        private LocalEmbed CreateReminderEmbed(Reminder reminder, ZonedDateTime now, int? index, int? total)
         {
             var createdAt = Instant.FromDateTimeUtc(reminder.CreatedAt).InZone(now.Zone);
             var endsAt = Instant.FromDateTimeUtc(reminder.EndsAt).InZone(now.Zone);
 
-            var embed = new EmbedBuilder()
-                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"))
-                .WithAuthor(Context.User.Username, Context.User.GetAvatarUrl())
+            var embed = new LocalEmbed()
+                .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")))
+                .WithAuthor(Context.Author.Name, Context.Author.GetAvatarUrl())
                 .WithTitle("Reminder")
                 .WithDescription($"Ends {now.ToDurationString(endsAt, formatted: true)}.")
                 .AddField("Created", DateTimeToClickableString(createdAt, reminder.Url), true)
                 .AddField("Ends", endsAt.ToReadableShortString(), true)
-                .AddField("Channel", MentionUtils.MentionChannel(reminder.ChannelId), true);
+                .AddField("Channel", Mention.Channel(reminder.ChannelId), true);
 
             if (!string.IsNullOrEmpty(reminder.Message))
                 embed.AddField("Message", reminder.Message.Truncate(1024));
 
-            if (index != null && total != null)
+            if (index is not null && total is not null)
                 embed.WithFooter($"Reminder {index + 1}/{total} (ID: {reminder.Id})");
             else
                 embed.WithFooter($"ID: {reminder.Id})");
 
-            return embed.Build();
+            return embed;
         }
 
-        private Embed CreateReminderEmbed(Reminder reminder, ZonedDateTime now)
+        private LocalEmbed CreateReminderEmbed(Reminder reminder, ZonedDateTime now)
             => CreateReminderEmbed(reminder, now, null, null);
 
         private static string DateTimeToClickableString(ZonedDateTime date, string url)

@@ -5,17 +5,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Configuration;
+
 using Conbot.Commands;
 using Conbot.Extensions;
 using Conbot.Interactive;
 using Conbot.TimeZonePlugin;
 using Conbot.TimeZonePlugin.Extensions;
 
-using Discord;
+using Disqord;
+using Disqord.Bot;
 
 using Humanizer;
-
-using Microsoft.Extensions.Configuration;
 
 using NodaTime;
 
@@ -27,25 +28,22 @@ namespace Conbot.SplatoonPlugin
     [Group("splatoon", "splat", "sploon")]
     [Description("Shows the Splatoon 2 rotation.")]
     [Remarks("Powered by [Splatoon2.ink](https://splatoon2.ink/).")]
-    public class SplatoonModule : DiscordModuleBase
+    public class SplatoonModule : ConbotModuleBase
     {
         private readonly SplatoonService _splatoonService;
-        private readonly InteractiveService _interactiveService;
         private readonly Random _random;
         private readonly IConfiguration _config;
 
-        public SplatoonModule(SplatoonService service, InteractiveService interactiveService,
-            Random random, IConfiguration configuration)
+        public SplatoonModule(SplatoonService service, Random random, IConfiguration configuration)
         {
             _splatoonService = service;
-            _interactiveService = interactiveService;
             _random = random;
             _config = configuration.GetSection("SplatoonPlugin");
         }
 
         [Command("schedule", "stages", "rotations")]
         [Description("Shows the current map schedule.")]
-        public async Task<CommandResult> ScheduleAsync(
+        public async Task<DiscordCommandResult> ScheduleAsync(
             [Description("The mode to show the schedule of.")]
             [Choices("regular", "ranked", "league", "all")]
             string mode = "all",
@@ -53,11 +51,9 @@ namespace Conbot.SplatoonPlugin
             int page = 1)
         {
             var schedules = await _splatoonService.GetSchedulesAsync();
+
             if (schedules is null)
-            {
-                await ReplyAsync("Currently there is no schedule available.");
-                return Successful;
-            }
+                return Reply("Currently there is no schedule available.");
 
             if (mode == "all")
                 return await ShowAllSchedulesAsync(schedules, page - 1);
@@ -65,7 +61,7 @@ namespace Conbot.SplatoonPlugin
                 return await ShowScheduleAsync(schedules, mode);
         }
 
-        public async Task<CommandResult> ShowAllSchedulesAsync(Schedules schedules, int startIndex = 0)
+        public async Task<DiscordCommandResult> ShowAllSchedulesAsync(Schedules schedules, int startIndex = 0)
         {
             var now = DateTimeOffset.Now;
 
@@ -74,8 +70,9 @@ namespace Conbot.SplatoonPlugin
             var leagueRotations = schedules.LeagueRotations.Where(x => x.EndTime > now);
 
             int count = regularRotations.Count();
+
             if (startIndex >= count || startIndex < 0)
-                return Unsuccessful("This page doesn't exist.");
+                return Fail("This page doesn't exist.");
 
             var timezone = await Context.GetUserTimeZoneAsync() ?? DateTimeZone.Utc;
             var instant = SystemClock.Instance.GetCurrentInstant();
@@ -93,11 +90,10 @@ namespace Conbot.SplatoonPlugin
                 paginator.AddPage(embed);
             }
 
-            await paginator.RunAsync(_interactiveService, Context, startIndex);
-            return Successful;
+            return Paginate(paginator, startIndex);
         }
 
-        public Embed CreateSchedulesEmbed(Rotation regularRotation, Rotation rankedRotation,
+        public LocalEmbed CreateSchedulesEmbed(Rotation regularRotation, Rotation rankedRotation,
             Rotation leagueRotation, DateTimeZone timezone, Instant instant, int page, int total)
         {
             var now = instant.ToDateTimeOffset();
@@ -128,7 +124,7 @@ namespace Conbot.SplatoonPlugin
 
             titleText.Append(endTime.TimeOfDay.ToString("HH:mm", CultureInfo.InvariantCulture));
 
-            return new EmbedBuilder()
+            return new LocalEmbed()
                 .WithColor(new Color(0x19d719))
                 .WithTitle(titleText.ToString())
                 .WithDescription($"for {(regularRotation.EndTime - now).ToLongFormattedString()}")
@@ -143,11 +139,10 @@ namespace Conbot.SplatoonPlugin
                     $"**{leagueRotation.MapA.Name}** and **{leagueRotation.MapB.Name}**")
                 .WithFooter(
                     $"Splatoon 2 • Page {page}/{total} ({"entry".ToQuantity(total)})",
-                    _config["EmbedFooterIconUrl"])
-                .Build();
+                    _config["EmbedFooterIconUrl"]);
         }
 
-        public async Task<CommandResult> ShowScheduleAsync(Schedules schedules, string mode = "regular",
+        public async Task<DiscordCommandResult> ShowScheduleAsync(Schedules schedules, string mode = "regular",
             int startIndex = 0)
         {
             IEnumerable<Rotation> schedule;
@@ -193,10 +188,10 @@ namespace Conbot.SplatoonPlugin
             int totalPages = (count / 4) + (count % 4 != 0 ? 1 : 0);
 
             if (startIndex >= totalPages || totalPages < 0)
-                return Unsuccessful("This page doesn't exist.");
+                return Fail("This page doesn't exist.");
 
             var paginator = new Paginator();
-            var embed = new EmbedBuilder();
+            var embed = new LocalEmbed();
 
             for (int i = 0; i < count; i++)
             {
@@ -263,25 +258,22 @@ namespace Conbot.SplatoonPlugin
                             _config["EmbedFooterIconUrl"]);
 
                     currentPage++;
-                    paginator.AddPage(embed.Build());
-                    embed = new EmbedBuilder();
+                    paginator.AddPage(embed);
+                    embed = new LocalEmbed();
                 }
             }
 
-            await paginator.RunAsync(_interactiveService, Context, startIndex);
-            return Successful;
+            return Paginate(paginator, startIndex);
         }
 
         [Command("salmonrun", "sr")]
         [Description("Shows the current Salmon Run schedule.")]
-        public async Task SalmonRunAsync()
+        public async Task<DiscordCommandResult> SalmonRunAsync()
         {
             var schedules = await _splatoonService.GetSalmonRunSchedulesAsync();
+
             if (schedules is null)
-            {
-                await ReplyAsync("Currently there is no schedule available.");
-                return;
-            }
+                return Reply("Currently there is no schedule available.");
 
             var timezone = await Context.GetUserTimeZoneAsync() ?? DateTimeZone.Utc;
             var instant = SystemClock.Instance.GetCurrentInstant();
@@ -293,7 +285,7 @@ namespace Conbot.SplatoonPlugin
                     .Concat(schedules.Rotations.Where(x => x.EndTime > now).Skip(detailedRotations.Count()))
                     .ToList();
 
-            var embedBuilder = new EmbedBuilder()
+            var embed = new LocalEmbed()
                 .WithColor(new Color(0xff5600))
                 .WithThumbnailUrl($"{_config["Splatoon2InkBaseUrl"]}/assets/img/mr-grizz.a87af8.png")
                 .WithTitle("Salmon Run")
@@ -366,22 +358,20 @@ namespace Conbot.SplatoonPlugin
                         .AppendLine((rotation.StartTime - now).ToLongFormattedString());
                 }
 
-                embedBuilder.AddField(nameText.ToString(), valueText.ToString());
+                embed.AddField(nameText.ToString(), valueText.ToString());
             }
 
-            await ReplyAsync("", embed: embedBuilder.Build());
+            return Reply(embed);
         }
 
         [Command("shop", "gear")]
         [Description("Shows the currently available gear on the SplatNet Gear Shop.")]
-        public async Task SplatShopAsync()
+        public async Task<DiscordCommandResult> SplatShopAsync()
         {
             var merchandises = await _splatoonService.GetMerchandisesAsync();
+
             if (merchandises?.Any() != true)
-            {
-                await ReplyAsync("Currently there is no Splat Shop information available.");
-                return;
-            }
+                return Reply("Currently there is no Splat Shop information available.");
 
             var now = DateTimeOffset.UtcNow;
 
@@ -434,7 +424,7 @@ namespace Conbot.SplatoonPlugin
                 var skill = merchandise.Gear.Brand.FrequentSkill;
                 string commonAbilityText = $"<:{_config[$"Emotes:Skills:{skill.EmoteName}"]}> {skill.Name}";
 
-                var embed = new EmbedBuilder()
+                var embed = new LocalEmbed()
                     .WithTitle(merchandise.Gear.Name)
                     .WithUrl($"https://splatoonwiki.org/wiki/{merchandise.Gear.Name.Replace(' ', '_')}")
                     .WithDescription(description)
@@ -454,16 +444,16 @@ namespace Conbot.SplatoonPlugin
                 else
                     embed.WithColor(new Color(0xee156e));
 
-                paginator.AddPage(embed.Build());
+                paginator.AddPage(embed);
                 gear++;
             }
 
-            await paginator.RunAsync(_interactiveService, Context);
+            return Paginate(paginator);
         }
 
         [Command("pickweapon")]
         [Description("Picks a random weapon.")]
-        public async Task PickWeaponAsync(
+        public DiscordCommandResult PickWeapon(
             [Description("The category of the weapons to pick from.")]
             [Choices("shooters", "rollers", "chargers", "sloshers", "splatlings", "dualies", "brellas", "all")]
             string category = "all",
@@ -483,7 +473,7 @@ namespace Conbot.SplatoonPlugin
             var subWeapon = weapon.SubWeapon;
             var special = weapon.Special;
 
-            var embed = new EmbedBuilder()
+            var embed = new LocalEmbed()
                 .WithColor(new Color(0xf02d7d))
                 .WithTitle(weapon.Name)
                 .WithUrl($"https://splatoonwiki.org/wiki/{weapon.Name.Replace(' ', '_')}")
@@ -495,10 +485,9 @@ namespace Conbot.SplatoonPlugin
                     "Special",
                     $"<:{_config[$"Emotes:Specials:{special.EmoteName}"]}> {special.Name}",
                     true)
-                .WithFooter("Splatoon 2", _config["EmbedFooterIconUrl"])
-                .Build();
+                .WithFooter("Splatoon 2", _config["EmbedFooterIconUrl"]);
 
-            await ReplyAsync($"You picked **{weapon.Name}**!", embed: embed);
+            return Reply($"You picked **{weapon.Name}**!", embed);
         }
     }
 }

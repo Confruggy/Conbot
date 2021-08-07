@@ -32,7 +32,7 @@ namespace Conbot.UrbanPlugin
         {
             var response = await _client.GetAsync($"{WebsiteBaseUrl}/random.php?page=1");
 
-            if (response?.RequestMessage?.RequestUri == null)
+            if (response?.RequestMessage?.RequestUri is null)
                 return new UrbanSearchResult();
 
             return await SearchAsync(response.RequestMessage.RequestUri.AbsoluteUri

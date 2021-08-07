@@ -1,7 +1,8 @@
 using System;
-using System.Threading.Tasks;
 
 using Conbot.Commands;
+
+using Disqord.Bot;
 
 using Qmmands;
 
@@ -9,7 +10,7 @@ namespace Conbot.RngPlugin
 {
     [Name("RNG")]
     [Description("Random number generation.")]
-    public class RngModule : DiscordModuleBase
+    public class RngModule : ConbotModuleBase
     {
         private readonly Random _random;
 
@@ -17,25 +18,25 @@ namespace Conbot.RngPlugin
 
         [Command("roll")]
         [Description("Rolls a random number between a minimal and a maximal value.")]
-        public async Task RollAsync(
+        public DiscordCommandResult Roll(
             [Description("The maximal value.")] int max = 100,
             [Description("The minimal value.")] int min = 1)
         {
             int number = _random.Next(min, max);
-            await ReplyAsync($"You rolled **{number}**.");
+            return Reply($"You rolled **{number}**.");
         }
 
         [Command("choose")]
         [Description("Chooses an option from several options.")]
-        public async Task ChooseAsync(
+        public DiscordCommandResult Choose(
             [Description("The options to choose from."), MinLength(2)] params string[] options)
-            => await ReplyAsync(options[_random.Next(options.Length)]);
+            => Reply(options[_random.Next(options.Length)]);
 
         [Command("8ball")]
         [Description("Asks the Magic 8 Ball a question.")]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
 #pragma warning disable IDE0060
-        public Task EightBallAsync(
+        public DiscordCommandResult EightBall(
             [Description("The question to ask."), Remainder] string question)
         {
 #pragma warning restore IDE0060
@@ -62,7 +63,8 @@ namespace Conbot.RngPlugin
                 "Outlook not so good.",
                 "Very doubtful."
             };
-            return ReplyAsync($"🎱 {answers[_random.Next(answers.Length)]}");
+
+            return Reply($"🎱 {answers[_random.Next(answers.Length)]}");
         }
     }
 }

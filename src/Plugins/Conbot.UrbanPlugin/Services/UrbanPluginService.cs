@@ -1,27 +1,26 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.Hosting;
+using Disqord.Bot.Hosting;
 
-using Conbot.Commands;
+using Qmmands;
 
 namespace Conbot.UrbanPlugin
 {
-    public class UrbanPluginService : IHostedService
+    public class UrbanPluginService : DiscordBotService
     {
-        private readonly SlashCommandService _slashCommandService;
+        private Module? _module;
 
-        public UrbanPluginService(SlashCommandService slashCommandService)
-            => _slashCommandService = slashCommandService;
-
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public override Task StartAsync(CancellationToken cancellationToken)
         {
-            await _slashCommandService.RegisterModuleAsync<UrbanModule>();
+            _module = Bot.Commands.AddModule<UrbanModule>();
+            return base.StartAsync(cancellationToken);
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public override Task StopAsync(CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            Bot.Commands.RemoveModule(_module);
+            return base.StopAsync(cancellationToken);
         }
     }
 }

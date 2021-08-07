@@ -13,7 +13,6 @@ namespace Conbot.TimeZonePlugin
         public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
         {
             services
-                .AddHostedService<TimeZonePluginService>()
                 .AddDbContext<TimeZoneContext>()
                 .AddSingleton(DateTimeZoneProviders.Tzdb);
         }

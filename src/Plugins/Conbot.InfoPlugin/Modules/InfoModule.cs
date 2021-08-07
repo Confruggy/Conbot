@@ -1,45 +1,46 @@
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Configuration;
 
 using Conbot.Commands;
 using Conbot.Extensions;
 
-using Discord;
-using Discord.WebSocket;
-
-using Microsoft.Extensions.Configuration;
+using Disqord;
+using Disqord.Bot;
 
 using Qmmands;
 
 namespace Conbot.InfoPlugin
 {
     [Name("Info")]
-    public class InfoModule : DiscordModuleBase
+    public class InfoModule : ConbotModuleBase
     {
         [Command("ping")]
-        [Description("Sends a message and shows the time difference between the command message and the bots response.")]
+        [Description(
+            "Sends a message and shows the time difference between the command message and the bots response.")]
         [Remarks("This has nothing to do with your own ping.")]
-        public async Task PingAsync()
+        public async Task<DiscordCommandResult> PingAsync()
         {
-            var msg = await ReplyAsync("**Pong:** ...");
-            long difference =
-                (msg.CreatedAt - (Context.Interaction?.CreatedAt ?? Context.Message!.CreatedAt)).Milliseconds;
-            await msg.ModifyAsync(x => x.Content = $"**Pong:** {difference} ms");
+            var message = await Reply("**Pong:** ...");
+
+            long difference = (message.CreatedAt() - Context.Message.CreatedAt()).Milliseconds;
+
+            return Modify(message, $"**Pong:** {difference} ms");
         }
 
         [Command("uptime")]
         [Description("Shows the uptime of the bot.")]
-        public Task UptimeAsync() => ReplyAsync($"The bot is running for {GetUptime().ToLongFormattedString()}.");
+        public DiscordCommandResult Uptime() => Reply($"The bot is running for {GetUptime().ToLongFormattedString()}.");
 
         private static TimeSpan GetUptime()
             => DateTime.Now.Subtract(Process.GetCurrentProcess().StartTime);
 
         [Group("roleinfo")]
         [Description("Gives information about roles.")]
-        public class RoleInfoCommands : DiscordModuleBase
+        public class RoleInfoCommands : ConbotGuildModuleBase
         {
             private readonly IConfiguration _config;
 
@@ -48,7 +49,7 @@ namespace Conbot.InfoPlugin
             [Command("summary", "")]
             [Description("Shows a short summary about a specific role.")]
             [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-            public async Task SummaryAsync([Description("The role to show a summary of.")] SocketRole role)
+            public DiscordCommandResult Summary([Description("The role to show a summary of.")] IRole role)
             {
                 string checkMarkEmote = $"<:{_config.GetValue<string>("Emotes:SettingsCheckMark")}>";
                 string crossMarkEmote = $"<:{_config.GetValue<string>("Emotes:SettingsCrossMark")}>";
@@ -59,40 +60,38 @@ namespace Conbot.InfoPlugin
                     .Append(role.IsMentionable ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Allow anyone to @mention this role");
 
-                var embed = new EmbedBuilder()
+                var embed = new LocalEmbed()
                     .WithColor(role.Color)
                     .WithAuthor(role.Name)
                     .AddField("Mention", role.Mention, true)
-                    .AddField("Members", role.Members.Count(), true)
                     .AddField("Position", role.Position, true)
                     .AddField("Color", role.Color, true)
                     .AddField("Role Settings", roleSettingsText.ToString())
-                    .WithTimestamp(role.CreatedAt)
-                    .WithFooter($"ID: {role.Id}")
-                    .Build();
+                    .WithTimestamp(role.CreatedAt())
+                    .WithFooter($"ID: {role.Id}");
 
-                await ReplyAsync(embed: embed);
+                return Reply(embed);
             }
 
             [Command("permissions")]
             [Description("Shows the permissions of a specific role.")]
             [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
-            public async Task RoleAsync([Description("The role to show the permissions of.")] SocketRole role)
+            public DiscordCommandResult Role([Description("The role to show the permissions of.")] IRole role)
             {
                 string checkMarkEmote = $"<:{_config.GetValue<string>("Emotes:SettingsCheckMark")}>";
                 string crossMarkEmote = $"<:{_config.GetValue<string>("Emotes:SettingsCrossMark")}>";
                 var permission = role.Permissions;
 
                 var generalServerPermissionsText = new StringBuilder()
-                    .Append(permission.ViewChannel ? checkMarkEmote : crossMarkEmote)
+                    .Append(permission.ViewChannels ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" View Channels")
                     .Append(permission.ManageChannels ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Manage Channels")
                     .Append(permission.ManageRoles ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Manage Roles")
-                    .Append(permission.ManageEmojis ? checkMarkEmote : crossMarkEmote)
+                    .Append(permission.ManageEmojisAndStickers ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Manage Emojis")
-                    .Append(permission.ManageEmojis ? checkMarkEmote : crossMarkEmote)
+                    .Append(permission.ManageEmojisAndStickers ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" View Audit Log")
                     .Append(permission.ViewAuditLog ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Manage Webhooks")
@@ -100,11 +99,11 @@ namespace Conbot.InfoPlugin
                     .AppendLine(" Manage Server");
 
                 var membershipPermissionsText = new StringBuilder()
-                    .Append(permission.CreateInstantInvite ? checkMarkEmote : crossMarkEmote)
+                    .Append(permission.CreateInvites ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Create Invite")
-                    .Append(permission.ChangeNickname ? checkMarkEmote : crossMarkEmote)
+                    .Append(permission.SetNick ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Change Nickname")
-                    .Append(permission.ManageNicknames ? checkMarkEmote : crossMarkEmote)
+                    .Append(permission.ManageNicks ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Manage Nicknames")
                     .Append(permission.KickMembers ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Kick Members")
@@ -114,9 +113,9 @@ namespace Conbot.InfoPlugin
                 var textChannelPermissionsText = new StringBuilder()
                     .Append(permission.SendMessages ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Send Messages")
-                    .Append(permission.EmbedLinks ? checkMarkEmote : crossMarkEmote)
+                    .Append(permission.SendEmbeds ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Embed Links")
-                    .Append(permission.AttachFiles ? checkMarkEmote : crossMarkEmote)
+                    .Append(permission.SendAttachments ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Attach Files")
                     .Append(permission.AddReactions ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Add Reactions")
@@ -128,7 +127,7 @@ namespace Conbot.InfoPlugin
                     .AppendLine(" Manage Messages")
                     .Append(permission.ReadMessageHistory ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Read Message History")
-                    .Append(permission.SendTTSMessages ? checkMarkEmote : crossMarkEmote)
+                    .Append(permission.UseTextToSpeech ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Send Text-to-speech Messages");
 
                 var voiceChannelPermissionsText = new StringBuilder()
@@ -136,7 +135,7 @@ namespace Conbot.InfoPlugin
                     .AppendLine(" Connect")
                     .Append(permission.Speak ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Speak")
-                    .Append(permission.UseVAD ? checkMarkEmote : crossMarkEmote)
+                    .Append(permission.UseVad ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Use Voice Activity")
                     .Append(permission.PrioritySpeaker ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Priority Speaker")
@@ -151,7 +150,7 @@ namespace Conbot.InfoPlugin
                     .Append(permission.Administrator ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Administrator");
 
-                var embed = new EmbedBuilder()
+                var embed = new LocalEmbed()
                     .WithColor(role.Color)
                     .WithAuthor(role.Name)
                     .AddField("General Server Permissions", generalServerPermissionsText.ToString())
@@ -159,10 +158,9 @@ namespace Conbot.InfoPlugin
                     .AddField("Text Channel Permissions", textChannelPermissionsText.ToString())
                     .AddField("Voice Channel Permissions", voiceChannelPermissionsText.ToString())
                     .AddField("Advanced Permissions", advancedPermissionsText.ToString())
-                    .WithFooter($"ID: {role.Id}")
-                    .Build();
+                    .WithFooter($"ID: {role.Id}");
 
-                await ReplyAsync(embed: embed);
+                return Reply(embed);
             }
         }
     }

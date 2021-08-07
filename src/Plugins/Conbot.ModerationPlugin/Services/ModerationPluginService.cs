@@ -1,34 +1,34 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.Hosting;
-
-using Conbot.Commands;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+
+using Disqord.Bot.Hosting;
+
+using Qmmands;
 
 namespace Conbot.ModerationPlugin
 {
-    public class ModerationPluginService : IHostedService
+    public class ModerationPluginService : DiscordBotService
     {
-        private readonly SlashCommandService _slashCommandService;
         private readonly IServiceScopeFactory _scopeFactory;
+        private Module? _module;
 
-        public ModerationPluginService(SlashCommandService slashCommandService, IServiceScopeFactory scopeFactory)
-        {
-            _slashCommandService = slashCommandService;
-            _scopeFactory = scopeFactory;
-        }
+        public ModerationPluginService(IServiceScopeFactory scopeFactory) => _scopeFactory = scopeFactory;
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
             await UpdateDatabaseAsync();
-            await _slashCommandService.RegisterModuleAsync<ModerationModule>();
+            _module = Bot.Commands.AddModule<ModerationModule>();
+
+            await base.StartAsync(cancellationToken);
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public override Task StopAsync(CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            Bot.Commands.RemoveModule(_module);
+            return base.StopAsync(cancellationToken);
         }
 
         private async Task UpdateDatabaseAsync()

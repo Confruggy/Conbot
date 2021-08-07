@@ -2,10 +2,11 @@ using System;
 using System.Linq;
 using System.Text;
 
-using Discord;
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+
+using Disqord;
+using Disqord.Bot;
 
 using Qmmands;
 
@@ -15,19 +16,18 @@ namespace Conbot.Commands
     {
         private readonly CommandContext _context;
         private readonly IConfiguration _config;
-        private readonly CommandService _commandService;
-        private readonly EmbedBuilder _embed;
+        private readonly DiscordBotBase _bot;
+        private readonly LocalEmbed _embed;
 
         public SettingsEmbedBuilder(CommandContext context)
         {
             _context = context;
 
-            var serviceProdier = _context.ServiceProvider;
-            _config = serviceProdier.GetRequiredService<IConfiguration>();
-            _commandService = serviceProdier.GetRequiredService<CommandService>();
+            var services = _context.Services;
+            _config = services.GetRequiredService<IConfiguration>();
+            _bot = services.GetRequiredService<DiscordBotBase>();
 
-            _embed = new EmbedBuilder()
-                .WithColor(_config.GetValue<uint>("DefaultEmbedColor"));
+            _embed = new LocalEmbed().WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")));
         }
 
         public SettingsEmbedBuilder WithTitle(string title)
@@ -36,7 +36,7 @@ namespace Conbot.Commands
             return this;
         }
 
-        public SettingsEmbedBuilder WithColor(uint color)
+        public SettingsEmbedBuilder WithColor(Color color)
         {
             _embed.WithColor(color);
             return this;
@@ -50,7 +50,7 @@ namespace Conbot.Commands
 
         public SettingsEmbedBuilder WithGuild(IGuild guild)
         {
-            _embed.WithFooter(guild.Name, guild.IconUrl);
+            _embed.WithFooter(guild.Name, guild.GetIconUrl());
             return this;
         }
 
@@ -59,14 +59,7 @@ namespace Conbot.Commands
 
         public SettingsEmbedBuilder AddSetting(string name, object value, Type moduleBaseType, string commandAlias)
         {
-            if (!typeof(DiscordModuleBase).IsAssignableFrom(moduleBaseType))
-            {
-                throw new ArgumentException(
-                    $"{moduleBaseType} must be derived from {typeof(DiscordModuleBase)}",
-                    nameof(moduleBaseType));
-            }
-
-            var module = _commandService.GetAllModules().First(x => x.Type == moduleBaseType);
+            var module = _bot.Commands.GetAllModules().First(x => x.Type == moduleBaseType);
             var command = module.Commands.First(x => x.Aliases.FirstOrDefault() == commandAlias);
 
             var fieldNameText = new StringBuilder();
@@ -100,6 +93,6 @@ namespace Conbot.Commands
             return this;
         }
 
-        public Embed Build() => _embed.Build();
+        public LocalEmbed Build() => _embed;
     }
 }

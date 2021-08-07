@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 
-using Discord.WebSocket;
+using Disqord;
+using Disqord.Gateway;
 
 using Qmmands;
 
@@ -10,36 +11,34 @@ namespace Conbot.Commands
     {
         public override ValueTask<CheckResult> CheckAsync(object argument, CommandContext context)
         {
-            var discordCommandContext = (DiscordCommandContext)context;
+            if (context is not ConbotGuildCommandContext discordCommandContext)
+                return CheckResult.Failed("This command must be used in a server.");
 
-            if (discordCommandContext.Guild == null)
-                return CheckResult.Unsuccessful("This command must be used in a server.");
+            var author = discordCommandContext.Author;
+            var currentMember = discordCommandContext.CurrentMember;
 
-            var user = (SocketGuildUser)discordCommandContext.User;
-            var currentUser = discordCommandContext.Guild.CurrentUser;
-
-            if (argument is SocketRole role)
+            if (argument is IRole role)
             {
-                if (role.Position >= user.Hierarchy)
+                if (role.Position >= author.GetHierarchy())
                 {
-                    return CheckResult.Unsuccessful("Role must be lower than your highest role.");
+                    return CheckResult.Failed("Role must be lower than your highest role.");
                 }
-                else if (role.Position >= currentUser.Hierarchy)
+                else if (role.Position >= currentMember.GetHierarchy())
                 {
-                    return CheckResult.Unsuccessful("Role must be lower than the bot's highest role.");
+                    return CheckResult.Failed("Role must be lower than the bot's highest role.");
                 }
             }
 
-            if (argument is SocketGuildUser target)
+            if (argument is IMember target)
             {
-                if (target.Hierarchy >= user.Hierarchy)
+                if (target.GetHierarchy() >= author.GetHierarchy())
                 {
-                    return CheckResult.Unsuccessful(
+                    return CheckResult.Failed(
                         "Member's highest role must be lower than your highest role.");
                 }
-                else if (target.Hierarchy >= currentUser.Hierarchy)
+                else if (target.GetHierarchy() >= currentMember.GetHierarchy())
                 {
-                    return CheckResult.Unsuccessful(
+                    return CheckResult.Failed(
                         "Member's highest role must be lower than the bot's highest role.");
                 }
             }

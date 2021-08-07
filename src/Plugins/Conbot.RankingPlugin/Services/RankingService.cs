@@ -1,241 +1,211 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-using Discord;
-using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
+using Disqord;
+using Disqord.Bot;
+using Disqord.Bot.Hosting;
+using Disqord.Gateway;
+using Disqord.Rest;
 
 namespace Conbot.RankingPlugin
 {
-    public class RankingService : IHostedService
+    public class RankingService : DiscordBotService
     {
         private readonly ILogger<RankingService> _logger;
-        private readonly DiscordShardedClient _client;
+        private readonly DiscordBot _bot;
         private readonly Random _random;
         private readonly int[] _levels;
         private readonly IServiceScopeFactory _scopeFactory;
 
-        public RankingService(DiscordShardedClient client, Random random, IConfiguration config,
-            IServiceScopeFactory scopeFactory, ILogger<RankingService> logger)
+        public RankingService(DiscordBot bot, Random random, IConfiguration config, IServiceScopeFactory scopeFactory,
+            ILogger<RankingService> logger)
         {
-            _client = client;
+            _bot = bot;
             _random = random;
             _levels = config.GetSection("RankingPlugin:Levels").Get<int[]>();
             _scopeFactory = scopeFactory;
             _logger = logger;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        protected override async ValueTask OnMessageReceived(BotMessageReceivedEventArgs e)
         {
-            _client.MessageReceived += OnMessageReceivedAsync;
-            _client.UserJoined += OnUserJoinedAsync;
-            _client.RoleDeleted += OnRoleDeletedAsync;
-            _client.GuildAvailable += GuildAvailableAsync;
-            return Task.CompletedTask;
-        }
+            if (e.Message.Author is not IMember member)
+                return;
 
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _client.MessageReceived -= OnMessageReceivedAsync;
-            _client.UserJoined -= OnUserJoinedAsync;
-            _client.RoleDeleted -= OnRoleDeletedAsync;
-            _client.GuildAvailable -= GuildAvailableAsync;
-            return Task.CompletedTask;
-        }
+            var now = DateTime.UtcNow;
+            var guildId = member.GuildId;
 
-        public Task OnMessageReceivedAsync(SocketMessage message)
-        {
-            _ = Task.Run(async () =>
+            using var scope = _scopeFactory.CreateScope();
+            using var context = scope.ServiceProvider.GetRequiredService<RankingContext>();
+
+            var config = await context.GetGuildConfigurationAsync(guildId);
+            if (config?.IgnoredChannels.Any(x => x.ChannelId == e.ChannelId) == true)
+                return;
+
+            var rank = await context.GetOrCreateRankAsync(member);
+            rank.TotalMessages++;
+
+            int oldLevel = GetLevel(rank.ExperiencePoints);
+
+            if (rank.LastMessage is null || now >= rank.LastMessage?.AddMinutes(1))
             {
-                if (message.Author is not SocketGuildUser user)
-                    return;
+                rank.ExperiencePoints += rank.ExperiencePoints == 0 ? 10 : _random.Next(5, 15);
+                rank.RankedMessages++;
+                rank.LastMessage = now;
+            }
 
-                var now = DateTime.UtcNow;
-                var guild = user.Guild;
+            await context.SaveChangesAsync();
+
+            if (member.IsBot)
+                return;
+
+            int newLevel = GetLevel(rank.ExperiencePoints);
+
+            if (config is not null)
+            {
+                var roles = GetRolesForLevel(_bot.GetRoles(guildId), newLevel, config);
+
+                if (roles is not null)
+                    await UpdateRolesAsync(member, roles, config?.RoleRewardsType ?? RoleRewardsType.Stack);
+            }
+
+            if (newLevel > oldLevel)
+            {
+                var userConfig = await context.GetUserConfigurationAsync(member);
+                IMessageChannel? channel = null;
+                string? text = null;
+                LocalAllowedMentions? allowedMentions = null;
+                var guild = _bot.GetGuild(guildId);
+
+                if (config?.ShowLevelUpAnnouncements == true &&
+                    newLevel >= (config.LevelUpAnnouncementsMinimumLevel ?? 0))
+                {
+                    channel = config.LevelUpAnnouncementsChannelId.HasValue
+                        ? await _bot.FetchChannelAsync(config.LevelUpAnnouncementsChannelId.Value) as IMessageChannel
+                        : e.Channel;
+
+                    if (channel is IGuildChannel guildChannel &&
+                        guild.GetMember(_bot.CurrentUser.Id).GetPermissions(guildChannel).SendMessages)
+                    {
+                        text = channel.Id == e.ChannelId
+                            ? $"{member.Mention}, you achieved level **{newLevel}**. Congratulations! 🎉"
+                            : $"{member.Mention} achieved level **{newLevel}**. Congratulations! 🎉";
+
+                        allowedMentions = userConfig?.AnnouncementsAllowMentions ?? false
+                            ? LocalAllowedMentions.ExceptEveryone
+                            : LocalAllowedMentions.None;
+                    }
+                    else
+                    {
+                        channel = null;
+                    }
+                }
+
+                if (channel is null && userConfig?.AnnouncementsSendDirectMessages == true)
+                {
+                    channel = await member.CreateDirectChannelAsync();
+
+                    text = $"You achieved level **{newLevel}** on **{guild.Name}**. Congratulations! 🎉";
+                }
+
+                if (channel is not null)
+                {
+                    try
+                    {
+                        await channel.SendMessageAsync(
+                            new LocalMessage()
+                                .WithContent(text)
+                                .WithAllowedMentions(allowedMentions)
+                        );
+                    }
+                    catch (Exception exception)
+                    {
+                        _logger.LogWarning(exception,
+                            "Sending level up message for {Member} failed on {Guild}/{Channel}", member, guildId,
+                            channel);
+                    }
+                }
+            }
+        }
+
+        protected override async ValueTask OnMemberJoined(MemberJoinedEventArgs e)
+        {
+            using var scope = _scopeFactory.CreateScope();
+            using var context = scope.ServiceProvider.GetRequiredService<RankingContext>();
+
+            var rank = await context.GetRankAsync(e.Member);
+            int level = rank is null ? 0 : GetLevel(rank.ExperiencePoints);
+            var config = await context.GetGuildConfigurationAsync(e.GuildId);
+
+            if (config is not null)
+            {
+                var roles = GetRolesForLevel(_bot.GetRoles(e.GuildId), level, config);
+                await UpdateRolesAsync(e.Member, roles, config?.RoleRewardsType ?? RoleRewardsType.Stack);
+            }
+        }
+
+        protected override async ValueTask OnRoleDeleted(RoleDeletedEventArgs e)
+        {
+            using var scope = _scopeFactory.CreateScope();
+            using var context = scope.ServiceProvider.GetRequiredService<RankingContext>();
+
+            var config = await context.GetGuildConfigurationAsync(e.GuildId);
+            if (config is null)
+                return;
+
+            var roleReward = config.RoleRewards.Find(x => x.RoleId == e.RoleId);
+            if (roleReward is null)
+                return;
+
+            context.Remove(roleReward);
+            await context.SaveChangesAsync();
+        }
+
+        protected override async ValueTask OnGuildAvailable(GuildAvailableEventArgs e)
+        {
+            var guild = e.Guild;
+
+            try
+            {
+                _logger.LogDebug("Checking role rewards for {Guild}", guild);
+
+                var roles = await _bot.FetchRolesAsync(guild.Id);
+                if (roles.Count == 0)
+                    return;
 
                 using var scope = _scopeFactory.CreateScope();
                 using var context = scope.ServiceProvider.GetRequiredService<RankingContext>();
 
                 var config = await context.GetGuildConfigurationAsync(guild);
-                if (config?.IgnoredChannels.Any(x => x.ChannelId == message.Channel.Id) == true)
-                    return;
-
-                var rank = await context.GetOrCreateRankAsync(user);
-                rank.TotalMessages++;
-
-                int oldLevel = GetLevel(rank.ExperiencePoints);
-
-                if (rank.LastMessage == null || now >= rank.LastMessage?.AddMinutes(1))
-                {
-                    rank.ExperiencePoints += rank.ExperiencePoints == 0 ? 10 : _random.Next(5, 15);
-                    rank.RankedMessages++;
-                    rank.LastMessage = now;
-                }
-
-                await context.SaveChangesAsync();
-
-                if (user.IsBot)
-                    return;
-
-                int newLevel = GetLevel(rank.ExperiencePoints);
-
-                if (config is not null)
-                {
-                    var roles = GetRolesForLevel(user.Guild.Roles, newLevel, config);
-
-                    if (roles != null)
-                        await UpdateRolesAsync(user, roles, config?.RoleRewardsType ?? RoleRewardsType.Stack);
-                }
-
-                if (newLevel > oldLevel)
-                {
-                    var userConfig = await context.GetUserConfigurationAsync(user);
-                    IMessageChannel? channel = null;
-                    string? text = null;
-                    AllowedMentions? allowedMentions = null;
-
-                    if (config?.ShowLevelUpAnnouncements == true &&
-                        newLevel >= (config.LevelUpAnnouncementsMinimumLevel ?? 0))
-                    {
-                        channel = config.LevelUpAnnouncementsChannelId.HasValue
-                            ? _client.GetChannel(config.LevelUpAnnouncementsChannelId.Value) as IMessageChannel
-                            : message.Channel;
-
-                        if (channel is SocketTextChannel textChannel &&
-                            guild.CurrentUser.GetPermissions(textChannel).SendMessages)
-                        {
-                            text = channel.Id == message.Channel.Id
-                                ? $"{user.Mention}, you achieved level **{newLevel}**. Congratulations! 🎉"
-                                : $"{user.Mention} achieved level **{newLevel}**. Congratulations! 🎉";
-
-                            allowedMentions = userConfig?.AnnouncementsAllowMentions ?? false
-                                ? AllowedMentions.All
-                                : AllowedMentions.None;
-                        }
-                        else
-                        {
-                            channel = null;
-                        }
-                    }
-
-                    if (channel is null && userConfig?.AnnouncementsSendDirectMessages == true)
-                    {
-                        channel = await user.GetOrCreateDMChannelAsync();
-                        text = $"You achieved level **{newLevel}** on **{guild.Name}**. Congratulations! 🎉";
-                    }
-
-                    if (channel is not null)
-                    {
-                        try
-                        {
-                            await channel.SendMessageAsync(text, allowedMentions: allowedMentions);
-                        }
-                        catch (Exception exception)
-                        {
-                            _logger.LogWarning(exception,
-                                "Sending level up message for {User} failed on {Guild}/{Channel}", user, guild,
-                                channel);
-                        }
-                    }
-                }
-            });
-
-            return Task.CompletedTask;
-        }
-
-        public Task OnUserJoinedAsync(SocketGuildUser user)
-        {
-            _ = Task.Run(async () =>
-            {
-                using var scope = _scopeFactory.CreateScope();
-                using var context = scope.ServiceProvider.GetRequiredService<RankingContext>();
-
-                var rank = await context.GetRankAsync(user);
-                int level = rank is null ? 0 : GetLevel(rank.ExperiencePoints);
-                var config = await context.GetGuildConfigurationAsync(user.Guild);
-
-                if (config != null)
-                {
-                    var roles = GetRolesForLevel(user.Guild.Roles, level, config);
-                    await UpdateRolesAsync(user, roles, config?.RoleRewardsType ?? RoleRewardsType.Stack);
-                }
-            });
-
-            return Task.CompletedTask;
-        }
-
-        public Task OnRoleDeletedAsync(SocketRole role)
-        {
-            _ = Task.Run(async () =>
-            {
-                using var scope = _scopeFactory.CreateScope();
-                using var context = scope.ServiceProvider.GetRequiredService<RankingContext>();
-
-                var config = await context.GetGuildConfigurationAsync(role.Guild);
                 if (config is null)
                     return;
 
-                var roleReward = config.RoleRewards.Find(x => x.RoleId == role.Id);
-                if (roleReward is null)
+                if (config.RoleRewards.Count == 0)
                     return;
 
-                context.Remove(roleReward);
+                foreach (var roleReward in config.RoleRewards.Where(x => !roles.Any(r => r.Id == x.RoleId)))
+                    context.RemoveRoleReward(roleReward);
+
                 await context.SaveChangesAsync();
-            });
-
-            return Task.CompletedTask;
-        }
-
-        public Task GuildAvailableAsync(SocketGuild guild)
-        {
-            _ = Task.Run(async () =>
+            }
+            catch (Exception exception)
             {
-                try
-                {
-                    _logger.LogDebug("Checking role rewards for {Guild}", guild);
-
-                    var roles = (await _client.Rest.GetGuildAsync(guild.Id))?.Roles;
-                    if (roles is null)
-                        return;
-
-                    using var scope = _scopeFactory.CreateScope();
-                    using var context = scope.ServiceProvider.GetRequiredService<RankingContext>();
-
-                    var config = await context.GetGuildConfigurationAsync(guild);
-                    if (config is null)
-                        return;
-
-                    if (config.RoleRewards.Count == 0)
-                        return;
-
-                    foreach (var roleReward in config.RoleRewards.Where(x => !roles.Any(r => r.Id == x.RoleId)))
-                        context.RemoveRoleReward(roleReward);
-
-                    await context.SaveChangesAsync();
-                }
-                catch (Exception exception)
-                {
-                    _logger.LogDebug(exception, "Checking role rewards for {Guild} failed", guild);
-                }
-            });
-
-            return Task.CompletedTask;
+                _logger.LogDebug(exception, "Checking role rewards for {Guild} failed", guild);
+            }
         }
 
-        public static IEnumerable<IRole> GetRolesForLevel(IEnumerable<IRole> roles, int level,
+        public static IEnumerable<IRole> GetRolesForLevel(IReadOnlyDictionary<Snowflake, CachedRole> roles, int level,
             RankGuildConfiguration configuration)
         {
             foreach (var roleReward in configuration.RoleRewards)
             {
-                var role = roles.FirstOrDefault(x => x.Id == roleReward.RoleId);
-                if (role == null)
+                if (!roles.TryGetValue(roleReward.RoleId, out var role))
                     continue;
 
                 if (level >= roleReward.Level)
@@ -243,12 +213,12 @@ namespace Conbot.RankingPlugin
             }
         }
 
-        public async Task UpdateRolesAsync(IGuildUser user, IEnumerable<IRole> roles, RoleRewardsType type)
+        public async Task UpdateRolesAsync(IMember member, IEnumerable<IRole> roles, RoleRewardsType type)
         {
             if (!roles.Any())
                 return;
 
-            var guild = user.Guild;
+            var guild = member.GetGuild();
 
             if (type == RoleRewardsType.Stack)
             {
@@ -256,11 +226,11 @@ namespace Conbot.RankingPlugin
                 {
                     try
                     {
-                        await user.AddRoleAsync(role);
+                        await member.GrantRoleAsync(role.Id);
                     }
                     catch (Exception exception)
                     {
-                        _logger.LogWarning(exception, "Adding role {Role} to {User} failed in {Guild}", role, user,
+                        _logger.LogWarning(exception, "Adding role {Role} to {User} failed in {Guild}", role, member,
                             guild);
                     }
                 }
@@ -271,24 +241,24 @@ namespace Conbot.RankingPlugin
                 {
                     try
                     {
-                        await user.RemoveRoleAsync(role);
+                        await member.RevokeRoleAsync(role.Id);
                     }
                     catch (Exception exception)
                     {
-                        _logger.LogWarning(exception, "Removing role {Role} from {User} failed in {Guild}", role, user,
-                            user.Guild);
+                        _logger.LogWarning(exception, "Removing role {Role} from {User} failed in {Guild}", role,
+                            member, guild);
                     }
                 }
 
                 var last = roles.Last();
                 try
                 {
-                    await user.AddRoleAsync(last);
+                    await member.GrantRoleAsync(last.Id);
                 }
                 catch (Exception exception)
                 {
-                    _logger.LogWarning(exception, "Adding role {Role} to {User} failed in {Guild}", last, user,
-                        user.Guild);
+                    _logger.LogWarning(exception, "Adding role {Role} to {User} failed in {Guild}", last, member,
+                        guild);
                 }
             }
         }

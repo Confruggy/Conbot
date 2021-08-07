@@ -2,7 +2,8 @@ using System.Threading.Tasks;
 
 using Conbot.Commands;
 
-using Discord;
+using Disqord;
+using Disqord.Bot;
 
 using Qmmands;
 
@@ -11,11 +12,11 @@ namespace Conbot.HelpPlugin
     [Name("Help")]
     [Group("help")]
     [Description("Gives information about commands.")]
-    [RequireBotPermission(
-        ChannelPermission.AddReactions |
-        ChannelPermission.EmbedLinks |
-        ChannelPermission.UseExternalEmojis)]
-    public class HelpModule : DiscordModuleBase
+    [Commands.RequireBotChannelPermissions(
+        Permission.AddReactions |
+        Permission.SendEmbeds |
+        Permission.UseExternalEmojis)]
+    public class HelpModule : DiscordModuleBase<ConbotCommandContext>
     {
         private readonly HelpService _service;
 

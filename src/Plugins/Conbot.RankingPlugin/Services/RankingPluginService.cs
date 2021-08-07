@@ -1,45 +1,41 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
-using Conbot.Commands;
+using Disqord.Bot.Hosting;
+
+using Qmmands;
 
 namespace Conbot.RankingPlugin
 {
-    public class RankingPluginService : IHostedService
+    public class RankingPluginService : DiscordBotService
     {
-        private readonly IServiceProvider _services;
-        private readonly SlashCommandService _slashCommandService;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private Module? _module;
 
-        public RankingPluginService(IServiceProvider services, SlashCommandService slashCommandService)
-        {
-            _services = services;
-            _slashCommandService = slashCommandService;
-        }
+        public RankingPluginService(IServiceScopeFactory scopeFactory) => _scopeFactory = scopeFactory;
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
             await UpdateDatabaseAsync();
+            _module = Bot.Commands.AddModule<RankingModule>();
 
-            await _slashCommandService.RegisterModuleAsync<RankingModule>();
+            await base.StartAsync(cancellationToken);
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public override Task StopAsync(CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            Bot.Commands.RemoveModule(_module);
+            return base.StopAsync(cancellationToken);
         }
 
         private async Task UpdateDatabaseAsync()
         {
-            using var serviceScope = _services
-                .GetRequiredService<IServiceScopeFactory>()
-                .CreateScope();
-
+            using var serviceScope = _scopeFactory.CreateScope();
             using var context = serviceScope.ServiceProvider.GetRequiredService<RankingContext>();
+
             await context.Database.MigrateAsync();
         }
     }

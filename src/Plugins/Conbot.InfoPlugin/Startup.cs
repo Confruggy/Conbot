@@ -8,10 +8,7 @@ namespace Conbot.InfoPlugin
 {
     public class Startup : IPluginStartup
     {
-        public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
-        {
-            services.AddHostedService<InfoPluginService>();
-        }
+        public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services) { }
 
         public void BuildConfiguration(IConfigurationBuilder builder) { }
     }

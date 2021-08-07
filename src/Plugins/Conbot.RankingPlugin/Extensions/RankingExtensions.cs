@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 
-using Discord;
+using Disqord;
 
 namespace Conbot.RankingPlugin
 {
@@ -16,14 +16,14 @@ namespace Conbot.RankingPlugin
                 .AsQueryable()
                 .FirstOrDefaultAsync(x => x.GuildId == guildId && x.UserId == userId);
 
-        public static Task<Rank> GetRankAsync(this RankingContext context, IGuildUser user)
+        public static Task<Rank> GetRankAsync(this RankingContext context, IMember user)
             => GetRankAsync(context, user.GuildId, user.Id);
 
-        public static async Task<Rank> GetOrCreateRankAsync(this RankingContext context, IGuildUser user)
+        public static async Task<Rank> GetOrCreateRankAsync(this RankingContext context, IMember user)
         {
             var rank = await GetRankAsync(context, user);
 
-            if (rank == null)
+            if (rank is null)
             {
                 rank = new Rank(user.GuildId, user.Id, user.IsBot, 0, 0, 0);
                 await context.Ranks.AddAsync(rank);
@@ -61,7 +61,7 @@ namespace Conbot.RankingPlugin
         {
             var config = await GetGuildConfigurationAsync(context, guildId);
 
-            if (config == null)
+            if (config is null)
             {
                 config = new RankGuildConfiguration(guildId);
                 await context.GuildConfigurations.AddAsync(config);
@@ -150,7 +150,7 @@ namespace Conbot.RankingPlugin
         {
             var config = await GetUserConfigurationAsync(context, userId);
 
-            if (config == null)
+            if (config is null)
             {
                 config = new RankUserConfiguration(userId);
                 await context.UserConfigurations.AddAsync(config);
