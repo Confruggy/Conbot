@@ -91,13 +91,13 @@ namespace Conbot.ReminderPlugin
 
                         string text;
                         LocalMessageReference? reference = null;
-                        IMessage? message = null;
+                        IMessage? originalMessage = null;
 
                         if (toSendChannel.Id == reminder.ChannelId)
                         {
-                            message = await toSendChannel.FetchMessageAsync(reminder.MessageId);
+                            originalMessage = await toSendChannel.FetchMessageAsync(reminder.MessageId);
 
-                            if (message is IUserMessage)
+                            if (originalMessage is IUserMessage)
                             {
                                 text = $"You've set a reminder {time}.";
                                 reference = new LocalMessageReference()
@@ -138,14 +138,20 @@ namespace Conbot.ReminderPlugin
                                         : $"{reminder.Message.Truncate(2021 - hyperLink.Length)} ({hyperLink})");
                         }
 
+                        var message = new LocalMessage()
+                            .WithContent(text);
+
+                        if (embed is not null)
+                            message.AddEmbed(embed);
+
+                        if (reference is not null)
+                            message.WithReference(reference);
+
                         tasks.Add(Task.Run(async () =>
                         {
                             try
                             {
-                                await toSendChannel.SendMessageAsync(new LocalMessage()
-                                    .WithContent(text)
-                                    .WithEmbeds(embed)
-                                    .WithReference(reference));
+                                await toSendChannel.SendMessageAsync(message);
                             }
                             catch (Exception e) { Logger.LogError(e, "Failed sending reminder message"); }
                         }, cancellationToken));
