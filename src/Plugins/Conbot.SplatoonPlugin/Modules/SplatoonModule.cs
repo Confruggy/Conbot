@@ -280,7 +280,7 @@ namespace Conbot.SplatoonPlugin
                 {
                     valueText
                         .Append(" (")
-                        .AppendJoin(", ", rotation.Weapons.Select(x => x.Name))
+                        .AppendJoin(", ", rotation.Weapons.Select(x => x?.Name ?? "Random"))
                         .Append(')');
                 }
 
