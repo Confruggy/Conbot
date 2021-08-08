@@ -1,7 +1,13 @@
+using System.Collections.Generic;
+
 using Conbot.Interactive;
 
 using Disqord;
 using Disqord.Bot;
+using Disqord.Extensions.Interactivity.Menus.Paged;
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conbot.Commands
 {
@@ -36,9 +42,20 @@ namespace Conbot.Commands
         protected virtual ConbotInteractiveCommandResult Interactive(LocalInteractiveMessage message)
             => new(Context, message);
 
-        protected virtual ConbotInteractiveCommandResult Paginate(Paginator paginator, int startIndex = 0,
-            bool reply = true)
-            => new(Context, paginator.ToInteractiveMessage(Context, startIndex, reply));
+        protected virtual DiscordMenuCommandResult Paginate(List<Page> pages, LocalMessage? templateMessage = null,
+            int startIndex = 0)
+            => Paginate(new ListPageProvider(pages), templateMessage, startIndex);
+
+        protected virtual DiscordMenuCommandResult Paginate(IEnumerable<Page> pages,
+            LocalMessage? templateMessage = null, int startIndex = 0)
+            => Paginate(new ListPageProvider(pages), templateMessage, startIndex);
+
+        protected virtual DiscordMenuCommandResult Paginate(PageProvider pageProvider,
+            LocalMessage? templateMessage = null, int startIndex = 0)
+        {
+            var config = Bot.Services.GetService<IConfiguration>();
+            return View(new ConbotPagedView(pageProvider, templateMessage, startIndex, config));
+        }
 
         protected virtual ConbotPromptCommandResult Prompt(string text, int timeout = 60000)
             => new(Context, text, timeout);

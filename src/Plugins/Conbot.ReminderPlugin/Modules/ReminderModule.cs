@@ -15,6 +15,8 @@ using Humanizer;
 
 using Qmmands;
 using System;
+using Disqord.Extensions.Interactivity.Menus.Paged;
+using System.Collections.Generic;
 
 namespace Conbot.ReminderPlugin
 {
@@ -140,7 +142,7 @@ namespace Conbot.ReminderPlugin
 
             int count = reminders.Length;
 
-            var paginator = new Paginator();
+            List<Page> pages = new();
 
             view = view.ToLowerInvariant();
             if (view == "compact")
@@ -151,24 +153,24 @@ namespace Conbot.ReminderPlugin
                 if (count % 5 != 0)
                     pageCount++;
 
-                var page = new LocalEmbed();
+                var embed = new LocalEmbed();
 
                 foreach (var reminder in reminders)
                 {
-                    page.AddField(
+                    embed.AddField(
                         $"{Markdown.Timestamp(reminder.EndsAt, Markdown.TimestampFormat.LongDateTime)} (ID: {reminder.Id})",
                         !string.IsNullOrEmpty(reminder.Message) ? reminder.Message.Truncate(1024) : "…");
 
                     if (entryPos % 5 == 0 || entryPos == count)
                     {
-                        page
+                        embed
                             .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")))
                             .WithAuthor(Context.Author.Name, Context.Author.GetAvatarUrl())
                             .WithTitle("Reminders")
                             .WithFooter($"Page {pageIndex + 1}/{pageCount} ({"entry".ToQuantity(count)})");
 
-                        paginator.AddPage(page);
-                        page = new LocalEmbed();
+                        pages.Add(new Page().WithEmbeds(embed));
+                        embed = new LocalEmbed();
                         pageIndex++;
                     }
 
@@ -178,10 +180,10 @@ namespace Conbot.ReminderPlugin
             else
             {
                 for (int i = 0; i < count; i++)
-                    paginator.AddPage(CreateReminderEmbed(reminders[i], i, count));
+                    pages.Add(new Page().WithEmbeds(CreateReminderEmbed(reminders[i], i, count)));
             }
 
-            return Paginate(paginator);
+            return Paginate(pages);
         }
 
         private LocalEmbed CreateReminderEmbed(Reminder reminder, int? index, int? total)

@@ -14,6 +14,8 @@ using Disqord.Bot;
 using Humanizer;
 
 using Qmmands;
+using System.Collections.Generic;
+using Disqord.Extensions.Interactivity.Menus.Paged;
 
 namespace Conbot.UrbanPlugin
 {
@@ -62,12 +64,12 @@ namespace Conbot.UrbanPlugin
             if (result is null)
                 return Fail("No definition has been found for this word.");
 
-            var paginator = new Paginator();
+            List<Page> pages = new();
 
             for (int i = 0; i < count; i++)
-                paginator.AddPage(CreateUrbanEmbed(searchResult.Results.ElementAt(i), i + 1, count));
+                pages.Add(new Page().AddEmbed(CreateUrbanEmbed(searchResult.Results.ElementAt(i), i + 1, count)));
 
-            return Paginate(paginator);
+            return Paginate(pages);
         }
 
         private LocalEmbed CreateUrbanEmbed(UrbanResult result, int currentPage, int totalPages)

@@ -17,6 +17,7 @@ using Disqord.Rest;
 using Humanizer;
 
 using Qmmands;
+using Disqord.Extensions.Interactivity.Menus.Paged;
 
 namespace Conbot.TagPlugin
 {
@@ -437,7 +438,7 @@ namespace Conbot.TagPlugin
 
             int count = tags.Length;
             int padding = count.ToString().Length;
-            var pages = new List<string>();
+            var pageDescriptions = new List<string>();
 
             int i = 1;
             var pageText = new StringBuilder();
@@ -452,19 +453,19 @@ namespace Conbot.TagPlugin
 
                 if (i % 15 == 0 || i == count)
                 {
-                    pages.Add(pageText.ToString());
+                    pageDescriptions.Add(pageText.ToString());
                     pageText.Clear();
                 }
 
                 i++;
             }
 
-            if (page > pages.Count || page < 1)
+            if (page > pageDescriptions.Count || page < 1)
                 return Fail("This page doesn't exist.");
 
-            var paginator = new Paginator();
+            List<Page> pages = new();
 
-            for (int j = 0; j < pages.Count; j++)
+            for (int j = 0; j < pageDescriptions.Count; j++)
             {
                 var embed = new LocalEmbed()
                     .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")))
@@ -472,13 +473,13 @@ namespace Conbot.TagPlugin
                         member?.Name ?? Context.Guild.Name,
                         member?.GetAvatarUrl() ?? Context.Guild.GetIconUrl())
                     .WithTitle("Tags")
-                    .WithDescription(pages[j])
-                    .WithFooter($"Page {j + 1}/{pages.Count} ({"entry".ToQuantity(count)})");
+                    .WithDescription(pageDescriptions[j])
+                    .WithFooter($"Page {j + 1}/{pageDescriptions.Count} ({"entry".ToQuantity(count)})");
 
-                paginator.AddPage(embed);
+                pages.Add(new Page().AddEmbed(embed));
             }
 
-            return Paginate(paginator, page - 1);
+            return Paginate(pages, startIndex: page - 1);
         }
     }
 }

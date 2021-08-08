@@ -15,6 +15,7 @@ using Disqord.Bot;
 using Humanizer;
 
 using Qmmands;
+using Disqord.Extensions.Interactivity.Menus.Paged;
 
 namespace Conbot.SplatoonPlugin
 {
@@ -68,7 +69,7 @@ namespace Conbot.SplatoonPlugin
             if (startIndex >= count || startIndex < 0)
                 return Fail("This page doesn't exist.");
 
-            var paginator = new Paginator();
+            List<Page> pages = new();
 
             for (int i = 0; i < count; i++)
             {
@@ -77,10 +78,10 @@ namespace Conbot.SplatoonPlugin
                 var leagueRotation = leagueRotations.ElementAt(i);
 
                 var embed = CreateSchedulesEmbed(regularRotation, rankedRotation, leagueRotation, i + 1, count);
-                paginator.AddPage(embed);
+                pages.Add(new Page().WithEmbeds(embed));
             }
 
-            return Paginate(paginator, startIndex);
+            return Paginate(pages, startIndex: startIndex);
         }
 
         public LocalEmbed CreateSchedulesEmbed(Rotation regularRotation, Rotation rankedRotation,
@@ -164,7 +165,7 @@ namespace Conbot.SplatoonPlugin
             if (startIndex >= totalPages || totalPages < 0)
                 return Fail("This page doesn't exist.");
 
-            var paginator = new Paginator();
+            List<Page> pages = new();
             var embed = new LocalEmbed();
 
             for (int i = 0; i < count; i++)
@@ -210,12 +211,12 @@ namespace Conbot.SplatoonPlugin
                             _config["EmbedFooterIconUrl"]);
 
                     currentPage++;
-                    paginator.AddPage(embed);
+                    pages.Add(new Page().WithEmbeds(embed));
                     embed = new LocalEmbed();
                 }
             }
 
-            return Paginate(paginator, startIndex);
+            return Paginate(pages, startIndex: startIndex);
         }
 
         [Command("salmonrun", "sr")]
@@ -313,7 +314,7 @@ namespace Conbot.SplatoonPlugin
                 return Reply("Currently there is no Splat Shop information available.");
 
             int count = merchandises.Count();
-            var paginator = new Paginator();
+            List<Page> pages = new();
 
             int gear = 1;
 
@@ -382,11 +383,11 @@ namespace Conbot.SplatoonPlugin
                 else
                     embed.WithColor(new Color(0xee156e));
 
-                paginator.AddPage(embed);
+                pages.Add(new Page().WithEmbeds(embed));
                 gear++;
             }
 
-            return Paginate(paginator);
+            return Paginate(pages);
         }
 
         [Command("pickweapon")]

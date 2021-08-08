@@ -16,6 +16,7 @@ using Disqord.Gateway;
 using Humanizer;
 
 using Qmmands;
+using Disqord.Extensions.Interactivity.Menus.Paged;
 
 namespace Conbot.RankingPlugin
 {
@@ -133,7 +134,7 @@ namespace Conbot.RankingPlugin
             var ranks = await _db.GetRanksAsync(Context.Guild!).ToArrayAsync();
 
             var text = new StringBuilder();
-            var pages = new List<string>();
+            var pageDescriptions = new List<string>();
 
             int padding = ranks.Length.ToString().Length;
 
@@ -181,26 +182,26 @@ namespace Conbot.RankingPlugin
 
                 if ((i + 1) % 5 == 0 || i == ranks.Length - 1)
                 {
-                    pages.Add(text.ToString());
+                    pageDescriptions.Add(text.ToString());
                     text.Clear();
                 }
             }
 
-            var paginator = new Paginator();
+            List<Page> pages = new();
 
-            for (int i = 0; i < pages.Count; i++)
+            for (int i = 0; i < pageDescriptions.Count; i++)
             {
                 var embed = new LocalEmbed()
                     .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")))
                     .WithAuthor(Context.Guild.Name, Context.Guild.GetIconUrl())
                     .WithTitle("Leaderboard")
-                    .WithDescription(pages[i])
-                    .WithFooter($"Page {i + 1}/{pages.Count} ({"entry".ToQuantity(ranks.Length)})");
+                    .WithDescription(pageDescriptions[i])
+                    .WithFooter($"Page {i + 1}/{pageDescriptions.Count} ({"entry".ToQuantity(ranks.Length)})");
 
-                paginator.AddPage(embed);
+                pages.Add(new Page().WithEmbeds(embed));
             }
 
-            return Paginate(paginator, page - 1);
+            return Paginate(pages, startIndex: page - 1);
         }
 
         [Group("announcements")]
@@ -480,7 +481,7 @@ namespace Conbot.RankingPlugin
                 int currentPage = 1;
                 int totalPages = (count / 10) + (count % 10 != 0 ? 1 : 0);
 
-                var paginator = new Paginator();
+                List<Page> pages = new();
                 var embed = new LocalEmbed();
 
                 for (int i = 0; i < count; i++)
@@ -502,12 +503,12 @@ namespace Conbot.RankingPlugin
                             .WithFooter($"Page {currentPage}/{totalPages} ({"entry".ToQuantity(count)})");
 
                         currentPage++;
-                        paginator.AddPage(embed);
+                        pages.Add(new Page().WithEmbeds(embed));
                         embed = new LocalEmbed();
                     }
                 }
 
-                return Paginate(paginator, page - 1);
+                return Paginate(pages, startIndex: page - 1);
             }
 
             [Command("add")]
@@ -690,7 +691,7 @@ namespace Conbot.RankingPlugin
                 if (count == 0)
                     return Reply("There are no channels ignored from gaining experience points.");
 
-                List<string> pages = new();
+                List<string> pageDescription = new();
 
                 int i = 1;
                 var pageText = new StringBuilder();
@@ -701,30 +702,31 @@ namespace Conbot.RankingPlugin
 
                     if (i % 15 == 0 || i == count)
                     {
-                        pages.Add(pageText.ToString());
+                        pageDescription.Add(pageText.ToString());
                         pageText.Clear();
                     }
 
                     i++;
                 }
 
-                if (page > pages.Count || page < 1)
+                if (page > pageDescription.Count || page < 1)
                     return Fail("This page doesn't exist.");
 
-                var paginator = new Paginator();
+                List<Page> pages = new();
 
-                for (int j = 0; j < pages.Count; j++)
+                for (int j = 0; j < pageDescription.Count; j++)
                 {
                     var embed = new LocalEmbed()
                         .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")))
                         .WithAuthor(Context.Guild!.Name, Context.Guild.GetIconUrl())
                         .WithTitle("Ignored Channels")
-                        .WithDescription(pages[j])
-                        .WithFooter($"Page {j + 1}/{pages.Count} ({"entry".ToQuantity(count)})");
-                    paginator.AddPage(embed);
+                        .WithDescription(pageDescription[j])
+                        .WithFooter($"Page {j + 1}/{pageDescription.Count} ({"entry".ToQuantity(count)})");
+
+                    pages.Add(new Page().WithEmbeds(embed));
                 }
 
-                return Paginate(paginator, page - 1);
+                return Paginate(pages, startIndex: page - 1);
             }
         }
 
