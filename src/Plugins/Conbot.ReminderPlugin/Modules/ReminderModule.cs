@@ -7,24 +7,20 @@ using Microsoft.Extensions.Configuration;
 using Conbot.Commands;
 using Conbot.Interactive;
 using Conbot.TimeZonePlugin;
-using Conbot.TimeZonePlugin.Extensions;
 
 using Disqord;
 using Disqord.Bot;
 
 using Humanizer;
 
-using NodaTime;
-using NodaTime.Extensions;
-
 using Qmmands;
+using System;
 
 namespace Conbot.ReminderPlugin
 {
     [Name("Reminder")]
     [Description("Create scheduled reminders.")]
     [Group("reminder", "remind", "timer")]
-    [RequireTimeZone]
     public class ReminderModule : ConbotModuleBase
     {
         private readonly ReminderContext _db;
@@ -50,6 +46,7 @@ namespace Conbot.ReminderPlugin
             "• \"in 5 hours 30 min do laundry\"\n" +
             "• \"2h unmute someone\"")]
         [OverrideArgumentParser(typeof(ReminderArgumentParser))]
+        [RequireTimeZone]
         public async Task<DiscordCommandResult> ReminderAsync(
             [Description("The time when you want to be reminded.")]
             [Remarks(
@@ -65,13 +62,12 @@ namespace Conbot.ReminderPlugin
             if (time.Then!.Value.LocalDateTime < time.Now.LocalDateTime)
                 return Fail("This time is in the past.");
 
-            await _db.AddReminderAsync(Context, time.Now.ToDateTimeUtc(), time.Then.Value.ToDateTimeUtc(),
+            var reminder = await _db.AddReminderAsync(Context, time.Now.ToDateTimeUtc(), time.Then.Value.ToDateTimeUtc(),
                 message?.Trim());
 
             var text = new StringBuilder()
                 .Append("⏰ Reminder has been set. You'll be reminded ")
-                .Append(time.Now.ToDurationString(time.Then.Value, DurationLevel.Seconds,
-                    showDateAt: Duration.FromDays(1), formatted: true))
+                .Append(Markdown.Timestamp(reminder.EndsAt, Markdown.TimestampFormat.LongDateTime))
                 .Append('.');
 
             return Reply(text.ToString()).RunWith(_db.SaveChangesAsync());
@@ -132,12 +128,10 @@ namespace Conbot.ReminderPlugin
             [Remainder]
             string view = "compact")
         {
-            var timeZone = await Context.GetUserTimeZoneAsync();
-            var now = SystemClock.Instance.InZone(timeZone)
-                .GetCurrentZonedDateTime();
+            var now = DateTimeOffset.UtcNow;
 
             var reminders = await _db.GetRemindersAsync(Context.Author)
-                .Where(x => x.EndsAt > now.ToDateTimeUtc())
+                .Where(x => x.EndsAt > now)
                 .OrderBy(x => x.EndsAt)
                 .ToArrayAsync();
 
@@ -161,9 +155,8 @@ namespace Conbot.ReminderPlugin
 
                 foreach (var reminder in reminders)
                 {
-                    var endsAt = Instant.FromDateTimeUtc(reminder.EndsAt).InZone(now.Zone);
                     page.AddField(
-                        $"{now.ToDurationString(endsAt, accuracy: 3).Humanize()} (ID: {reminder.Id})",
+                        $"{Markdown.Timestamp(reminder.EndsAt, Markdown.TimestampFormat.LongDateTime)} (ID: {reminder.Id})",
                         !string.IsNullOrEmpty(reminder.Message) ? reminder.Message.Truncate(1024) : "…");
 
                     if (entryPos % 5 == 0 || entryPos == count)
@@ -185,24 +178,21 @@ namespace Conbot.ReminderPlugin
             else
             {
                 for (int i = 0; i < count; i++)
-                    paginator.AddPage(CreateReminderEmbed(reminders[i], now, i, count));
+                    paginator.AddPage(CreateReminderEmbed(reminders[i], i, count));
             }
 
             return Paginate(paginator);
         }
 
-        private LocalEmbed CreateReminderEmbed(Reminder reminder, ZonedDateTime now, int? index, int? total)
+        private LocalEmbed CreateReminderEmbed(Reminder reminder, int? index, int? total)
         {
-            var createdAt = Instant.FromDateTimeUtc(reminder.CreatedAt).InZone(now.Zone);
-            var endsAt = Instant.FromDateTimeUtc(reminder.EndsAt).InZone(now.Zone);
-
             var embed = new LocalEmbed()
                 .WithColor(new Color(_config.GetValue<int>("DefaultEmbedColor")))
                 .WithAuthor(Context.Author.Name, Context.Author.GetAvatarUrl())
                 .WithTitle("Reminder")
-                .WithDescription($"Ends {now.ToDurationString(endsAt, formatted: true)}.")
-                .AddField("Created", DateTimeToClickableString(createdAt, reminder.Url), true)
-                .AddField("Ends", endsAt.ToReadableShortString(), true)
+                .WithDescription($"ends {Markdown.Timestamp(reminder.EndsAt, Markdown.TimestampFormat.RelativeTime)}")
+                .AddField("Created", Markdown.Link(Markdown.Timestamp(reminder.CreatedAt), reminder.Url), true)
+                .AddField("Ends", Markdown.Timestamp(reminder.EndsAt), true)
                 .AddField("Channel", Mention.Channel(reminder.ChannelId), true);
 
             if (!string.IsNullOrEmpty(reminder.Message))
@@ -215,11 +205,5 @@ namespace Conbot.ReminderPlugin
 
             return embed;
         }
-
-        private LocalEmbed CreateReminderEmbed(Reminder reminder, ZonedDateTime now)
-            => CreateReminderEmbed(reminder, now, null, null);
-
-        private static string DateTimeToClickableString(ZonedDateTime date, string url)
-            => $"[{date.ToReadableShortString()}]({url})";
     }
 }

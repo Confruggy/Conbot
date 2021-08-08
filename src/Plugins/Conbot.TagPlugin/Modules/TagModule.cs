@@ -8,8 +8,6 @@ using Microsoft.Extensions.Configuration;
 
 using Conbot.Commands;
 using Conbot.Interactive;
-using Conbot.TimeZonePlugin;
-using Conbot.TimeZonePlugin.Extensions;
 
 using Disqord;
 using Disqord.Bot;
@@ -17,8 +15,6 @@ using Disqord.Gateway;
 using Disqord.Rest;
 
 using Humanizer;
-
-using NodaTime;
 
 using Qmmands;
 
@@ -271,7 +267,6 @@ namespace Conbot.TagPlugin
 
         [Command("info")]
         [Description("Shows inMarkdownion about a tag or an alias.")]
-        [RequireTimeZone]
         [Commands.RequireBotChannelPermissions(Permission.SendEmbeds)]
         [OverrideArgumentParser(typeof(InteractiveArgumentParser))]
         public async Task<DiscordCommandResult> InfoAsync(
@@ -281,8 +276,6 @@ namespace Conbot.TagPlugin
             var tag = Array.Find(tags, x => x.GuildId == Context.Guild.Id &&
                 string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
 
-            var timeZone = await Context.GetUserTimeZoneAsync();
-
             if (tag is null)
             {
                 var alias = await _db.GetTagAliasAsync(Context.Guild, name);
@@ -290,26 +283,28 @@ namespace Conbot.TagPlugin
                 if (alias is null)
                     return Fail($"Tag **{Markdown.Escape(name)}** hasn't been found.");
 
-                return Reply(CreateTagAliasEmbed(alias, timeZone!));
+                return Reply(CreateTagAliasEmbed(alias));
             }
             else
             {
                 int count = tags.Length;
                 int uses = tag.Uses.Count;
                 int rank = count - tags.Count(x => x.Uses.Count <= uses) + 1;
-                return Reply(CreateTagEmbed(tag, uses, rank, count, timeZone!));
+                return Reply(CreateTagEmbed(tag, uses, rank, count));
             }
         }
 
-        private LocalEmbed CreateTagEmbed(Tag tag, int uses, int rank, int count, DateTimeZone timeZone)
+        private LocalEmbed CreateTagEmbed(Tag tag, int uses, int rank, int count)
         {
             var owner = Context.Guild.GetMember(tag.OwnerId);
             double days = (DateTime.UtcNow - tag.CreatedAt).TotalDays;
             double average = days > 1 ? Math.Round(uses / days) : uses;
 
             var createdAtText = new StringBuilder()
-                .AppendLine(DateTimeToClickableString(
-                    Instant.FromDateTimeUtc(tag.CreatedAt).InZone(timeZone), tag.CreationUrl));
+                .AppendLine(
+                    Markdown.Link(
+                        Markdown.Timestamp(tag.CreatedAt, Markdown.TimestampFormat.RelativeTime),
+                        tag.CreationUrl));
 
             if (tag.CreatorId != tag.OwnerId)
             {
@@ -330,8 +325,10 @@ namespace Conbot.TagPlugin
             else
             {
                 modifiedAtText
-                    .AppendLine(DateTimeToClickableString(
-                        Instant.FromDateTimeUtc(modification.ModifiedAt).InZone(timeZone), modification.Url));
+                    .AppendLine(
+                        Markdown.Link(
+                            Markdown.Timestamp(modification.ModifiedAt, Markdown.TimestampFormat.RelativeTime),
+                            modification.Url));
 
                 if (modification.UserId != tag.OwnerId)
                 {
@@ -354,7 +351,7 @@ namespace Conbot.TagPlugin
                 .AddField("Last Edited", modifiedAtText.ToString(), true);
         }
 
-        private LocalEmbed CreateTagAliasEmbed(TagAlias alias, DateTimeZone timeZone)
+        private LocalEmbed CreateTagAliasEmbed(TagAlias alias)
         {
             var owner = Context.Guild.GetMember(alias.OwnerId);
             double days = (DateTime.UtcNow - alias.CreatedAt).TotalDays;
@@ -362,8 +359,10 @@ namespace Conbot.TagPlugin
             double average = days > 1 ? Math.Round(uses / days) : uses;
 
             var createdAtText = new StringBuilder()
-                .AppendLine(DateTimeToClickableString(
-                    Instant.FromDateTimeUtc(alias.CreatedAt).InZone(timeZone), alias.CreationUrl));
+                .AppendLine(
+                    Markdown.Link(
+                        Markdown.Timestamp(alias.CreatedAt, Markdown.TimestampFormat.RelativeTime),
+                        alias.CreationUrl));
 
             if (alias.CreatorId != alias.OwnerId)
             {
@@ -383,9 +382,6 @@ namespace Conbot.TagPlugin
                 .AddField("Uses", $"{uses:n0} ({average}/day)", true)
                 .AddField("Created", createdAtText.ToString(), true);
         }
-
-        public static string DateTimeToClickableString(ZonedDateTime date, string url)
-            => $"[{date.ToReadableShortString(false)}]({url})";
 
         [Command("alias")]
         [Description("Creates an alias for an already existing tag.")]

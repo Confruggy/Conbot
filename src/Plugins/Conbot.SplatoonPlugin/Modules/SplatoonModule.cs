@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,17 +7,12 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 
 using Conbot.Commands;
-using Conbot.Extensions;
 using Conbot.Interactive;
-using Conbot.TimeZonePlugin;
-using Conbot.TimeZonePlugin.Extensions;
 
 using Disqord;
 using Disqord.Bot;
 
 using Humanizer;
-
-using NodaTime;
 
 using Qmmands;
 
@@ -56,12 +50,12 @@ namespace Conbot.SplatoonPlugin
                 return Reply("Currently there is no schedule available.");
 
             if (mode == "all")
-                return await ShowAllSchedulesAsync(schedules, page - 1);
+                return ShowAllSchedules(schedules, page - 1);
             else
-                return await ShowScheduleAsync(schedules, mode);
+                return ShowSchedule(schedules, mode);
         }
 
-        public async Task<DiscordCommandResult> ShowAllSchedulesAsync(Schedules schedules, int startIndex = 0)
+        public DiscordCommandResult ShowAllSchedules(Schedules schedules, int startIndex = 0)
         {
             var now = DateTimeOffset.Now;
 
@@ -74,9 +68,6 @@ namespace Conbot.SplatoonPlugin
             if (startIndex >= count || startIndex < 0)
                 return Fail("This page doesn't exist.");
 
-            var timezone = await Context.GetUserTimeZoneAsync() ?? DateTimeZone.Utc;
-            var instant = SystemClock.Instance.GetCurrentInstant();
-
             var paginator = new Paginator();
 
             for (int i = 0; i < count; i++)
@@ -85,8 +76,7 @@ namespace Conbot.SplatoonPlugin
                 var rankedRotation = rankedRotations.ElementAt(i);
                 var leagueRotation = leagueRotations.ElementAt(i);
 
-                var embed = CreateSchedulesEmbed(
-                    regularRotation, rankedRotation, leagueRotation, timezone, instant, i + 1, count);
+                var embed = CreateSchedulesEmbed(regularRotation, rankedRotation, leagueRotation, i + 1, count);
                 paginator.AddPage(embed);
             }
 
@@ -94,40 +84,30 @@ namespace Conbot.SplatoonPlugin
         }
 
         public LocalEmbed CreateSchedulesEmbed(Rotation regularRotation, Rotation rankedRotation,
-            Rotation leagueRotation, DateTimeZone timezone, Instant instant, int page, int total)
+            Rotation leagueRotation, int page, int total)
         {
-            var now = instant.ToDateTimeOffset();
-            var zonedInstant = instant.InZone(timezone);
+            var titleText = new StringBuilder()
+                .Append(Markdown.Timestamp(regularRotation.StartTime))
+                .Append(" – ")
+                .Append(Markdown.Timestamp(regularRotation.EndTime));
 
-            var startTime = Instant.FromDateTimeOffset(regularRotation.StartTime).InZone(timezone);
-            var endTime = Instant.FromDateTimeOffset(regularRotation.EndTime).InZone(timezone);
+            var description = new StringBuilder();
 
-            var titleText = new StringBuilder();
+            if (page == 1)
+                description.Append("ends");
+            else
+                description.Append("starts");
 
-            if (startTime.Date != zonedInstant.Date)
-            {
-                titleText
-                    .Append(startTime.Date.ToString("dd/MM", CultureInfo.InvariantCulture))
-                    .Append(" at ");
-            }
-
-            titleText
-                .Append(startTime.TimeOfDay.ToString("HH:mm", CultureInfo.InvariantCulture))
-                .Append(" – ");
-
-            if (endTime.Date != startTime.Date)
-            {
-                titleText
-                    .Append(endTime.Date.ToString("dd/MM", CultureInfo.InvariantCulture))
-                    .Append(" at ");
-            }
-
-            titleText.Append(endTime.TimeOfDay.ToString("HH:mm", CultureInfo.InvariantCulture));
+            description
+                .Append(' ')
+                .Append(Markdown.Timestamp(
+                    page == 1 ? regularRotation.EndTime : regularRotation.StartTime,
+                    Markdown.TimestampFormat.RelativeTime));
 
             return new LocalEmbed()
                 .WithColor(new Color(0x19d719))
                 .WithTitle(titleText.ToString())
-                .WithDescription($"for {(regularRotation.EndTime - now).ToLongFormattedString()}")
+                .WithDescription(description.ToString())
                 .AddField(
                     $"<:{_config["Emotes:Modes:Regular"]}> {regularRotation.Mode.Name}: {regularRotation.Rule.Name}",
                     $"**{regularRotation.MapA.Name}** and **{regularRotation.MapB.Name}**")
@@ -142,8 +122,7 @@ namespace Conbot.SplatoonPlugin
                     _config["EmbedFooterIconUrl"]);
         }
 
-        public async Task<DiscordCommandResult> ShowScheduleAsync(Schedules schedules, string mode = "regular",
-            int startIndex = 0)
+        public DiscordCommandResult ShowSchedule(Schedules schedules, string mode = "regular", int startIndex = 0)
         {
             IEnumerable<Rotation> schedule;
             string title;
@@ -176,12 +155,7 @@ namespace Conbot.SplatoonPlugin
                 color = new Color(0x19d719);
             }
 
-            var timezone = await Context.GetUserTimeZoneAsync() ?? DateTimeZone.Utc;
-            var instant = SystemClock.Instance.GetCurrentInstant();
-            var now = instant.ToDateTimeOffset();
-            var zonedInstant = instant.InZone(timezone);
-
-            schedule = schedule.Where(x => x.EndTime > now);
+            schedule = schedule.Where(x => x.EndTime > DateTimeOffset.UtcNow);
 
             int count = schedule.Count();
             int currentPage = 1;
@@ -197,9 +171,6 @@ namespace Conbot.SplatoonPlugin
             {
                 var rotation = schedule.ElementAt(i);
 
-                var startTime = Instant.FromDateTimeOffset(rotation.StartTime).InZone(timezone);
-                var endTime = Instant.FromDateTimeOffset(rotation.EndTime).InZone(timezone);
-
                 string name = $"{rotation.Rule.Name}";
 
                 var valueText = new StringBuilder()
@@ -209,40 +180,21 @@ namespace Conbot.SplatoonPlugin
                     .Append(rotation.MapB.Name)
                     .AppendLine("**");
 
-                if (rotation.StartTime <= now)
-                {
-                    valueText
-                        .Append("for")
-                        .Append(' ')
-                        .AppendLine((rotation.EndTime - now).ToLongFormattedString());
-                }
+                if (i == 0)
+                    valueText.Append("ends");
                 else
-                {
-                    valueText
-                        .Append("in")
-                        .Append(' ')
-                        .AppendLine((rotation.StartTime - now).ToLongFormattedString());
-                }
-
-                if (startTime.Date != zonedInstant.Date)
-                {
-                    valueText
-                        .Append(startTime.Date.ToString("dd/MM", CultureInfo.InvariantCulture))
-                        .Append(" at ");
-                }
+                    valueText.Append("starts");
 
                 valueText
-                    .Append(startTime.TimeOfDay.ToString("HH:mm", CultureInfo.InvariantCulture))
-                    .Append(" – ");
+                    .Append(' ')
+                    .AppendLine(Markdown.Timestamp(
+                        i == 0 ? rotation.EndTime : rotation.StartTime,
+                        Markdown.TimestampFormat.RelativeTime));
 
-                if (endTime.Date != startTime.Date)
-                {
-                    valueText
-                        .Append(endTime.Date.ToString("dd/MM", CultureInfo.InvariantCulture))
-                        .Append(" at ");
-                }
-
-                valueText.Append(endTime.TimeOfDay.ToString("HH:mm", CultureInfo.InvariantCulture));
+                valueText
+                    .Append(Markdown.Timestamp(rotation.StartTime))
+                    .Append(" – ")
+                    .Append(Markdown.Timestamp(rotation.EndTime));
 
                 embed.AddField(name, valueText.ToString());
 
@@ -275,9 +227,7 @@ namespace Conbot.SplatoonPlugin
             if (schedules is null)
                 return Reply("Currently there is no schedule available.");
 
-            var timezone = await Context.GetUserTimeZoneAsync() ?? DateTimeZone.Utc;
-            var instant = SystemClock.Instance.GetCurrentInstant();
-            var now = instant.ToDateTimeOffset();
+            var now = DateTimeOffset.UtcNow;
 
             var detailedRotations = schedules.DetailedRotations.Where(x => x.EndTime > now);
             var rotations =
@@ -294,9 +244,6 @@ namespace Conbot.SplatoonPlugin
             for (int i = 0; i < rotations.Count; i++)
             {
                 var rotation = rotations[i];
-
-                var startTime = Instant.FromDateTimeOffset(rotation.StartTime).InZone(timezone);
-                var endTime = Instant.FromDateTimeOffset(rotation.EndTime).InZone(timezone);
 
                 var nameText = new StringBuilder();
 
@@ -315,13 +262,9 @@ namespace Conbot.SplatoonPlugin
                     .Append("<:")
                     .Append(_config["Emotes:SalmonRun"])
                     .Append("> ")
-                    .Append(startTime.Date.ToString("dd/MM", CultureInfo.InvariantCulture))
-                    .Append(" at ")
-                    .Append(startTime.TimeOfDay.ToString("HH:mm", CultureInfo.InvariantCulture))
+                    .Append(Markdown.Timestamp(rotation.StartTime))
                     .Append(" – ")
-                    .Append(endTime.Date.ToString("dd/MM", CultureInfo.InvariantCulture))
-                    .Append(" at ")
-                    .Append(endTime.TimeOfDay.ToString("HH:mm", CultureInfo.InvariantCulture));
+                    .Append(Markdown.Timestamp(rotation.EndTime));
 
                 var valueText = new StringBuilder();
 
@@ -343,20 +286,16 @@ namespace Conbot.SplatoonPlugin
 
                 valueText.AppendLine();
 
-                if (rotation.StartTime <= now)
-                {
-                    valueText
-                        .Append("for")
-                        .Append(' ')
-                        .AppendLine((rotation.EndTime - now).ToLongFormattedString());
-                }
+                if (i == 0)
+                    valueText.Append("ends");
                 else
-                {
-                    valueText
-                        .Append("in")
-                        .Append(' ')
-                        .AppendLine((rotation.StartTime - now).ToLongFormattedString());
-                }
+                    valueText.Append("starts");
+
+                valueText
+                    .Append(' ')
+                    .AppendLine(Markdown.Timestamp(
+                        i == 0 ? rotation.EndTime : rotation.StartTime,
+                        Markdown.TimestampFormat.RelativeTime));
 
                 embed.AddField(nameText.ToString(), valueText.ToString());
             }
@@ -373,8 +312,6 @@ namespace Conbot.SplatoonPlugin
             if (merchandises?.Any() != true)
                 return Reply("Currently there is no Splat Shop information available.");
 
-            var now = DateTimeOffset.UtcNow;
-
             int count = merchandises.Count();
             var paginator = new Paginator();
 
@@ -382,7 +319,8 @@ namespace Conbot.SplatoonPlugin
 
             foreach (var merchandise in merchandises)
             {
-                string description = $"{(merchandise.EndTime - now).ToLongFormattedString()} left";
+                string description =
+                    $"ends {Markdown.Timestamp(merchandise.EndTime, Markdown.TimestampFormat.RelativeTime)}";
                 string priceText = $"<:{_config["Emotes:SplatShop:Money"]}> {merchandise.Price}";
 
                 var slotsText = new StringBuilder()

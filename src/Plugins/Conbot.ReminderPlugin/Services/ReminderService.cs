@@ -87,12 +87,7 @@ namespace Conbot.ReminderPlugin
                             ? _provider.GetZoneOrNull(userTimeZone.TimeZoneId)!
                             : _provider.GetSystemDefault();
 
-                        string time = Instant.FromDateTimeUtc(reminder.EndsAt).InZone(timeZone)
-                            .ToDurationString(
-                                Instant.FromDateTimeUtc(reminder.CreatedAt).InZone(timeZone),
-                                DurationLevel.Seconds,
-                                showDateAt: Duration.FromDays(1),
-                                formatted: true);
+                        string time = Markdown.Timestamp(reminder.CreatedAt, Markdown.TimestampFormat.RelativeTime);
 
                         string text;
                         LocalMessageReference? reference = null;
