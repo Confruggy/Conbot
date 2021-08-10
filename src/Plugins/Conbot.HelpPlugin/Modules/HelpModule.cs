@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 using Conbot.Commands;
 
@@ -16,34 +16,34 @@ namespace Conbot.HelpPlugin
         Permission.AddReactions |
         Permission.SendEmbeds |
         Permission.UseExternalEmojis)]
-    public class HelpModule : DiscordModuleBase<ConbotCommandContext>
+    public class HelpModule : ConbotModuleBase
     {
-        private readonly HelpService _service;
+        private readonly IConfiguration _config;
 
-        public HelpModule(HelpService service) => _service = service;
+        public HelpModule(IConfiguration config) => _config = config;
 
         [Command("all", "")]
         [Description("Shows all available commands.")]
-        public Task HelpAsync() => _service.ExecuteHelpMessageAsync(Context);
+        public DiscordCommandResult Help() => View(new StartView(Context, _config));
 
         [Command("command", "")]
         [Description("Gives information about a specific command.")]
         [Priority(1)]
-        public Task HelpAsync(
+        public DiscordCommandResult Help(
             [Description("The command to give information about.")]
             [Remarks("Can be either the name of the command or any alias.")]
             [Remainder]
             Command command)
-            => _service.ExecuteHelpMessageAsync(Context, command);
+            => View(new CommandView(command, Context, _config));
 
         [Command("group", "")]
         [Description("Gives information about a specific group.")]
         [Priority(2)]
-        public Task HelpAsync(
+        public DiscordCommandResult Help(
             [Description("The group to give information about.")]
             [Remarks("Can be either the name of the group or the group's prefix.")]
             [Remainder]
             Module group)
-         => _service.ExecuteHelpMessageAsync(Context, group);
+            => View(new ModuleView(group, Context, _config));
     }
 }

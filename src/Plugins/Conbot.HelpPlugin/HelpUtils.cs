@@ -73,9 +73,8 @@ namespace Conbot.HelpPlugin
                 }
 
                 var text = new StringBuilder()
-                    .Append("**")
-                    .Append(name)
-                    .Append("** : ")
+                    .Append(Markdown.Bold(name))
+                    .Append(" : ")
                     .Append(type)
                     .Append(" (*");
 
@@ -109,5 +108,38 @@ namespace Conbot.HelpPlugin
 
         public static string FormatParameters(Command command)
             => string.Join(" ", command.Parameters.Select(x => FormatParameter(x)));
+
+        public static string GetShortModule(Module module)
+            => $"{Markdown.Bold(module.Parent is not null ? $"{module.FullAliases[0]}*" : module.Name)}\n" +
+                $"> {module.Description ?? "No Description."}";
+
+        public static string GetShortCommand(Command command)
+            => $"{Markdown.Bold(command.FullAliases[0])} {FormatParameters(command)}\n" +
+                $"> {command.Description ?? "No Description."}";
+
+        public static string GetPath(Module module)
+        {
+            string? alias = module.FullAliases.FirstOrDefault();
+
+            if (string.IsNullOrEmpty(alias))
+                return module.Name;
+
+            var parent = module.Parent;
+
+            while (parent?.Parent is not null)
+                parent = module.Parent;
+
+            return $"{parent?.Name ?? module.Name} › {string.Join(" › ", alias.Split(' '))}";
+        }
+
+        public static string GetPath(Command command)
+        {
+            var module = command.Module;
+
+            while (module.Parent is not null)
+                module = module.Parent;
+
+            return $"{module.Name} › {command.FullAliases[0].Replace(" ", " › ")}";
+        }
     }
 }

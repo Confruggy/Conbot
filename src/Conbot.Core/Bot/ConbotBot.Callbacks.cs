@@ -18,12 +18,12 @@ namespace Conbot
 {
     public partial class ConbotBot
     {
-        public override DiscordCommandContext CreateCommandContext(IPrefix prefix, string input,
-            IGatewayUserMessage message, CachedMessageGuildChannel channel)
+        public override ConbotCommandContext CreateCommandContext(IPrefix prefix, string input,
+            IGatewayUserMessage message, CachedMessageGuildChannel? channel)
         {
             var scope = Services.CreateScope();
             var context = message.GuildId is not null
-                ? new ConbotGuildCommandContext(this, prefix, input, message, channel, scope)
+                ? new ConbotGuildCommandContext(this, prefix, input, message, channel!, scope)
                 : new ConbotCommandContext(this, prefix, input, message, scope);
             context.Services.GetRequiredService<ICommandContextAccessor>().Context = context;
             return context;

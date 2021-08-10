@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 
 using Conbot.Commands;
-using Conbot.Interactive;
 
 using Disqord;
+using Disqord.Extensions.Interactivity.Menus;
 using Disqord.Gateway;
 
 using Qmmands;
@@ -16,16 +16,8 @@ namespace Conbot.HelpPlugin
     public class HelpPluginCommandFailedHandler : ICommandFailedHandler
     {
         private readonly IConfiguration _config;
-        private readonly InteractiveService _interactiveService;
-        private readonly HelpService _helpService;
 
-        public HelpPluginCommandFailedHandler(IConfiguration config, InteractiveService interactiveService,
-            HelpService helpService)
-        {
-            _config = config;
-            _interactiveService = interactiveService;
-            _helpService = helpService;
-        }
+        public HelpPluginCommandFailedHandler(IConfiguration config) => _config = config;
 
         public async ValueTask HandleFailedResultAsync(ConbotCommandContext context, FailedResult result)
         {
@@ -55,52 +47,36 @@ namespace Conbot.HelpPlugin
 
             Module? module = null;
 
-            if (command is null)
+            if (command is null && result is OverloadsFailedResult overloadsFailedResult)
             {
-                if (result is OverloadsFailedResult overloadsFailedResult)
-                {
-                    if (overloadsFailedResult.FailedOverloads.Count == 1)
-                        command = overloadsFailedResult.FailedOverloads.First().Key;
-                    else
-                        module = overloadsFailedResult.FailedOverloads.First().Key.Module;
-                }
+                if (overloadsFailedResult.FailedOverloads.Count == 1)
+                    command = overloadsFailedResult.FailedOverloads.First().Key;
                 else
-                {
-                    return;
-                }
+                    module = overloadsFailedResult.FailedOverloads.First().Key.Module;
             }
 
-            bool executeHelpCommand = false;
+            ErrorView view;
 
-            message
-                .WithPrecondition(x => x.Id == context.Author.Id)
-                .AddReactionCallback(_config.GetValue<string>("Emotes:Info"), x => x
-                    .WithCallback((msg, _) =>
-                    {
-                        executeHelpCommand = true;
-                        msg.Stop();
-                    }));
+            if (command is not null)
+                view = new ErrorView(message, context, _config, command);
+            else if (module is not null)
+                view = new ErrorView(message, context, _config, module);
+            else
+                view = new ErrorView(message, context, _config);
 
-            await _interactiveService.ExecuteInteractiveMessageAsync(message, context);
-
-            if (executeHelpCommand)
-            {
-                if (command is not null)
-                    await _helpService.ExecuteHelpMessageAsync(context, command, true);
-                else if (module is not null)
-                    await _helpService.ExecuteHelpMessageAsync(context, module, true);
-            }
+            await context.Bot.RunMenuAsync(context.ChannelId, new InteractiveMenu(context.Author.Id, view));
         }
 
-        private static LocalInteractiveMessage? FormatFailureMessage(ConbotCommandContext context, FailedResult result)
+        private static LocalMessage? FormatFailureMessage(ConbotCommandContext context, FailedResult result)
         {
             string reason = context.Bot.FormatFailureReason(context, result);
 
             if (string.IsNullOrEmpty(reason))
                 return null;
 
-            var message = new LocalInteractiveMessage()
-                .WithContent(reason);
+            var message = new LocalMessage()
+                .WithContent(reason)
+                .WithReply(context.Messages[^1].Id, context.ChannelId, context.GuildId);
 
             if (result is OverloadsFailedResult overloadsFailedResult)
             {
