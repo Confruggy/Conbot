@@ -63,7 +63,7 @@ namespace Conbot.HelpPlugin
             _commands = GetCommands();
             _subcommands = GetSubcommands();
 
-            if (_commands.Count() > 1)
+            if (_commands.Any())
             {
                 List<LocalSelectionComponentOption> options = new();
 
@@ -71,7 +71,7 @@ namespace Conbot.HelpPlugin
                 {
                     var option = new LocalSelectionComponentOption()
                         .WithLabel($"{command.FullAliases[0]} {HelpUtils.FormatParameters(command)}")
-                        .WithValue(command.Aliases[0])
+                        .WithValue(command.ToString())
                         .WithDescription(command.Description ?? "No Description.");
 
                     options.Add(option);
@@ -91,7 +91,7 @@ namespace Conbot.HelpPlugin
                 CommandSelection = null;
             }
 
-            if (_subcommands.Count > 1)
+            if (_subcommands.Count > 0)
             {
                 List<LocalSelectionComponentOption> options = new();
 
