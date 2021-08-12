@@ -21,6 +21,7 @@
         "build Conbot.RankingPlugin",
         "build Conbot.ReminderPlugin",
         "build Conbot.RngPlugin",
+        "build Conbot.RpsPlugin",
         "build Conbot.SplatoonPlugin",
         "build Conbot.TagPlugin",
         "build Conbot.UrbanPlugin",
@@ -94,6 +95,16 @@
       "args": [
         "build",
         "${workspaceFolder}/src/Plugins/Conbot.RngPlugin/Conbot.RngPlugin.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+    },
+    {
+      "label": "build Conbot.RpsPlugin",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Plugins/Conbot.RpsPlugin/Conbot.RpsPlugin.csproj"
       ],
       "problemMatcher": "$msCompile",
     },
