@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -69,7 +70,35 @@ namespace Conbot.HelpPlugin
 
         private static LocalMessage? FormatFailureMessage(ConbotCommandContext context, FailedResult result)
         {
-            string reason = context.Bot.FormatFailureReason(context, result);
+            string reason;
+            Dictionary<string, string> fields = new();
+
+            if (result is OverloadsFailedResult overloadsFailedResult)
+            {
+                if (overloadsFailedResult.FailedOverloads.Count == 1)
+                {
+                    reason = context.Bot.FormatFailureReason(context,
+                        overloadsFailedResult.FailedOverloads.First().Value);
+                }
+                else
+                {
+                    foreach (var (overload, overloadResult) in overloadsFailedResult.FailedOverloads)
+                    {
+                        string overloadReason = context.Bot.FormatFailureReason(context, overloadResult);
+
+                        if (overloadReason is null)
+                            continue;
+
+                        fields.Add($"{overload.FullAliases[0]} {HelpUtils.FormatParameters(overload)}", overloadReason);
+                    }
+
+                    reason = context.Bot.FormatFailureReason(context, result);
+                }
+            }
+            else
+            {
+                reason = context.Bot.FormatFailureReason(context, result);
+            }
 
             if (string.IsNullOrEmpty(reason))
                 return null;
@@ -78,21 +107,15 @@ namespace Conbot.HelpPlugin
                 .WithContent(reason)
                 .WithReply(context.Messages[^1].Id, context.ChannelId, context.GuildId);
 
-            if (result is OverloadsFailedResult overloadsFailedResult)
+            if (fields.Count > 0)
             {
                 var embed = new LocalEmbed()
                     .WithColor(0xED4245);
 
-                foreach (var (overload, overloadResult) in overloadsFailedResult.FailedOverloads)
-                {
-                    string overloadReason = context.Bot.FormatFailureReason(context, overloadResult);
-                    if (overloadReason == null)
-                        continue;
+                foreach (var field in fields)
+                    embed.AddField(field.Key, field.Value);
 
-                    embed.AddField($"{overload.FullAliases[0]} {HelpUtils.FormatParameters(overload)}", overloadReason);
-                }
-
-                message.AddEmbed(embed);
+                message.WithEmbeds(embed);
             }
 
             return message;
