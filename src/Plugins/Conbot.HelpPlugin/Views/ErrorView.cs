@@ -6,6 +6,7 @@ using Conbot.Commands;
 
 using Disqord;
 using Disqord.Extensions.Interactivity.Menus;
+using Disqord.Rest;
 
 using Qmmands;
 
@@ -20,6 +21,7 @@ namespace Conbot.HelpPlugin
         public IConfiguration Configuration { get; }
 
         public ButtonViewComponent HelpButton { get; }
+        public ButtonViewComponent DismissButton { get; }
 
         public ErrorView(LocalMessage templateMessage, ConbotCommandContext context, IConfiguration configuration)
             : this(templateMessage, context, configuration, null, null)
@@ -55,16 +57,40 @@ namespace Conbot.HelpPlugin
             };
 
             AddComponent(HelpButton);
+
+            DismissButton = new ButtonViewComponent(OnDismissButtonAsync)
+            {
+                Label = "Dismiss",
+                Style = LocalButtonComponentStyle.Secondary
+            };
+
+            AddComponent(DismissButton);
         }
 
         public ValueTask OnHelpButtonAsync(ButtonEventArgs e)
         {
+            ViewBase view;
+
             if (_command is not null)
-                Menu.View = new CommandView(_command, Context, Configuration, TemplateMessage);
+                view = new CommandView(_command, Context, Configuration);
             else if (_module is not null)
-                Menu.View = new ModuleView(_module, Context, Configuration, TemplateMessage);
+                view = new ModuleView(_module, Context, Configuration);
             else
-                Menu.View = new StartView(Context, Configuration, TemplateMessage);
+                view = new StartView(Context, Configuration);
+
+            HelpButton.IsDisabled = true;
+
+            var menu = new InteractiveMenu(Context.Author.Id, view);
+            _ = Context.Bot.StartMenuAsync(Context.ChannelId, menu);
+
+            return default;
+        }
+
+        public ValueTask OnDismissButtonAsync(ButtonEventArgs e)
+        {
+            _ = e.Interaction.Message.DeleteAsync();
+
+            Menu.Stop();
 
             return default;
         }
