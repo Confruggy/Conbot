@@ -15,7 +15,7 @@ namespace Conbot.ReminderPlugin
         public async ValueTask<ArgumentParserResult> ParseAsync(CommandContext context)
         {
             if (context is not DiscordCommandContext discordCommandContext)
-                return ConbotArgumentParserResult.Failed("Invalid context.");
+                return InteractiveArgumentParserResult.Failed("Invalid context.");
 
             if (string.IsNullOrEmpty(context.RawArguments))
             {
@@ -60,7 +60,7 @@ namespace Conbot.ReminderPlugin
                 remainder = null;
 
             if (remainder?.StartsWith(' ') == false)
-                return ConbotArgumentParserResult.Failed("There must be a space between the time and the message.");
+                return InteractiveArgumentParserResult.Failed("There must be a space between the time and the message.");
 
             var arguments = new Dictionary<Parameter, object?>
             {
@@ -68,7 +68,7 @@ namespace Conbot.ReminderPlugin
                 [context.Command.Parameters[1]] = remainder,
             };
 
-            return ConbotArgumentParserResult.Successful(arguments);
+            return InteractiveArgumentParserResult.Successful(arguments);
         }
     }
 }

@@ -161,6 +161,7 @@ namespace Conbot.HelpPlugin
             var parser = Context.Bot.Commands.GetArgumentParser<InteractiveArgumentParser>();
             var handler = Context.Bot.Services.GetRequiredService<ICommandFailedHandler>();
 
+            //this is a hack, don't recommend
             Context.Bot.Queue.Post(_newContext, async context =>
             {
                 var parserResult = await parser.ParseAsync(context);
@@ -168,15 +169,31 @@ namespace Conbot.HelpPlugin
                 var input = new StringBuilder()
                     .Append(Command.FullAliases[0]);
 
-                if (parserResult.Arguments.Count != 0)
-                    input.Append(' ').AppendJoin(' ', parserResult.Arguments.Select(x => x.Value));
+                if (!parserResult.IsSuccessful)
+                {
+                    var argumentParseFailedResult =
+                        (ArgumentParseFailedResult)typeof(ArgumentParseFailedResult)
+                            .GetConstructor(
+                                BindingFlags.Instance | BindingFlags.NonPublic,
+                                null,
+                                new[] { typeof(CommandContext), typeof(ArgumentParserResult) },
+                                null)!
+                            .Invoke(new object[] { context, parserResult });
 
-                var commandResult = await Context.Bot.Commands.ExecuteAsync(input.ToString(), context);
+                    await handler.HandleFailedResultAsync((ConbotCommandContext)context, argumentParseFailedResult);
+                }
+                else
+                {
+                    if (parserResult.Arguments.Count != 0)
+                        input.Append(' ').AppendJoin(' ', parserResult.Arguments.Select(x => x.Value));
 
-                if (commandResult.IsSuccessful)
-                    return;
+                    var commandResult = await Context.Bot.Commands.ExecuteAsync(input.ToString(), context);
 
-                await handler.HandleFailedResultAsync((ConbotCommandContext)context, (FailedResult)commandResult);
+                    if (commandResult.IsSuccessful)
+                        return;
+
+                    await handler.HandleFailedResultAsync((ConbotCommandContext)context, (FailedResult)commandResult);
+                }
 
                 await context.DisposeAsync();
             });

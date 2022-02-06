@@ -35,14 +35,10 @@ namespace Conbot
             {
                 case ArgumentParseFailedResult argumentParserFailedResult:
                     {
-                        var commandParameters = argumentParserFailedResult.Command.Parameters.Where(x => !x.IsOptional);
-                        var parsedParameters = argumentParserFailedResult.ParserResult.Arguments
-                            .Select(x => x.Key)
-                            .Where(x => !x.IsOptional);
-
-                        if (commandParameters.Count() > parsedParameters.Count())
+                        if (argumentParserFailedResult.ParserResult is DefaultArgumentParserResult parser &&
+                            parser.Failure == DefaultArgumentParserFailure.TooFewArguments)
                         {
-                            var missingParameters = commandParameters.Except(parsedParameters);
+                            var missingParameters = parser.EnumerateMissingParameters();
 
                             return new StringBuilder()
                                 .Append("Required ")

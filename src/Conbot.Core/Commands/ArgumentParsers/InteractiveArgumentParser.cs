@@ -14,6 +14,7 @@ using Disqord.Bot;
 using Humanizer;
 
 using Qmmands;
+using Disqord.Extensions.Interactivity.Menus;
 
 namespace Conbot.Commands
 {
@@ -22,7 +23,7 @@ namespace Conbot.Commands
         public async ValueTask<ArgumentParserResult> ParseAsync(CommandContext context)
         {
             if (context is not ConbotCommandContext conbotCommandContext)
-                return ConbotArgumentParserResult.Failed("Invalid context.");
+                return InteractiveArgumentParserResult.Failed("Invalid context.");
 
             if (!string.IsNullOrEmpty(context.RawArguments))
             {
@@ -41,16 +42,34 @@ namespace Conbot.Commands
 
                 var lastEntered = arguments.Keys.LastOrDefault();
 
+                object[]? choices;
+
+                if (parameter.Checks.FirstOrDefault(x => x is ChoicesAttribute) is ChoicesAttribute attribute)
+                    choices = attribute.Choices;
+                else
+                    choices = null;
+
                 if (lastEntered is not null)
                 {
                     text
                         .Append(lastEntered.Name.Humanize())
-                        .Append(" has been entered. Now enter ");
+                        .Append(" has been entered. Now ");
+
+                    if (choices is not null)
+                        text.Append("select");
+                    else
+                        text.Append("enter");
+                }
+                else if (choices is not null)
+                {
+                    text.Append("Select");
                 }
                 else
                 {
-                    text.Append("Enter ");
+                    text.Append("Enter");
                 }
+
+                text.Append(' ');
 
                 if (!string.IsNullOrEmpty(parameter.Description))
                 {
@@ -65,60 +84,35 @@ namespace Conbot.Commands
                         .Append('.');
                 }
 
-                string? argument = null;
-                bool skipped = false;
+                var view = new ArgumentInputView(
+                    new LocalMessage()
+                        .WithContent(text.ToString())
+                        .WithReply(conbotCommandContext.Message!.Id, conbotCommandContext.Message.ChannelId,
+                        conbotCommandContext.Message.GuildId),
+                    conbotCommandContext,
+                    parameter.IsOptional,
+                    choices);
 
-                var message = new LocalInteractiveMessage()
-                    .WithContent(text.ToString())
-                    .WithReply(conbotCommandContext.Message!.Id, conbotCommandContext.Message.ChannelId,
-                        conbotCommandContext.Message.GuildId)
-                    .WithAllowedMentions(LocalAllowedMentions.None)
-                    .WithPrecondition(x => x.Id == conbotCommandContext.Author.Id);
+                var menu = new InteractiveMenu(conbotCommandContext.Author.Id, view);
 
-                if (parameter.IsOptional)
-                {
-                    text
-                        .Append(" Click on <:")
-                        .Append(config.GetValue<string>("Emotes:MediumSkip"))
-                        .Append("> to skip this parameter or on <:")
-                        .Append(config.GetValue<string>("Emotes:MediumCrossMark"))
-                        .Append("> to cancel the command.");
+                await using var yield = conbotCommandContext.BeginYield();
 
-                    message.AddReactionCallback(config.GetValue<string>("Emotes:Skip"), x => x
-                        .WithCallback((msg, _) =>
-                        {
-                            skipped = true;
-                            msg.Stop();
-                        }));
-                }
+                await conbotCommandContext.Bot.StartMenuAsync(conbotCommandContext.ChannelId, menu);
+
+                conbotCommandContext.AddMessage(menu.Message);
+
+                if (choices is null)
+                    await view.BackgroundTask();
                 else
-                {
-                    text
-                        .Append(" Click on <:")
-                        .Append(config.GetValue<string>("Emotes:MediumCrossMark"))
-                        .Append("> to cancel the command.");
-                }
+                    await menu.Task;
 
-                message
-                    .AddReactionCallback(config.GetValue<string>("Emotes:CrossMark"), x => x
-                        .WithCallback((msg, _) => msg.Stop()))
-                    .AddMessageCallback(x => x
-                        .WithCallback((msg, e) =>
-                        {
-                            conbotCommandContext.AddMessage((IUserMessage)e.Message);
-                            argument = e.Message.Content;
-                            msg.Stop();
-                        }));
+                if (view.Result is null && !view.Skipped)
+                    return InteractiveArgumentParserResult.Failed("Command has been canceled.");
 
-                var response = await interactiveService.ExecuteInteractiveMessageAsync(message, conbotCommandContext);
-
-                if (argument is null && !skipped)
-                    return ConbotArgumentParserResult.Failed("Aborted");
-
-                arguments.Add(parameter, argument);
+                arguments.Add(parameter, view.Result);
             }
 
-            return ConbotArgumentParserResult.Successful(arguments);
+            return InteractiveArgumentParserResult.Successful(arguments);
         }
     }
 }
