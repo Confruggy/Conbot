@@ -93,7 +93,10 @@ namespace Conbot.Commands
                     parameter.IsOptional,
                     choices);
 
-                var menu = new InteractiveMenu(conbotCommandContext.Author.Id, view);
+                var menu = new DefaultMenu(view)
+                {
+                    AuthorId = conbotCommandContext.Author.Id
+                };
 
                 await using var yield = conbotCommandContext.BeginYield();
 

@@ -6,13 +6,13 @@ using Disqord.Gateway;
 
 namespace Conbot.RpsPlugin
 {
-    public class RpsMenu : InteractiveMenu
+    public class RpsMenu : DefaultMenu
     {
         private readonly Snowflake _user1Id;
         private readonly Snowflake _user2Id;
 
         public RpsMenu(RpsView view)
-            : base(view.User1State.User.Id, view)
+            : base(view)
         {
             _user1Id = view.User1State.User.Id;
             _user2Id = view.User2State.User.Id;

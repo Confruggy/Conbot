@@ -80,7 +80,7 @@ namespace Conbot.HelpPlugin
 
             HelpButton.IsDisabled = true;
 
-            var menu = new InteractiveMenu(Context.Author.Id, view);
+            DefaultMenu menu = new(view) { AuthorId = Context.Author.Id };
             _ = Context.Bot.StartMenuAsync(Context.ChannelId, menu);
 
             return default;

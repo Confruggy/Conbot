@@ -16,12 +16,17 @@ namespace Conbot.Commands
             if (!context.Bot.CacheProvider.TryGetRoles(context.GuildId, out var roleCache))
                 throw new InvalidOperationException($"The {GetType().Name} requires the role cache.");
 
-            IRole? role;
+            CachedRole? role;
 
             if (Snowflake.TryParse(value, out var id) || Mention.TryParseRole(value, out id))
-                role = roleCache.GetValueOrDefault(id);
+            {
+                if (!roleCache.TryGetValue(id, out role))
+                    role = null;
+            }
             else
+            {
                 role = Array.Find(roleCache.Values, x => x.Name == value);
+            }
 
             if (role is not null)
                 return Success(role);

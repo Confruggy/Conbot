@@ -142,7 +142,7 @@ namespace Conbot.Commands
 
             DisableComponents();
 
-            if (Menu is InteractiveMenu menu)
+            if (Menu is DefaultMenu menu)
                 await menu.ApplyChangesAsync();
         }
     }

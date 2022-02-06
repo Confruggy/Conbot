@@ -65,7 +65,7 @@ namespace Conbot.HelpPlugin
             else
                 view = new ErrorView(message, context, _config);
 
-            await context.Bot.RunMenuAsync(context.ChannelId, new InteractiveMenu(context.Author.Id, view));
+            await context.Bot.RunMenuAsync(context.ChannelId, new DefaultMenu(view) { AuthorId = context.Author.Id });
         }
 
         private static LocalMessage? FormatFailureMessage(ConbotCommandContext context, FailedResult result)

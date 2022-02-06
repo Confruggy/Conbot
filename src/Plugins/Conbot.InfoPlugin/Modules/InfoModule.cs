@@ -135,7 +135,7 @@ namespace Conbot.InfoPlugin
                     .AppendLine(" Connect")
                     .Append(permission.Speak ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Speak")
-                    .Append(permission.UseVad ? checkMarkEmote : crossMarkEmote)
+                    .Append(permission.UseVoiceActivity ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Use Voice Activity")
                     .Append(permission.PrioritySpeaker ? checkMarkEmote : crossMarkEmote)
                     .AppendLine(" Priority Speaker")
