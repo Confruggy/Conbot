@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Handlebars.Net" Version="2.1.0" />
     <PackageReference Include="System.Linq.Async" Version="5.0.0" />
     <PackageReference Include="Disqord.Bot" Version="1.0.0-12302021-165" />
     <PackageReference Include="Humanizer.Core" Version="2.8.26" />
