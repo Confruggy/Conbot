@@ -25,6 +25,7 @@
         "build Conbot.SplatoonPlugin",
         "build Conbot.TagPlugin",
         "build Conbot.UrbanPlugin",
+        "build Conbot.WelcomePlugin",
         "build Conbot.TimeZonePlugin"
       ]
     },
@@ -135,6 +136,16 @@
       "args": [
         "build",
         "${workspaceFolder}/src/Plugins/Conbot.UrbanPlugin/Conbot.UrbanPlugin.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+    },
+    {
+      "label": "build Conbot.WelcomePlugin",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Plugins/Conbot.WelcomePlugin/Conbot.WelcomePlugin.csproj"
       ],
       "problemMatcher": "$msCompile",
     },
