@@ -67,14 +67,12 @@ namespace Conbot.Commands
 
             if (value is bool boolValue)
             {
-                fieldNameText.Append("<:");
-
                 if (boolValue)
                     fieldNameText.Append(_config.GetValue<string>("Emotes:SettingsCheckMark"));
                 else
                     fieldNameText.Append(_config.GetValue<string>("Emotes:SettingsCrossMark"));
 
-                fieldNameText.Append("> ");
+                fieldNameText.Append(' ');
             }
             else
             {
