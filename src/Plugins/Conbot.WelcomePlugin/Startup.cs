@@ -4,16 +4,17 @@ using Microsoft.Extensions.Hosting;
 
 using Conbot.Plugins;
 
-namespace Conbot.WelcomePlugin
-{
-    public class Startup : IPluginStartup
-    {
-        public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
-        {
-            services
-                .AddDbContext<WelcomeContext>();
-        }
+namespace Conbot.WelcomePlugin;
 
-        public void BuildConfiguration(IConfigurationBuilder builder) { }
+public class Startup : IPluginStartup
+{
+    public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
+    {
+        services
+            .AddDbContext<WelcomeContext>();
+    }
+
+    public void BuildConfiguration(IConfigurationBuilder builder)
+    {
     }
 }

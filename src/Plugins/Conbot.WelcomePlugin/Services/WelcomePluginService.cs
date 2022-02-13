@@ -8,32 +8,31 @@ using Disqord.Bot.Hosting;
 
 using Qmmands;
 
-namespace Conbot.WelcomePlugin
+namespace Conbot.WelcomePlugin;
+
+public class WelcomePluginService : DiscordBotService
 {
-    public class WelcomePluginService : DiscordBotService
+    private Module? _module;
+
+    public override async Task StartAsync(CancellationToken cancellationToken)
     {
-        private Module? _module;
+        await UpdateDatabaseAsync();
+        _module = Bot.Commands.AddModule<WelcomeAndGoodbyeModule>();
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
-        {
-            await UpdateDatabaseAsync();
-            _module = Bot.Commands.AddModule<WelcomeAndGoodbyeModule>();
+        await base.StartAsync(cancellationToken);
+    }
 
-            await base.StartAsync(cancellationToken);
-        }
+    public override Task StopAsync(CancellationToken cancellationToken)
+    {
+        Bot.Commands.RemoveModule(_module);
+        return base.StopAsync(cancellationToken);
+    }
 
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            Bot.Commands.RemoveModule(_module);
-            return base.StopAsync(cancellationToken);
-        }
+    private async Task UpdateDatabaseAsync()
+    {
+        using var serviceScope = Bot.Services.CreateScope();
+        await using var context = serviceScope.ServiceProvider.GetRequiredService<WelcomeContext>();
 
-        private async Task UpdateDatabaseAsync()
-        {
-            using var serviceScope = Bot.Services.CreateScope();
-            using var context = serviceScope.ServiceProvider.GetRequiredService<WelcomeContext>();
-
-            await context.Database.MigrateAsync();
-        }
+        await context.Database.MigrateAsync();
     }
 }

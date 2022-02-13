@@ -3,26 +3,25 @@ using System.Linq;
 
 using Newtonsoft.Json;
 
-namespace Conbot.SplatoonPlugin
+namespace Conbot.SplatoonPlugin;
+
+public class Schedules
 {
-    public class Schedules
-    {
-        [JsonProperty("regular")]
-        private readonly IEnumerable<Rotation>? _regularRotations;
+    [JsonProperty("regular")]
+    private readonly IEnumerable<Rotation>? _regularRotations;
 
-        public IEnumerable<Rotation> RegularRotations
-            => _regularRotations ?? Enumerable.Empty<Rotation>();
+    public IEnumerable<Rotation> RegularRotations
+        => _regularRotations ?? Enumerable.Empty<Rotation>();
 
-        [JsonProperty("gachi")]
-        private readonly IEnumerable<Rotation>? _rankedRotations;
+    [JsonProperty("gachi")]
+    private readonly IEnumerable<Rotation>? _rankedRotations;
 
-        public IEnumerable<Rotation> RankedRotations
-            => _rankedRotations ?? Enumerable.Empty<Rotation>();
+    public IEnumerable<Rotation> RankedRotations
+        => _rankedRotations ?? Enumerable.Empty<Rotation>();
 
-        [JsonProperty("league")]
-        private readonly IEnumerable<Rotation>? _leagueRotations;
+    [JsonProperty("league")]
+    private readonly IEnumerable<Rotation>? _leagueRotations;
 
-        public IEnumerable<Rotation> LeagueRotations
-            => _leagueRotations ?? Enumerable.Empty<Rotation>();
-    }
+    public IEnumerable<Rotation> LeagueRotations
+        => _leagueRotations ?? Enumerable.Empty<Rotation>();
 }

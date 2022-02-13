@@ -6,17 +6,18 @@ using Conbot.Plugins;
 
 using NodaTime;
 
-namespace Conbot.TimeZonePlugin
-{
-    public class Startup : IPluginStartup
-    {
-        public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
-        {
-            services
-                .AddDbContext<TimeZoneContext>()
-                .AddSingleton(DateTimeZoneProviders.Tzdb);
-        }
+namespace Conbot.TimeZonePlugin;
 
-        public void BuildConfiguration(IConfigurationBuilder builder) { }
+public class Startup : IPluginStartup
+{
+    public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
+    {
+        services
+            .AddDbContext<TimeZoneContext>()
+            .AddSingleton(DateTimeZoneProviders.Tzdb);
+    }
+
+    public void BuildConfiguration(IConfigurationBuilder builder)
+    {
     }
 }

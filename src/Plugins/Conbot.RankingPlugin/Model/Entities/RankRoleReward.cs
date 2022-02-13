@@ -3,29 +3,30 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 using SQLite;
 
-namespace Conbot.RankingPlugin
+namespace Conbot.RankingPlugin;
+
+public class RankRoleReward
 {
-    public class RankRoleReward
+    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public long Id { get; set; }
+
+    public ulong GuildId { get; set; }
+    public virtual RankGuildConfiguration GuildConfiguration { get; set; } = null!;
+
+    public int Level { get; set; }
+
+    [Unique]
+    public ulong RoleId { get; set; }
+
+    public RankRoleReward(ulong guildId, int level, ulong roleId)
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Id { get; set; }
+        GuildId = guildId;
+        Level = level;
+        RoleId = roleId;
+    }
 
-        public ulong GuildId { get; set; }
-        public virtual RankGuildConfiguration GuildConfiguration { get; set; } = null!;
-
-        public int Level { get; set; }
-
-        [Unique]
-        public ulong RoleId { get; set; }
-
-        public RankRoleReward(ulong guildId, int level, ulong roleId)
-        {
-            GuildId = guildId;
-            Level = level;
-            RoleId = roleId;
-        }
-
-        public RankRoleReward(RankGuildConfiguration guildConfiguration, int level, ulong roleId)
-            : this(guildConfiguration.GuildId, level, roleId) { }
+    public RankRoleReward(RankGuildConfiguration guildConfiguration, int level, ulong roleId)
+        : this(guildConfiguration.GuildId, level, roleId)
+    {
     }
 }

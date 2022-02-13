@@ -7,237 +7,234 @@ using Disqord.Bot;
 
 using Qmmands;
 
-namespace Conbot.WelcomePlugin
+namespace Conbot.WelcomePlugin;
+
+[Name("Welcome & Goodbye Messages")]
+[Description("Configures welcome and goodbye messages.")]
+[Commands.RequireGuild]
+public class WelcomeAndGoodbyeModule : ConbotGuildModuleBase
 {
-    [Name("Welcome & Goodbye Messages")]
-    [Description("Configures welcome and goodbye messages.")]
-    [Commands.RequireGuild]
-    public class WelcomeAndGoodbyeModule : ConbotGuildModuleBase
+    [Group("welcome")]
+    [Description("Configures welcome messages.")]
+    public class WelcomeModule : ConbotGuildModuleBase
     {
-        [Group("welcome")]
-        [Description("Configures welcome messages.")]
-        public class WelcomeModule : ConbotGuildModuleBase
-        {
-            private readonly WelcomeContext _db;
+        private readonly WelcomeContext _db;
 
-            public WelcomeModule(WelcomeContext db) => _db = db;
+        public WelcomeModule(WelcomeContext db) => _db = db;
 
-            [Command("toggle", "")]
-            [Description("Toggles welcome messages.")]
-            [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
-            public async Task<DiscordCommandResult> ToggleAsync(
+        [Command("toggle", "")]
+        [Description("Toggles welcome messages.")]
+        [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
+        public async Task<DiscordCommandResult> ToggleAsync(
             [Description("Whether to enable or disable welcome messages.")]
-                [Choices("enable", "disable")]
-                string toggle)
+            [Choices("enable", "disable")]
+            string toggle)
+        {
+            var config = await _db.GetOrCreateConfigurationAsync(Context.Guild);
+
+            string? reply = null;
+
+            switch (toggle)
             {
-                var config = await _db.GetOrCreateConfigurationAsync(Context.Guild);
+                case "enable":
+                    if (config.ShowWelcomeMessages == true)
+                        return Fail("Welcome messages are already enabled.");
 
-                string? reply = null;
+                    config.ShowWelcomeMessages = true;
+                    reply = "Welcome messages have been enabled.";
 
-                switch (toggle)
-                {
-                    case "enable":
-                        if (config.ShowWelcomeMessages == true)
-                            return Fail("Welcome messages are already enabled.");
+                    break;
+                case "disable":
+                    if (config.ShowWelcomeMessages == false)
+                        return Fail("Welcome messages are already disabled.");
 
-                        config.ShowWelcomeMessages = true;
-                        reply = "Welcome messages have been enabled.";
+                    config.ShowWelcomeMessages = false;
+                    reply = "Welcome messages have been disabled.";
 
-                        break;
-                    case "disable":
-                        if (config.ShowWelcomeMessages == false)
-                            return Fail("Welcome messages are already disabled.");
-
-                        config.ShowWelcomeMessages = false;
-                        reply = "Welcome messages have been disabled.";
-
-                        break;
-                }
-
-                return Reply(reply).RunWith(_db.SaveChangesAsync());
+                    break;
             }
 
-            [Command("template")]
-            [Description("Sets the template for the message when someone joins the server.")]
-            [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
-            public async Task<DiscordCommandResult> TemplateAsync(
-                [Description("The template to set.")]
-                [Remainder]
-                string template)
-            {
-                var config = await _db.GetOrCreateConfigurationAsync(Context.Guild);
-
-                config.WelcomeMessageTemplate = template;
-
-                return Reply("Welcome message template has been set.").RunWith(_db.SaveChangesAsync());
-            }
-
-            [Command("channel")]
-            [Description("Sets the channel where welcome messages will be sent.")]
-            [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
-            public async Task<DiscordCommandResult> ChannelAsync(
-                [Description("The channel to set.")]
-                [Remarks("If left blank, welcome messages will be sent in the system messages channel.")]
-                [Remainder]
-                ITextChannel? channel)
-            {
-                var config = await _db.GetOrCreateConfigurationAsync(Context.Guild);
-
-                string reply;
-
-                if (channel is not null)
-                {
-                    config.WelcomeChannelId = channel.Id;
-                    reply = $"Channel for welcome messages has been set to {channel.Mention}.";
-                }
-                else
-                {
-                    config.WelcomeChannelId = null;
-                    reply = $"Channel for welcome messages has been set to the system messages channel.";
-                }
-
-                return Reply(reply).RunWith(_db.SaveChangesAsync());
-            }
-
-            [Command("settings")]
-            [Description("Shows the current settings for welcome messages.")]
-            [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
-            [Commands.RequireBotChannelPermissions(Permission.SendEmbeds)]
-            public async Task<DiscordCommandResult> SettingsAsync()
-            {
-                var config = await _db.GetConfigurationAsync(Context.Guild);
-
-                bool enabled = config?.ShowWelcomeMessages ?? false;
-                string channel = config?.WelcomeChannelId is not null
-                    ? Mention.Channel(config.WelcomeChannelId.Value)
-                    : Mention.Channel(Context.Guild.SystemChannelId ?? 0);
-                string template = config?.WelcomeMessageTemplate is not null
-                    ? config.WelcomeMessageTemplate
-                    : WelcomeService.DEFAULT_WELCOME_MESSAGE_TEMPLATE;
-
-                var embed = new SettingsEmbedBuilder(Context)
-                    .WithTitle("Welcome Messages Settings")
-                    .WithGuild(Context.Guild)
-                    .AddSetting("Show Welcome Messages", enabled, "toggle")
-                    .AddSetting("Welcome Messages Channel", channel, "channel")
-                    .AddSetting("Template", template, "template")
-                    .Build();
-
-                return Reply(embed);
-            }
+            return Reply(reply).RunWith(_db.SaveChangesAsync());
         }
 
-        [Group("goodbye")]
-        [Description("Configures goodbye messages.")]
-        public class GoodbyeModule : ConbotGuildModuleBase
+        [Command("template")]
+        [Description("Sets the template for the message when someone joins the server.")]
+        [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
+        public async Task<DiscordCommandResult> TemplateAsync(
+            [Description("The template to set.")]
+            [Remainder]
+            string template)
         {
-            private readonly WelcomeContext _db;
+            var config = await _db.GetOrCreateConfigurationAsync(Context.Guild);
 
-            public GoodbyeModule(WelcomeContext db) => _db = db;
+            config.WelcomeMessageTemplate = template;
 
-            [Command("toggle", "")]
-            [Description("Toggles goodbye messages.")]
-            [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
-            public async Task<DiscordCommandResult> ToggleAsync(
+            return Reply("Welcome message template has been set.").RunWith(_db.SaveChangesAsync());
+        }
+
+        [Command("channel")]
+        [Description("Sets the channel where welcome messages will be sent.")]
+        [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
+        public async Task<DiscordCommandResult> ChannelAsync(
+            [Description("The channel to set.")]
+            [Remarks("If left blank, welcome messages will be sent in the system messages channel.")]
+            [Remainder]
+            ITextChannel? channel)
+        {
+            var config = await _db.GetOrCreateConfigurationAsync(Context.Guild);
+
+            string reply;
+
+            if (channel is not null)
+            {
+                config.WelcomeChannelId = channel.Id;
+                reply = $"Channel for welcome messages has been set to {channel.Mention}.";
+            }
+            else
+            {
+                config.WelcomeChannelId = null;
+                reply = $"Channel for welcome messages has been set to the system messages channel.";
+            }
+
+            return Reply(reply).RunWith(_db.SaveChangesAsync());
+        }
+
+        [Command("settings")]
+        [Description("Shows the current settings for welcome messages.")]
+        [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
+        [Commands.RequireBotChannelPermissions(Permission.SendEmbeds)]
+        public async Task<DiscordCommandResult> SettingsAsync()
+        {
+            var config = await _db.GetConfigurationAsync(Context.Guild);
+
+            bool enabled = config?.ShowWelcomeMessages ?? false;
+            string channel = config?.WelcomeChannelId is not null
+                ? Mention.Channel(config.WelcomeChannelId.Value)
+                : Mention.Channel(Context.Guild.SystemChannelId ?? 0);
+            string template = config?.WelcomeMessageTemplate ?? WelcomeService.DefaultWelcomeMessageTemplate;
+
+            var embed = new SettingsEmbedBuilder(Context)
+                .WithTitle("Welcome Messages Settings")
+                .WithGuild(Context.Guild)
+                .AddSetting("Show Welcome Messages", enabled, "toggle")
+                .AddSetting("Welcome Messages Channel", channel, "channel")
+                .AddSetting("Template", template, "template")
+                .Build();
+
+            return Reply(embed);
+        }
+    }
+
+    [Group("goodbye")]
+    [Description("Configures goodbye messages.")]
+    public class GoodbyeModule : ConbotGuildModuleBase
+    {
+        private readonly WelcomeContext _db;
+
+        public GoodbyeModule(WelcomeContext db) => _db = db;
+
+        [Command("toggle", "")]
+        [Description("Toggles goodbye messages.")]
+        [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
+        public async Task<DiscordCommandResult> ToggleAsync(
             [Description("Whether to enable or disable goodbye messages.")]
-                [Choices("enable", "disable")]
-                string toggle)
+            [Choices("enable", "disable")]
+            string toggle)
+        {
+            var config = await _db.GetOrCreateConfigurationAsync(Context.Guild);
+
+            string? reply = null;
+
+            switch (toggle)
             {
-                var config = await _db.GetOrCreateConfigurationAsync(Context.Guild);
+                case "enable":
+                    if (config.ShowGoodbyeMessages == true)
+                        return Fail("Goodbye messages are already enabled.");
 
-                string? reply = null;
+                    config.ShowGoodbyeMessages = true;
+                    reply = "Goodbye messages have been enabled.";
 
-                switch (toggle)
-                {
-                    case "enable":
-                        if (config.ShowGoodbyeMessages == true)
-                            return Fail("Goodbye messages are already enabled.");
+                    break;
+                case "disable":
+                    if (config.ShowGoodbyeMessages == false)
+                        return Fail("Goodbye messages are already disabled.");
 
-                        config.ShowGoodbyeMessages = true;
-                        reply = "Goodbye messages have been enabled.";
+                    config.ShowGoodbyeMessages = false;
+                    reply = "Goodbye messages have been disabled.";
 
-                        break;
-                    case "disable":
-                        if (config.ShowGoodbyeMessages == false)
-                            return Fail("Goodbye messages are already disabled.");
-
-                        config.ShowGoodbyeMessages = false;
-                        reply = "Goodbye messages have been disabled.";
-
-                        break;
-                }
-
-                return Reply(reply).RunWith(_db.SaveChangesAsync());
+                    break;
             }
 
-            [Command("template", "message")]
-            [Description("Sets the template for the message when someone leaves the server.")]
-            [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
-            public async Task<DiscordCommandResult> TemplateAsync(
-                [Description("The template to set.")]
-                [Remainder]
-                string template)
+            return Reply(reply).RunWith(_db.SaveChangesAsync());
+        }
+
+        [Command("template", "message")]
+        [Description("Sets the template for the message when someone leaves the server.")]
+        [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
+        public async Task<DiscordCommandResult> TemplateAsync(
+            [Description("The template to set.")]
+            [Remainder]
+            string template)
+        {
+            var config = await _db.GetOrCreateConfigurationAsync(Context.Guild);
+
+            config.GoodbyeMessageTemplate = template;
+
+            return Reply("Goodbye message template has been set.").RunWith(_db.SaveChangesAsync());
+        }
+
+        [Command("channel")]
+        [Description("Sets the channel where goodbye messages will be sent.")]
+        [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
+        public async Task<DiscordCommandResult> ChannelAsync(
+            [Description("The channel to set.")]
+            [Remarks("If left blank, goodbye messages will be sent in the system messages channel.")]
+            [Remainder]
+            ITextChannel? channel)
+        {
+            var config = await _db.GetOrCreateConfigurationAsync(Context.Guild);
+
+            string reply;
+
+            if (channel is not null)
             {
-                var config = await _db.GetOrCreateConfigurationAsync(Context.Guild);
-
-                config.GoodbyeMessageTemplate = template;
-
-                return Reply("Goodbye message template has been set.").RunWith(_db.SaveChangesAsync());
+                config.GoodbyeChannelId = channel.Id;
+                reply = $"Channel for goodbye messages has been set to {channel.Mention}.";
+            }
+            else
+            {
+                config.WelcomeChannelId = null;
+                reply = $"Channel for goodbye messages has been set to the system messages channel.";
             }
 
-            [Command("channel")]
-            [Description("Sets the channel where goodbye messages will be sent.")]
-            [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
-            public async Task<DiscordCommandResult> ChannelAsync(
-                [Description("The channel to set.")]
-                [Remarks("If left blank, goodbye messages will be sent in the system messages channel.")]
-                [Remainder]
-                ITextChannel? channel)
-            {
-                var config = await _db.GetOrCreateConfigurationAsync(Context.Guild);
+            return Reply(reply).RunWith(_db.SaveChangesAsync());
+        }
 
-                string reply;
+        [Command("settings")]
+        [Description("Shows the current settings for goodbye messages.")]
+        [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
+        [Commands.RequireBotChannelPermissions(Permission.SendEmbeds)]
+        public async Task<DiscordCommandResult> SettingsAsync()
+        {
+            var config = await _db.GetConfigurationAsync(Context.Guild);
 
-                if (channel is not null)
-                {
-                    config.GoodbyeChannelId = channel.Id;
-                    reply = $"Channel for goodbye messages has been set to {channel.Mention}.";
-                }
-                else
-                {
-                    config.WelcomeChannelId = null;
-                    reply = $"Channel for goodbye messages has been set to the system messages channel.";
-                }
+            bool enabled = config?.ShowGoodbyeMessages ?? false;
+            string channel = config?.GoodbyeChannelId is not null
+                ? Mention.Channel(config.GoodbyeChannelId.Value)
+                : Mention.Channel(Context.Guild.SystemChannelId ?? 0);
+            string template = config?.GoodbyeMessageTemplate is not null
+                ? config.GoodbyeMessageTemplate
+                : WelcomeService.DefaultGoodbyeMessageTemplate;
 
-                return Reply(reply).RunWith(_db.SaveChangesAsync());
-            }
+            var embed = new SettingsEmbedBuilder(Context)
+                .WithTitle("Goodbye Messages Settings")
+                .WithGuild(Context.Guild)
+                .AddSetting("Show Goodbye Messages", enabled, "toggle")
+                .AddSetting("Goodbye Messages Channel", channel, "channel")
+                .AddSetting("Template", template, "template")
+                .Build();
 
-            [Command("settings")]
-            [Description("Shows the current settings for goodbye messages.")]
-            [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
-            [Commands.RequireBotChannelPermissions(Permission.SendEmbeds)]
-            public async Task<DiscordCommandResult> SettingsAsync()
-            {
-                var config = await _db.GetConfigurationAsync(Context.Guild);
-
-                bool enabled = config?.ShowGoodbyeMessages ?? false;
-                string channel = config?.GoodbyeChannelId is not null
-                    ? Mention.Channel(config.GoodbyeChannelId.Value)
-                    : Mention.Channel(Context.Guild.SystemChannelId ?? 0);
-                string template = config?.GoodbyeMessageTemplate is not null
-                    ? config.GoodbyeMessageTemplate
-                    : WelcomeService.DEFAULT_GOODBYE_MESSAGE_TEMPLATE;
-
-                var embed = new SettingsEmbedBuilder(Context)
-                    .WithTitle("Goodbye Messages Settings")
-                    .WithGuild(Context.Guild)
-                    .AddSetting("Show Goodbye Messages", enabled, "toggle")
-                    .AddSetting("Goodbye Messages Channel", channel, "channel")
-                    .AddSetting("Template", template, "template")
-                    .Build();
-
-                return Reply(embed);
-            }
+            return Reply(embed);
         }
     }
 }

@@ -8,32 +8,31 @@ using Disqord.Bot.Hosting;
 
 using Qmmands;
 
-namespace Conbot.TagPlugin
+namespace Conbot.TagPlugin;
+
+public class TagPluginService : DiscordBotService
 {
-    public class TagPluginService : DiscordBotService
+    private Module? _module;
+
+    public override async Task StartAsync(CancellationToken cancellationToken)
     {
-        private Module? _module;
+        await UpdateDatabaseAsync();
+        _module = Bot.Commands.AddModule<TagModule>();
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
-        {
-            await UpdateDatabaseAsync();
-            _module = Bot.Commands.AddModule<TagModule>();
+        await base.StartAsync(cancellationToken);
+    }
 
-            await base.StartAsync(cancellationToken);
-        }
+    public override Task StopAsync(CancellationToken cancellationToken)
+    {
+        Bot.Commands.RemoveModule(_module);
+        return base.StopAsync(cancellationToken);
+    }
 
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            Bot.Commands.RemoveModule(_module);
-            return base.StopAsync(cancellationToken);
-        }
+    private async Task UpdateDatabaseAsync()
+    {
+        using var serviceScope = Bot.Services.CreateScope();
+        await using var context = serviceScope.ServiceProvider.GetRequiredService<TagContext>();
 
-        private async Task UpdateDatabaseAsync()
-        {
-            using var serviceScope = Bot.Services.CreateScope();
-            using var context = serviceScope.ServiceProvider.GetRequiredService<TagContext>();
-
-            await context.Database.MigrateAsync();
-        }
+        await context.Database.MigrateAsync();
     }
 }

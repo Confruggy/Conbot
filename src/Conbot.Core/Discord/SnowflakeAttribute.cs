@@ -1,13 +1,12 @@
 using System;
 
-namespace Conbot
-{
-    [AttributeUsage(AttributeTargets.Parameter)]
-    public class SnowflakeAttribute : Attribute
-    {
-        public SnowflakeType Type { get; set; }
+namespace Conbot;
 
-        public SnowflakeAttribute(SnowflakeType type)
-            => Type = type;
-    }
+[AttributeUsage(AttributeTargets.Parameter)]
+public class SnowflakeAttribute : Attribute
+{
+    public SnowflakeType Type { get; set; }
+
+    public SnowflakeAttribute(SnowflakeType type)
+        => Type = type;
 }

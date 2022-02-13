@@ -1,12 +1,11 @@
-namespace Conbot.TimeZonePlugin
+namespace Conbot.TimeZonePlugin;
+
+public enum DurationLevel
 {
-    public enum DurationLevel
-    {
-        Milliseconds,
-        Seconds,
-        Minutes,
-        Hours,
-        Days,
-        Weeks
-    }
+    Milliseconds,
+    Seconds,
+    Minutes,
+    Hours,
+    Days,
+    Weeks
 }

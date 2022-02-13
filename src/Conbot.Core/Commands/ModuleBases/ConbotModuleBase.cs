@@ -1,6 +1,5 @@
-namespace Conbot.Commands
+namespace Conbot.Commands;
+
+public class ConbotModuleBase : ConbotModuleBase<ConbotCommandContext>
 {
-    public class ConbotModuleBase : ConbotModuleBase<ConbotCommandContext>
-    {
-    }
 }

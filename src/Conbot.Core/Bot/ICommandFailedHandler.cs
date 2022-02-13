@@ -4,10 +4,9 @@ using Conbot.Commands;
 
 using Qmmands;
 
-namespace Conbot
+namespace Conbot;
+
+public interface ICommandFailedHandler
 {
-    public interface ICommandFailedHandler
-    {
-        ValueTask HandleFailedResultAsync(ConbotCommandContext context, FailedResult result);
-    }
+    ValueTask HandleFailedResultAsync(ConbotCommandContext context, FailedResult result);
 }

@@ -5,22 +5,21 @@ using Disqord.Bot.Hosting;
 
 using Qmmands;
 
-namespace Conbot.InfoPlugin
+namespace Conbot.InfoPlugin;
+
+public class InfoPluginService : DiscordBotService
 {
-    public class InfoPluginService : DiscordBotService
+    private Module? _module;
+
+    public override Task StartAsync(CancellationToken cancellationToken)
     {
-        private Module? _module;
+        _module = Bot.Commands.AddModule<InfoModule>();
+        return base.StartAsync(cancellationToken);
+    }
 
-        public override Task StartAsync(CancellationToken cancellationToken)
-        {
-            _module = Bot.Commands.AddModule<InfoModule>();
-            return base.StartAsync(cancellationToken);
-        }
-
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            Bot.Commands.RemoveModule(_module);
-            return base.StopAsync(cancellationToken);
-        }
+    public override Task StopAsync(CancellationToken cancellationToken)
+    {
+        Bot.Commands.RemoveModule(_module);
+        return base.StopAsync(cancellationToken);
     }
 }

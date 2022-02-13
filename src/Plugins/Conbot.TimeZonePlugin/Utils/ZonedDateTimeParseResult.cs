@@ -2,21 +2,20 @@ using NodaTime;
 
 using Qmmands;
 
-namespace Conbot.TimeZonePlugin
-{
-    public class ZonedDateTimeParseResult : IResult
-    {
-        public ZonedDateTime Now { get; }
-        public ZonedDateTime? Then { get; }
-        public bool IsSuccessful => Then is not null;
-        public string? Reason { get; }
+namespace Conbot.TimeZonePlugin;
 
-        public ZonedDateTimeParseResult(ZonedDateTime now, ZonedDateTime? then = null,
-            string? reason = null)
-        {
-            Now = now;
-            Then = then;
-            Reason = reason;
-        }
+public class ZonedDateTimeParseResult : IResult
+{
+    public ZonedDateTime Now { get; }
+    public ZonedDateTime? Then { get; }
+    public bool IsSuccessful => Then is not null;
+    public string? Reason { get; }
+
+    public ZonedDateTimeParseResult(ZonedDateTime now, ZonedDateTime? then = null,
+        string? reason = null)
+    {
+        Now = now;
+        Then = then;
+        Reason = reason;
     }
 }

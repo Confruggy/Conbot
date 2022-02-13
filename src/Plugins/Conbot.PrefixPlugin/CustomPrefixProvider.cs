@@ -9,26 +9,25 @@ using Disqord.Bot;
 using Disqord.Gateway;
 using Disqord.Bot.Hosting;
 
-namespace Conbot.PrefixPlugin
+namespace Conbot.PrefixPlugin;
+
+public class CustomPrefixProvider : DiscordBotService, IPrefixProvider
 {
-    public class CustomPrefixProvider : DiscordBotService, IPrefixProvider
+    public async ValueTask<IEnumerable<IPrefix>> GetPrefixesAsync(IGatewayUserMessage message)
     {
-        public async ValueTask<IEnumerable<IPrefix>> GetPrefixesAsync(IGatewayUserMessage message)
-        {
-            using var scope = Bot.Services.CreateScope();
-            using var context = scope.ServiceProvider.GetRequiredService<PrefixContext>();
+        using var scope = Bot.Services.CreateScope();
+        await using var context = scope.ServiceProvider.GetRequiredService<PrefixContext>();
 
-            if (message.GuildId is null)
-                return Array.Empty<IPrefix>();
+        if (message.GuildId is null)
+            return Array.Empty<IPrefix>();
 
-            var prefixes = (await context.GetPrefixesAsync(message.GuildId))
-                .OrderByDescending(x => x.Text.Length)
-                .ThenBy(x => x.Text);
+        var prefixes = (await context.GetPrefixesAsync(message.GuildId))
+            .OrderByDescending(x => x.Text.Length)
+            .ThenBy(x => x.Text);
 
-            var result = new List<IPrefix>() { new MentionPrefix(Bot.CurrentUser.Id) };
-            result.AddRange(prefixes.Select(x => new StringPrefix(x.Text) as IPrefix));
+        var result = new List<IPrefix>() { new MentionPrefix(Bot.CurrentUser.Id) };
+        result.AddRange(prefixes.Select(x => new StringPrefix(x.Text) as IPrefix));
 
-            return result;
-        }
+        return result;
     }
 }

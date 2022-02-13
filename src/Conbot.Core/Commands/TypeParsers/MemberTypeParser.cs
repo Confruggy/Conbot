@@ -9,99 +9,98 @@ using Disqord.Rest;
 
 using Qmmands;
 
-namespace Conbot.Commands
+using Qommon.Collections;
+
+namespace Conbot.Commands;
+
+public class MemberTypeParser : ConbotGuildTypeParser<IMember>
 {
-    public class MemberTypeParser : ConbotGuildTypeParser<IMember>
+    public override async ValueTask<TypeParserResult<IMember>> ParseAsync(Parameter parameter, string value,
+        ConbotGuildCommandContext context)
     {
-        public override async ValueTask<TypeParserResult<IMember>> ParseAsync(Parameter parameter, string value,
-            ConbotGuildCommandContext context)
+        if (!context.Bot.CacheProvider.TryGetMembers(context.GuildId, out var memberCache))
+            throw new InvalidOperationException($"The {GetType().Name} requires the member cache.");
+
+        IMember? member;
+
+        if (Snowflake.TryParse(value, out var id) || Mention.TryParseUser(value, out id))
         {
-            if (!context.Bot.CacheProvider.TryGetMembers(context.GuildId, out var memberCache))
-                throw new InvalidOperationException($"The {GetType().Name} requires the member cache.");
-
-            IMember? member;
-
-            if (Snowflake.TryParse(value, out var id) || Mention.TryParseUser(value, out id))
+            if (!memberCache.TryGetValue(id, out var cachedMember))
             {
-                if (!memberCache.TryGetValue(id, out var cachedMember))
+                await using (context.BeginYield())
                 {
-                    await using (context.BeginYield())
+                    if (context.Bot.GetShard(context.GuildId).RateLimiter.GetRemainingRequests() < 3)
                     {
-                        if (context.Bot.GetShard(context.GuildId).RateLimiter.GetRemainingRequests() < 3)
-                        {
-                            member = await context.Bot.FetchMemberAsync(context.GuildId, id)
-                                .ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            var members = await context.Bot.Chunker.QueryAsync(context.GuildId, new[] { id })
-                                .ConfigureAwait(false);
-                            member = members.GetValueOrDefault(id);
-                        }
+                        member = await context.Bot.FetchMemberAsync(context.GuildId, id)
+                            .ConfigureAwait(false);
                     }
-                }
-                else
-                {
-                    member = cachedMember;
+                    else
+                    {
+                        var members = await context.Bot.Chunker.QueryAsync(context.GuildId, new[] { id })
+                            .ConfigureAwait(false);
+                        member = members.GetValueOrDefault(id);
+                    }
                 }
             }
             else
             {
-                string name;
-                string? discriminator;
-                int hashIndex = value.LastIndexOf('#');
+                member = cachedMember;
+            }
+        }
+        else
+        {
+            string name;
+            string? discriminator;
+            int hashIndex = value.LastIndexOf('#');
 
-                if (hashIndex != -1 && hashIndex + 5 == value.Length)
+            if (hashIndex != -1 && hashIndex + 5 == value.Length)
+            {
+                name = value[0..^5];
+                discriminator = value[(hashIndex + 1)..];
+            }
+            else
+            {
+                name = value;
+                discriminator = null;
+            }
+
+            static IMember? FindMember(IReadOnlyCollection<IMember> members, string name, string? discriminator)
+            {
+                if (discriminator is not null)
                 {
-                    name = value[0..^5];
-                    discriminator = value[(hashIndex + 1)..];
-                }
-                else
-                {
-                    name = value;
-                    discriminator = null;
+                    return members.FirstOrDefault(x => x.Name == name && x.Discriminator == discriminator);
                 }
 
-                static IMember? FindMember(IEnumerable<IMember> members, string name, string? discriminator)
+                return members.FirstOrDefault(x => x.Name == name) ??
+                       members.FirstOrDefault(x => x.Nick == name);
+            }
+
+            member = FindMember(memberCache.Values, name, discriminator);
+
+            if (member == null)
+            {
+                await using (context.BeginYield())
                 {
-                    if (discriminator is not null)
+                    IReadOnlyCollection<IMember> members;
+                    if (context.Bot.GetShard(context.GuildId).RateLimiter.GetRemainingRequests() < 3)
                     {
-                        return members.FirstOrDefault(x => x.Name == name && x.Discriminator == discriminator);
+                        members = await context.Bot.SearchMembersAsync(context.GuildId, name)
+                            .ConfigureAwait(false);
                     }
                     else
                     {
-                        return members.FirstOrDefault(x => x.Name == name) ??
-                            members.FirstOrDefault(x => x.Nick == name);
+                        members = (await context.Bot.Chunker.QueryAsync(context.GuildId, name)
+                            .ConfigureAwait(false)).Values.ToReadOnlyList();
                     }
-                }
 
-                member = FindMember(memberCache.Values, name, discriminator);
-
-                if (member == null)
-                {
-                    await using (context.BeginYield())
-                    {
-                        IEnumerable<IMember> members;
-                        if (context.Bot.GetShard(context.GuildId).RateLimiter.GetRemainingRequests() < 3)
-                        {
-                            members = await context.Bot.SearchMembersAsync(context.GuildId, name)
-                                .ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            members = (await context.Bot.Chunker.QueryAsync(context.GuildId, name)
-                                .ConfigureAwait(false)).Values;
-                        }
-
-                        member = FindMember(members, name, discriminator);
-                    }
+                    member = FindMember(members, name, discriminator);
                 }
             }
-
-            if (member is not null)
-                return Success(member);
-
-            return Failure("No member found matching the input.");
         }
+
+        if (member is not null)
+            return Success(member);
+
+        return Failure("No member found matching the input.");
     }
 }

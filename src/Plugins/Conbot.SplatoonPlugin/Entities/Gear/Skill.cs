@@ -2,12 +2,11 @@ using Humanizer;
 
 using Newtonsoft.Json;
 
-namespace Conbot.SplatoonPlugin
+namespace Conbot.SplatoonPlugin;
+
+public record Skill(
+    [property: JsonProperty("id")] int Id,
+    [property: JsonProperty("Name")] string Name)
 {
-    public record Skill(
-        [property: JsonProperty("id")] int Id,
-        [property: JsonProperty("Name")] string Name)
-    {
-        public string EmoteName => string.Concat(Name.Split(new char[] { '(', ')' })).Pascalize();
-    }
+    public string EmoteName => string.Concat(Name.Split(new char[] { '(', ')' })).Pascalize();
 }

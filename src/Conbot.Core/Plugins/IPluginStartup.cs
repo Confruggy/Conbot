@@ -2,11 +2,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Conbot.Plugins
+namespace Conbot.Plugins;
+
+public interface IPluginStartup
 {
-    public interface IPluginStartup
-    {
-        void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services);
-        void BuildConfiguration(IConfigurationBuilder builder);
-    }
+    void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services);
+    void BuildConfiguration(IConfigurationBuilder builder);
 }

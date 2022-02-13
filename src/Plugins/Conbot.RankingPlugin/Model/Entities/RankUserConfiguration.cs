@@ -1,15 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Conbot.RankingPlugin
+namespace Conbot.RankingPlugin;
+
+public class RankUserConfiguration
 {
-    public class RankUserConfiguration
-    {
-        [Key]
-        public ulong UserId { get; set; }
+    [Key]
+    public ulong UserId { get; set; }
 
-        public bool? AnnouncementsAllowMentions { get; set; } = null!;
-        public bool? AnnouncementsSendDirectMessages { get; set; } = null!;
+    public bool? AnnouncementsAllowMentions { get; set; }
+    public bool? AnnouncementsSendDirectMessages { get; set; }
 
-        public RankUserConfiguration(ulong userId) => UserId = userId;
-    }
+    public RankUserConfiguration(ulong userId) => UserId = userId;
 }

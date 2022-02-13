@@ -3,20 +3,19 @@ using System.Linq;
 
 using Newtonsoft.Json;
 
-namespace Conbot.SplatoonPlugin
+namespace Conbot.SplatoonPlugin;
+
+public class SalmonRunSchedules
 {
-    public class SalmonRunSchedules
-    {
-        [JsonProperty("details")]
-        private readonly IEnumerable<SalmonRunRotation>? _detailedRotations;
+    [JsonProperty("details")]
+    private readonly IEnumerable<SalmonRunRotation>? _detailedRotations;
 
-        public IEnumerable<SalmonRunRotation> DetailedRotations
-            => _detailedRotations ?? Enumerable.Empty<SalmonRunRotation>();
+    public IEnumerable<SalmonRunRotation> DetailedRotations
+        => _detailedRotations ?? Enumerable.Empty<SalmonRunRotation>();
 
-        [JsonProperty("schedules")]
-        private readonly IEnumerable<SalmonRunRotation>? _rotations;
+    [JsonProperty("schedules")]
+    private readonly IEnumerable<SalmonRunRotation>? _rotations;
 
-        public IEnumerable<SalmonRunRotation> Rotations
-            => _rotations ?? Enumerable.Empty<SalmonRunRotation>();
-    }
+    public IEnumerable<SalmonRunRotation> Rotations
+        => _rotations ?? Enumerable.Empty<SalmonRunRotation>();
 }

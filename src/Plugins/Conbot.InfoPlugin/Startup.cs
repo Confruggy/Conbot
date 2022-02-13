@@ -4,12 +4,15 @@ using Microsoft.Extensions.Hosting;
 
 using Conbot.Plugins;
 
-namespace Conbot.InfoPlugin
-{
-    public class Startup : IPluginStartup
-    {
-        public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services) { }
+namespace Conbot.InfoPlugin;
 
-        public void BuildConfiguration(IConfigurationBuilder builder) { }
+public class Startup : IPluginStartup
+{
+    public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
+    {
+    }
+
+    public void BuildConfiguration(IConfigurationBuilder builder)
+    {
     }
 }

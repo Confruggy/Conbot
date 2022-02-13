@@ -6,22 +6,21 @@ using Conbot.Interactive;
 
 using Disqord.Bot;
 
-namespace Conbot.Commands
+namespace Conbot.Commands;
+
+public class ConbotInteractiveCommandResult : DiscordCommandResult
 {
-    public class ConbotInteractiveCommandResult : DiscordCommandResult
+    public LocalInteractiveMessage Message { get; }
+
+    public ConbotInteractiveCommandResult(ConbotCommandContext context, LocalInteractiveMessage message)
+        : base(context)
     {
-        public LocalInteractiveMessage Message { get; }
+        Message = message;
+    }
 
-        public ConbotInteractiveCommandResult(ConbotCommandContext context, LocalInteractiveMessage message)
-            : base(context)
-        {
-            Message = message;
-        }
-
-        public override async Task ExecuteAsync()
-        {
-            var interactiveService = Context.Services.GetRequiredService<InteractiveService>();
-            await interactiveService.ExecuteInteractiveMessageAsync(Message, (ConbotCommandContext)Context);
-        }
+    public override async Task ExecuteAsync()
+    {
+        var interactiveService = Context.Services.GetRequiredService<InteractiveService>();
+        await interactiveService.ExecuteInteractiveMessageAsync(Message, (ConbotCommandContext)Context);
     }
 }

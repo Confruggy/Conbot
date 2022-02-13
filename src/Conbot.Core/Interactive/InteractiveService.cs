@@ -12,174 +12,170 @@ using Disqord.Bot.Hosting;
 using Disqord.Gateway;
 using Disqord.Rest;
 
-namespace Conbot.Interactive
+namespace Conbot.Interactive;
+
+public class InteractiveService : DiscordBotService
 {
-    public class InteractiveService : DiscordBotService
+    private readonly ConcurrentDictionary<ulong, InteractiveUserMessage> _interactiveMessages;
+
+    public InteractiveService() => _interactiveMessages = new ConcurrentDictionary<ulong, InteractiveUserMessage>();
+
+    public override Task StartAsync(CancellationToken cancellationToken)
     {
-        private readonly ConcurrentDictionary<ulong, InteractiveUserMessage> _interactiveMessages;
+        Bot.Commands.AddArgumentParser(new InteractiveArgumentParser());
 
-        public InteractiveService()
-        {
-            _interactiveMessages = new ConcurrentDictionary<ulong, InteractiveUserMessage>();
-        }
+        return base.StartAsync(cancellationToken);
+    }
 
-        public override Task StartAsync(CancellationToken cancellationToken)
-        {
-            Bot.Commands.AddArgumentParser(new InteractiveArgumentParser());
+    public override Task StopAsync(CancellationToken cancellationToken)
+    {
+        Bot.Commands.RemoveArgumentParser<InteractiveArgumentParser>();
 
-            return base.StartAsync(cancellationToken);
-        }
+        return base.StopAsync(cancellationToken);
+    }
 
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            Bot.Commands.RemoveArgumentParser<InteractiveArgumentParser>();
+    public async ValueTask<IInteractiveUserMessage> ExecuteInteractiveMessageAsync(
+        LocalInteractiveMessage interactiveMessage, ConbotCommandContext context)
+    {
+        if (_interactiveMessages.TryGetValue(context.Author.Id, out var interactiveUserMessage))
+            StopInteractiveMessage(interactiveUserMessage);
 
-            return base.StopAsync(cancellationToken);
-        }
+        var message =
+            (TransientUserMessage)await context.Bot.SendMessageAsync(context.ChannelId, interactiveMessage);
 
-        public async ValueTask<IInteractiveUserMessage> ExecuteInteractiveMessageAsync(
-            LocalInteractiveMessage interactiveMessage, ConbotCommandContext context)
-        {
-            if (_interactiveMessages.TryGetValue(context.Author.Id, out var interactiveUserMessage))
-                StopInteractiveMessage(interactiveUserMessage);
+        context.AddMessage(message);
 
-            var message =
-                (TransientUserMessage)await context.Bot.SendMessageAsync(context.ChannelId, interactiveMessage);
+        interactiveUserMessage = new InteractiveUserMessage(message, interactiveMessage, context.Author, this);
 
-            context.AddMessage(message);
-
-            interactiveUserMessage = new InteractiveUserMessage(message, interactiveMessage, context.Author, this);
-
-            if (!_interactiveMessages.TryAdd(context.Author.Id, interactiveUserMessage))
-                return interactiveUserMessage;
-
-            var token = interactiveUserMessage.TokenSource.Token;
-
-            foreach (var emoji in interactiveMessage.ReactionCallbacks.Values
-                .Where(x => x.AutoReact)
-                .Select(x => x.Emoji))
-            {
-                if (token.IsCancellationRequested)
-                    break;
-
-                await message.TryAddReactionAsync(emoji);
-            }
-
-            while (!token.IsCancellationRequested)
-            {
-                try
-                {
-                    var timeout = interactiveUserMessage.TimeoutsAt - DateTimeOffset.UtcNow;
-                    if (timeout.Ticks >= 0)
-                        await Task.Delay(timeout, interactiveUserMessage.TokenSource.Token);
-
-                    if (DateTimeOffset.UtcNow >= interactiveUserMessage.TimeoutsAt)
-                    {
-                        StopInteractiveMessage(interactiveUserMessage);
-                        break;
-                    }
-                }
-                catch (TaskCanceledException)
-                {
-                    break;
-                }
-            }
-
-            await message.TryClearAllReactionsAsync();
-
+        if (!_interactiveMessages.TryAdd(context.Author.Id, interactiveUserMessage))
             return interactiveUserMessage;
+
+        var token = interactiveUserMessage.TokenSource.Token;
+
+        foreach (var emoji in interactiveMessage.ReactionCallbacks.Values
+                     .Where(x => x.AutoReact)
+                     .Select(x => x.Emoji))
+        {
+            if (token.IsCancellationRequested)
+                break;
+
+            await message.TryAddReactionAsync(emoji);
         }
 
-        protected override async ValueTask OnReactionAdded(ReactionAddedEventArgs e)
+        while (!token.IsCancellationRequested)
         {
-            foreach (var interactiveMessage in _interactiveMessages.Values)
+            try
             {
-                if (interactiveMessage.Id != e.MessageId)
-                    continue;
+                var timeout = interactiveUserMessage.TimeoutsAt - DateTimeOffset.UtcNow;
+                if (timeout.Ticks >= 0)
+                    await Task.Delay(timeout, interactiveUserMessage.TokenSource.Token);
 
-                if (e.UserId == Bot.CurrentUser.Id)
-                    return;
-
-                if (interactiveMessage.Precondition is not null && !await interactiveMessage.Precondition(e.Member))
-                    return;
-
-                var emoji = LocalEmoji.FromString(e.Emoji.GetReactionFormat());
-
-                if (!interactiveMessage.ReactionCallbacks.TryGetValue(emoji, out var callback))
-                    return;
-
-                interactiveMessage.TimeoutsAt = DateTimeOffset.UtcNow.AddMilliseconds(interactiveMessage.Timeout);
-
-                try
+                if (DateTimeOffset.UtcNow >= interactiveUserMessage.TimeoutsAt)
                 {
-                    await callback.Callback(interactiveMessage, e);
+                    StopInteractiveMessage(interactiveUserMessage);
+                    break;
                 }
-                finally
-                {
-                    if (!interactiveMessage.TokenSource.IsCancellationRequested)
-                        await interactiveMessage.TryRemoveReactionAsync(LocalEmoji.FromEmoji(emoji), e.Member.Id);
-                }
+            }
+            catch (TaskCanceledException)
+            {
+                break;
             }
         }
 
-        protected override async ValueTask OnMessageReceived(BotMessageReceivedEventArgs e)
+        await message.TryClearAllReactionsAsync();
+
+        return interactiveUserMessage;
+    }
+
+    protected override async ValueTask OnReactionAdded(ReactionAddedEventArgs e)
+    {
+        foreach (var interactiveMessage in _interactiveMessages.Values)
         {
-            if (e.Message is not IUserMessage userMessage)
+            if (interactiveMessage.Id != e.MessageId)
+                continue;
+
+            if (e.UserId == Bot.CurrentUser.Id)
                 return;
 
-            foreach (var interactiveMessage in _interactiveMessages.Values)
+            if (interactiveMessage.Precondition is not null && !await interactiveMessage.Precondition(e.Member))
+                return;
+
+            var emoji = LocalEmoji.FromString(e.Emoji.GetReactionFormat());
+
+            if (!interactiveMessage.ReactionCallbacks.TryGetValue(emoji, out var callback))
+                return;
+
+            interactiveMessage.TimeoutsAt = DateTimeOffset.UtcNow.AddMilliseconds(interactiveMessage.Timeout);
+
+            try
             {
-                if (e.ChannelId != interactiveMessage.ChannelId)
-                    continue;
-
-                if (interactiveMessage.Precondition is not null &&
-                    !await interactiveMessage.Precondition(e.Member))
-                {
-                    continue;
-                }
-
-                MessageCallback? callback = null;
-
-                foreach (var messageCallback in interactiveMessage.MessageCallbacks)
-                {
-                    if (messageCallback.Precondition is null)
-                    {
-                        callback = messageCallback;
-                        break;
-                    }
-
-                    if (await messageCallback.Precondition.Invoke(interactiveMessage, e))
-                    {
-                        callback = messageCallback;
-                        break;
-                    }
-                }
-
-                if (callback is null)
-                    return;
-
-                interactiveMessage.TimeoutsAt = DateTime.UtcNow.AddMilliseconds(interactiveMessage.Timeout);
-
                 await callback.Callback(interactiveMessage, e);
             }
+            finally
+            {
+                if (!interactiveMessage.TokenSource.IsCancellationRequested)
+                    await interactiveMessage.TryRemoveReactionAsync(LocalEmoji.FromEmoji(emoji), e.Member.Id);
+            }
         }
+    }
 
-        protected override ValueTask OnMessageDeleted(MessageDeletedEventArgs e)
+    protected override async ValueTask OnMessageReceived(BotMessageReceivedEventArgs e)
+    {
+        if (e.Message is not IUserMessage)
+            return;
+
+        foreach (var interactiveMessage in _interactiveMessages.Values)
         {
-            if (!_interactiveMessages.TryGetValue(e.MessageId, out var interactiveMessage))
-                return ValueTask.CompletedTask;
+            if (e.ChannelId != interactiveMessage.ChannelId)
+                continue;
 
-            if (e.MessageId != interactiveMessage.Id)
-                return ValueTask.CompletedTask;
+            if (interactiveMessage.Precondition is not null &&
+                !await interactiveMessage.Precondition(e.Member))
+            {
+                continue;
+            }
 
-            StopInteractiveMessage(interactiveMessage);
+            MessageCallback? callback = null;
+
+            foreach (var messageCallback in interactiveMessage.MessageCallbacks)
+            {
+                if (messageCallback.Precondition is null)
+                {
+                    callback = messageCallback;
+                    break;
+                }
+
+                if (!await messageCallback.Precondition.Invoke(interactiveMessage, e))
+                    continue;
+
+                callback = messageCallback;
+                break;
+            }
+
+            if (callback is null)
+                return;
+
+            interactiveMessage.TimeoutsAt = DateTime.UtcNow.AddMilliseconds(interactiveMessage.Timeout);
+
+            await callback.Callback(interactiveMessage, e);
+        }
+    }
+
+    protected override ValueTask OnMessageDeleted(MessageDeletedEventArgs e)
+    {
+        if (!_interactiveMessages.TryGetValue(e.MessageId, out var interactiveMessage))
             return ValueTask.CompletedTask;
-        }
 
-        internal void StopInteractiveMessage(InteractiveUserMessage interactiveMessage)
-        {
-            interactiveMessage.TokenSource.Cancel(true);
-            _interactiveMessages.TryRemove(interactiveMessage.User.Id, out var _);
-        }
+        if (e.MessageId != interactiveMessage.Id)
+            return ValueTask.CompletedTask;
+
+        StopInteractiveMessage(interactiveMessage);
+        return ValueTask.CompletedTask;
+    }
+
+    internal void StopInteractiveMessage(InteractiveUserMessage interactiveMessage)
+    {
+        interactiveMessage.TokenSource.Cancel(true);
+        _interactiveMessages.TryRemove(interactiveMessage.User.Id, out _);
     }
 }

@@ -5,20 +5,18 @@ using Disqord.Bot;
 
 using Qmmands;
 
-namespace Conbot.Commands
+namespace Conbot.Commands;
+
+public class RequireAuthorGuildPermissionsAttribute : DiscordCheckAttribute
 {
-    public class RequireAuthorGuildPermissionsAttribute : DiscordCheckAttribute
+    public Permission[] Permissions { get; }
+
+    public RequireAuthorGuildPermissionsAttribute(params Permission[] permission) => Permissions = permission;
+
+    public override ValueTask<CheckResult> CheckAsync(DiscordCommandContext context)
     {
-        public Permission[] Permissions { get; }
-
-        public RequireAuthorGuildPermissionsAttribute(params Permission[] permission) => Permissions = permission;
-
-        public override ValueTask<CheckResult> CheckAsync(DiscordCommandContext context)
-        {
-            if (context is not ConbotGuildCommandContext discordGuildCommandContext)
-                return CheckResult.Failed("This command must be used in a server.");
-
-            return RequirePermissionUtils.CheckGuildPermissionsAsync(discordGuildCommandContext.Author, Permissions);
-        }
+        return context is not ConbotGuildCommandContext discordGuildCommandContext
+            ? CheckResult.Failed("This command must be used in a server.")
+            : RequirePermissionUtils.CheckGuildPermissionsAsync(discordGuildCommandContext.Author, Permissions);
     }
 }

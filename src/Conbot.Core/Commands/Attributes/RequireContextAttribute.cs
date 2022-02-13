@@ -4,16 +4,14 @@ using Disqord.Bot;
 
 using Qmmands;
 
-namespace Conbot.Commands
-{
-    public class RequireGuildAttribute : DiscordCheckAttribute
-    {
-        public override ValueTask<CheckResult> CheckAsync(DiscordCommandContext context)
-        {
-            if (context.GuildId is null)
-                return CheckResult.Failed("This command must be used in a server.");
+namespace Conbot.Commands;
 
-            return CheckResult.Successful;
-        }
+public class RequireGuildAttribute : DiscordCheckAttribute
+{
+    public override ValueTask<CheckResult> CheckAsync(DiscordCommandContext context)
+    {
+        return context.GuildId is null
+            ? CheckResult.Failed("This command must be used in a server.")
+            : CheckResult.Successful;
     }
 }

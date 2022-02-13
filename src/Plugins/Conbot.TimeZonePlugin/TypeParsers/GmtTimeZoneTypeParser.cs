@@ -6,22 +6,21 @@ using NodaTime;
 
 using Qmmands;
 
-namespace Conbot.TimeZonePlugin
+namespace Conbot.TimeZonePlugin;
+
+public class GmtTimeZoneTypeParser : TypeParser<DateTimeZone>
 {
-    public class GmtTimeZoneTypeParser : TypeParser<DateTimeZone>
+    public override ValueTask<TypeParserResult<DateTimeZone>> ParseAsync(
+        Parameter parameter, string value, CommandContext context)
     {
-        public override ValueTask<TypeParserResult<DateTimeZone>> ParseAsync(
-            Parameter parameter, string value, CommandContext context)
-        {
-            var mapping = TimeZoneUtils.GmtTzdbMapping;
+        var mapping = TimeZoneUtils.GmtTzdbMapping;
 
-            if (!mapping.TryGetValue(value.ToUpper(), out string? zoneId))
-                return TypeParserResult<DateTimeZone>.Failed("Invalid GMT offset.");
+        if (!mapping.TryGetValue(value.ToUpper(), out string? zoneId))
+            return TypeParserResult<DateTimeZone>.Failed("Invalid GMT offset.");
 
-            var provider = context.Services.GetRequiredService<IDateTimeZoneProvider>();
-            var timeZone = provider.GetZoneOrNull(zoneId)!;
+        var provider = context.Services.GetRequiredService<IDateTimeZoneProvider>();
+        var timeZone = provider.GetZoneOrNull(zoneId)!;
 
-            return TypeParserResult<DateTimeZone>.Successful(timeZone);
-        }
+        return TypeParserResult<DateTimeZone>.Successful(timeZone);
     }
 }

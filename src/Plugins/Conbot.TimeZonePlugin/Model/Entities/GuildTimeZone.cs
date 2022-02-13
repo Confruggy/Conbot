@@ -1,19 +1,18 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Conbot.TimeZonePlugin
+namespace Conbot.TimeZonePlugin;
+
+public class GuildTimeZone
 {
-    public class GuildTimeZone
+    [Key]
+    public ulong GuildId { get; set; }
+
+    [Required]
+    public string TimeZoneId { get; set; }
+
+    public GuildTimeZone(ulong guildId, string timeZoneId)
     {
-        [Key]
-        public ulong GuildId { get; set; }
-
-        [Required]
-        public string TimeZoneId { get; set; }
-
-        public GuildTimeZone(ulong guildId, string timeZoneId)
-        {
-            GuildId = guildId;
-            TimeZoneId = timeZoneId;
-        }
+        GuildId = guildId;
+        TimeZoneId = timeZoneId;
     }
 }

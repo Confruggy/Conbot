@@ -1,4 +1,3 @@
-namespace Conbot.SplatoonPlugin
-{
-    public record WeaponCategory(string Name, string Key);
-}
+namespace Conbot.SplatoonPlugin;
+
+public record WeaponCategory(string Name, string Key);

@@ -1,10 +1,9 @@
-namespace Conbot
+namespace Conbot;
+
+public enum SnowflakeType
 {
-    public enum SnowflakeType
-    {
-        Guild,
-        Channel,
-        Message,
-        User
-    }
+    Guild,
+    Channel,
+    Message,
+    User
 }

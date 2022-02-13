@@ -4,17 +4,18 @@ using Microsoft.Extensions.Hosting;
 
 using Conbot.Plugins;
 
-namespace Conbot.HelpPlugin
-{
-    public class Startup : IPluginStartup
-    {
-        public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
-        {
-            services
-                .AddSingleton<HelpPluginCommandFailedHandler>()
-                .AddSingleton<ICommandFailedHandler>(x => x.GetRequiredService<HelpPluginCommandFailedHandler>());
-        }
+namespace Conbot.HelpPlugin;
 
-        public void BuildConfiguration(IConfigurationBuilder builder) { }
+public class Startup : IPluginStartup
+{
+    public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
+    {
+        services
+            .AddSingleton<HelpPluginCommandFailedHandler>()
+            .AddSingleton<ICommandFailedHandler>(x => x.GetRequiredService<HelpPluginCommandFailedHandler>());
+    }
+
+    public void BuildConfiguration(IConfigurationBuilder builder)
+    {
     }
 }

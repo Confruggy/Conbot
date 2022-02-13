@@ -4,21 +4,20 @@ using Disqord;
 using Disqord.Extensions.Interactivity.Menus;
 using Disqord.Gateway;
 
-namespace Conbot.RpsPlugin
+namespace Conbot.RpsPlugin;
+
+public class RpsMenu : DefaultMenu
 {
-    public class RpsMenu : DefaultMenu
+    private readonly Snowflake _user1Id;
+    private readonly Snowflake _user2Id;
+
+    public RpsMenu(RpsView view)
+        : base(view)
     {
-        private readonly Snowflake _user1Id;
-        private readonly Snowflake _user2Id;
-
-        public RpsMenu(RpsView view)
-            : base(view)
-        {
-            _user1Id = view.User1State.User.Id;
-            _user2Id = view.User2State.User.Id;
-        }
-
-        protected override ValueTask<bool> CheckInteractionAsync(InteractionReceivedEventArgs e)
-            => ValueTask.FromResult(e.AuthorId == _user1Id || e.AuthorId == _user2Id);
+        _user1Id = view.User1State.User.Id;
+        _user2Id = view.User2State.User.Id;
     }
+
+    protected override ValueTask<bool> CheckInteractionAsync(InteractionReceivedEventArgs e)
+        => ValueTask.FromResult(e.AuthorId == _user1Id || e.AuthorId == _user2Id);
 }

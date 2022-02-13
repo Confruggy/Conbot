@@ -1,8 +1,7 @@
-namespace Conbot.TagPlugin
+namespace Conbot.TagPlugin;
+
+public enum OwnerChangeType
 {
-    public enum OwnerChangeType
-    {
-        Transfer,
-        Claim
-    }
+    Transfer,
+    Claim
 }

@@ -1,8 +1,7 @@
-namespace Conbot.RankingPlugin
+namespace Conbot.RankingPlugin;
+
+public enum RoleRewardsType
 {
-    public enum RoleRewardsType
-    {
-        Stack,
-        Remove
-    }
+    Stack,
+    Remove
 }

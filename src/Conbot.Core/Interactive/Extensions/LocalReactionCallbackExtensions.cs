@@ -3,34 +3,33 @@ using System.Threading.Tasks;
 
 using Disqord.Gateway;
 
-namespace Conbot.Interactive
+namespace Conbot.Interactive;
+
+public static class LocalReactionCallbackExtensions
 {
-    public static class LocalReactionCallbackExtensions
+    public static LocalReactionCallback WithCallback(this LocalReactionCallback localReactionCallback,
+        Func<IInteractiveUserMessage, ReactionAddedEventArgs, Task> callback)
     {
-        public static LocalReactionCallback WithCallback(this LocalReactionCallback localReactionCallback,
-            Func<IInteractiveUserMessage, ReactionAddedEventArgs, Task> callback)
-        {
-            localReactionCallback.Callback = callback;
-            return localReactionCallback;
-        }
+        localReactionCallback.Callback = callback;
+        return localReactionCallback;
+    }
 
-        public static LocalReactionCallback WithCallback(this LocalReactionCallback localReactionCallback,
-            Action<IInteractiveUserMessage, ReactionAddedEventArgs> callback)
+    public static LocalReactionCallback WithCallback(this LocalReactionCallback localReactionCallback,
+        Action<IInteractiveUserMessage, ReactionAddedEventArgs> callback)
+    {
+        localReactionCallback.Callback = (m, e) =>
         {
-            localReactionCallback.Callback = (m, e) =>
-            {
-                callback(m, e);
-                return Task.CompletedTask;
-            };
+            callback(m, e);
+            return Task.CompletedTask;
+        };
 
-            return localReactionCallback;
-        }
+        return localReactionCallback;
+    }
 
-        public static LocalReactionCallback WithAutoReact(this LocalReactionCallback localReactionCallback,
-            bool autoReact)
-        {
-            localReactionCallback.AutoReact = autoReact;
-            return localReactionCallback;
-        }
+    public static LocalReactionCallback WithAutoReact(this LocalReactionCallback localReactionCallback,
+        bool autoReact)
+    {
+        localReactionCallback.AutoReact = autoReact;
+        return localReactionCallback;
     }
 }

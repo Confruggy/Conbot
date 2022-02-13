@@ -6,20 +6,19 @@ using Microsoft.Extensions.Hosting;
 
 using Conbot.Plugins;
 
-namespace Conbot.RankingPlugin
-{
-    public class Startup : IPluginStartup
-    {
-        public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
-        {
-            services
-                .AddDbContext<RankingContext>();
-        }
+namespace Conbot.RankingPlugin;
 
-        public void BuildConfiguration(IConfigurationBuilder builder)
-        {
-            builder
-                .AddJsonFile(Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "pluginsettings.json"));
-        }
+public class Startup : IPluginStartup
+{
+    public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
+    {
+        services
+            .AddDbContext<RankingContext>();
+    }
+
+    public void BuildConfiguration(IConfigurationBuilder builder)
+    {
+        builder
+            .AddJsonFile(Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "pluginsettings.json"));
     }
 }

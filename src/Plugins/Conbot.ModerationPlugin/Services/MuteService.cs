@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,53 +9,55 @@ using Microsoft.Extensions.Logging;
 using Disqord.Bot.Hosting;
 using Disqord.Rest;
 
-namespace Conbot.ModerationPlugin
+namespace Conbot.ModerationPlugin;
+
+public class MuteService : DiscordBotService
 {
-    public class MuteService : DiscordBotService
+    private readonly ILogger<MuteService> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
+
+    public MuteService(ILogger<MuteService> logger, IServiceScopeFactory scopeFactory)
     {
-        private readonly ILogger<MuteService> _logger;
-        private readonly IServiceScopeFactory _scopeFactory;
+        _logger = logger;
+        _scopeFactory = scopeFactory;
+    }
 
-        public MuteService(ILogger<MuteService> logger, IServiceScopeFactory scopeFactory)
+    //TODO remove temporary mute if muted role gets removed from user
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
         {
-            _logger = logger;
-            _scopeFactory = scopeFactory;
-        }
+            using var scope = _scopeFactory.CreateScope();
+            await using var context = scope.ServiceProvider.GetRequiredService<ModerationContext>();
 
-        //TODO remove temporary mute if muted role gets removed from user
-
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            while (!stoppingToken.IsCancellationRequested)
+            var now = DateTime.UtcNow;
+            await foreach (var user in context.GetTemporaryMutedUsersAsync()
+                               .Where(x => x.EndsAt <= now)
+                               .WithCancellation(stoppingToken))
             {
-                using var scope = _scopeFactory.CreateScope();
-                using var context = scope.ServiceProvider.GetRequiredService<ModerationContext>();
-
-                var now = DateTime.UtcNow;
-                await foreach (var user in context.GetTemporaryMutedUsersAsync().Where(x => x.EndsAt <= now))
+                try
                 {
-                    try
-                    {
-                        await Bot.RevokeRoleAsync(user.GuildId, user.UserId, user.RoleId,
-                            new DefaultRestRequestOptions { Reason = "Temporary mute duration expired" });
-                    }
-                    catch (Exception exception)
-                    {
-                        ulong roleId = user.UserId;
-                        ulong userId = user.RoleId;
-                        ulong guildId = user.GuildId;
+                    await Bot.RevokeRoleAsync(user.GuildId, user.UserId, user.RoleId,
+                        new DefaultRestRequestOptions { Reason = "Temporary mute duration expired" },
+                        stoppingToken);
+                }
+                catch (Exception exception)
+                {
+                    ulong roleId = user.UserId;
+                    ulong userId = user.RoleId;
+                    ulong guildId = user.GuildId;
 
-                        _logger.LogWarning(exception,
-                            "Removing muted role (ID: {RoleId}) from user (ID: {UserId}) in guild (ID: {GuildID}) failed",
-                            roleId, userId, guildId);
-                    }
-
-                    context.RemoveTemporaryMutedUser(user);
+                    _logger.LogWarning(exception,
+                        "Removing muted role (ID: {RoleId}) from user (ID: {UserId}) in guild (ID: {GuildID}) failed",
+                        roleId, userId, guildId);
                 }
 
-                await context.SaveChangesAsync(stoppingToken);
-                await Task.Delay(1000, stoppingToken);
+                context.RemoveTemporaryMutedUser(user);
             }
+
+            await context.SaveChangesAsync(stoppingToken);
+            await Task.Delay(1000, stoppingToken);
         }
     }
 }

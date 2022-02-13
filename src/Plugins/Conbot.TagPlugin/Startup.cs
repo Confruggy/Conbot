@@ -4,16 +4,17 @@ using Microsoft.Extensions.Hosting;
 
 using Conbot.Plugins;
 
-namespace Conbot.TagPlugin
-{
-    public class Startup : IPluginStartup
-    {
-        public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
-        {
-            services
-                .AddDbContext<TagContext>();
-        }
+namespace Conbot.TagPlugin;
 
-        public void BuildConfiguration(IConfigurationBuilder builder) { }
+public class Startup : IPluginStartup
+{
+    public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
+    {
+        services
+            .AddDbContext<TagContext>();
+    }
+
+    public void BuildConfiguration(IConfigurationBuilder builder)
+    {
     }
 }

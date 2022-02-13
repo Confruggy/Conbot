@@ -8,35 +8,34 @@ using Disqord.Bot.Hosting;
 
 using Qmmands;
 
-namespace Conbot.ReminderPlugin
+namespace Conbot.ReminderPlugin;
+
+public class ReminderPluginService : DiscordBotService
 {
-    public class ReminderPluginService : DiscordBotService
+    private Module? _module;
+
+    public override async Task StartAsync(CancellationToken cancellationToken)
     {
-        private Module? _module;
+        await UpdateDatabaseAsync();
+        Bot.Commands.AddArgumentParser(new ReminderArgumentParser());
+        _module = Bot.Commands.AddModule<ReminderModule>();
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
-        {
-            await UpdateDatabaseAsync();
-            Bot.Commands.AddArgumentParser(new ReminderArgumentParser());
-            _module = Bot.Commands.AddModule<ReminderModule>();
+        await base.StartAsync(cancellationToken);
+    }
 
-            await base.StartAsync(cancellationToken);
-        }
+    public override Task StopAsync(CancellationToken cancellationToken)
+    {
+        Bot.Commands.RemoveModule(_module);
+        Bot.Commands.RemoveArgumentParser<ReminderArgumentParser>();
 
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            Bot.Commands.RemoveModule(_module);
-            Bot.Commands.RemoveArgumentParser<ReminderArgumentParser>();
+        return base.StopAsync(cancellationToken);
+    }
 
-            return base.StopAsync(cancellationToken);
-        }
+    private async Task UpdateDatabaseAsync()
+    {
+        using var serviceScope = Bot.Services.CreateScope();
+        await using var context = serviceScope.ServiceProvider.GetRequiredService<ReminderContext>();
 
-        private async Task UpdateDatabaseAsync()
-        {
-            using var serviceScope = Bot.Services.CreateScope();
-            using var context = serviceScope.ServiceProvider.GetRequiredService<ReminderContext>();
-
-            await context.Database.MigrateAsync();
-        }
+        await context.Database.MigrateAsync();
     }
 }

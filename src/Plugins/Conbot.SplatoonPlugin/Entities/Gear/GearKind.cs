@@ -1,9 +1,8 @@
-namespace Conbot.SplatoonPlugin
+namespace Conbot.SplatoonPlugin;
+
+public enum GearKind
 {
-    public enum GearKind
-    {
-        Shoes,
-        Clothes,
-        Head
-    }
+    Shoes,
+    Clothes,
+    Head
 }

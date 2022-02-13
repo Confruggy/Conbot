@@ -6,17 +6,16 @@ using Microsoft.Extensions.Options;
 using Disqord;
 using Disqord.Bot;
 
-namespace Conbot
+namespace Conbot;
+
+public partial class ConbotBot : DiscordBot
 {
-    public partial class ConbotBot : DiscordBot
+    public ConbotBot(
+        IOptions<DiscordBotConfiguration> options,
+        ILogger<DiscordBot> logger,
+        IServiceProvider services,
+        DiscordClient client)
+        : base(options, logger, services, client)
     {
-        public ConbotBot(
-            IOptions<DiscordBotConfiguration> options,
-            ILogger<DiscordBot> logger,
-            IServiceProvider services,
-            DiscordClient client)
-            : base(options, logger, services, client)
-        {
-        }
     }
 }

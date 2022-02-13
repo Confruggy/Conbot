@@ -6,20 +6,19 @@ using Microsoft.Extensions.Hosting;
 
 using Conbot.Plugins;
 
-namespace Conbot.SplatoonPlugin
-{
-    public class Startup : IPluginStartup
-    {
-        public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
-        {
-            services
-                .AddSingleton<SplatoonService>();
-        }
+namespace Conbot.SplatoonPlugin;
 
-        public void BuildConfiguration(IConfigurationBuilder builder)
-        {
-            builder
-                .AddJsonFile(Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "pluginsettings.json"));
-        }
+public class Startup : IPluginStartup
+{
+    public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
+    {
+        services
+            .AddSingleton<SplatoonService>();
+    }
+
+    public void BuildConfiguration(IConfigurationBuilder builder)
+    {
+        builder
+            .AddJsonFile(Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, "pluginsettings.json"));
     }
 }

@@ -8,35 +8,34 @@ using Disqord.Bot.Hosting;
 
 using Qmmands;
 
-namespace Conbot.ModerationPlugin
+namespace Conbot.ModerationPlugin;
+
+public class ModerationPluginService : DiscordBotService
 {
-    public class ModerationPluginService : DiscordBotService
+    private readonly IServiceScopeFactory _scopeFactory;
+    private Module? _module;
+
+    public ModerationPluginService(IServiceScopeFactory scopeFactory) => _scopeFactory = scopeFactory;
+
+    public override async Task StartAsync(CancellationToken cancellationToken)
     {
-        private readonly IServiceScopeFactory _scopeFactory;
-        private Module? _module;
+        await UpdateDatabaseAsync();
+        _module = Bot.Commands.AddModule<ModerationModule>();
 
-        public ModerationPluginService(IServiceScopeFactory scopeFactory) => _scopeFactory = scopeFactory;
+        await base.StartAsync(cancellationToken);
+    }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
-        {
-            await UpdateDatabaseAsync();
-            _module = Bot.Commands.AddModule<ModerationModule>();
+    public override Task StopAsync(CancellationToken cancellationToken)
+    {
+        Bot.Commands.RemoveModule(_module);
+        return base.StopAsync(cancellationToken);
+    }
 
-            await base.StartAsync(cancellationToken);
-        }
+    private async Task UpdateDatabaseAsync()
+    {
+        using var scope = _scopeFactory.CreateScope();
+        await using var context = scope.ServiceProvider.GetRequiredService<ModerationContext>();
 
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            Bot.Commands.RemoveModule(_module);
-            return base.StopAsync(cancellationToken);
-        }
-
-        private async Task UpdateDatabaseAsync()
-        {
-            using var scope = _scopeFactory.CreateScope();
-            using var context = scope.ServiceProvider.GetRequiredService<ModerationContext>();
-
-            await context.Database.MigrateAsync();
-        }
+        await context.Database.MigrateAsync();
     }
 }

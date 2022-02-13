@@ -5,22 +5,21 @@ using Disqord.Bot.Hosting;
 
 using Qmmands;
 
-namespace Conbot.UrbanPlugin
+namespace Conbot.UrbanPlugin;
+
+public class UrbanPluginService : DiscordBotService
 {
-    public class UrbanPluginService : DiscordBotService
+    private Module? _module;
+
+    public override Task StartAsync(CancellationToken cancellationToken)
     {
-        private Module? _module;
+        _module = Bot.Commands.AddModule<UrbanModule>();
+        return base.StartAsync(cancellationToken);
+    }
 
-        public override Task StartAsync(CancellationToken cancellationToken)
-        {
-            _module = Bot.Commands.AddModule<UrbanModule>();
-            return base.StartAsync(cancellationToken);
-        }
-
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            Bot.Commands.RemoveModule(_module);
-            return base.StopAsync(cancellationToken);
-        }
+    public override Task StopAsync(CancellationToken cancellationToken)
+    {
+        Bot.Commands.RemoveModule(_module);
+        return base.StopAsync(cancellationToken);
     }
 }

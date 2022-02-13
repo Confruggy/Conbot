@@ -8,48 +8,47 @@ using Disqord.Bot.Hosting;
 
 using Qmmands;
 
-namespace Conbot.TimeZonePlugin
+namespace Conbot.TimeZonePlugin;
+
+public class TimeZonePluginService : DiscordBotService
 {
-    public class TimeZonePluginService : DiscordBotService
+    private TzdbZoneLocationsTypeParser _tzdbZoneLocationsTypeParser = null!;
+    private GmtTimeZoneTypeParser _gmtTimeZoneTypeParser = null!;
+    private ZonedDateTimeTypeParser _zonedDateTimeTypeParser = null!;
+    private Module? _module;
+
+    public override async Task StartAsync(CancellationToken cancellationToken)
     {
-        private TzdbZoneLocationsTypeParser _tzdbZoneLocationsTypeParser = null!;
-        private GmtTimeZoneTypeParser _gmtTimeZoneTypeParser = null!;
-        private ZonedDateTimeTypeParser _zonedDateTimeTypeParser = null!;
-        private Module? _module;
+        await UpdateDatabaseAsync();
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
-        {
-            await UpdateDatabaseAsync();
+        _tzdbZoneLocationsTypeParser = new TzdbZoneLocationsTypeParser();
+        Bot.Commands.AddTypeParser(_tzdbZoneLocationsTypeParser);
+        _gmtTimeZoneTypeParser = new GmtTimeZoneTypeParser();
+        Bot.Commands.AddTypeParser(_gmtTimeZoneTypeParser);
+        _zonedDateTimeTypeParser = new ZonedDateTimeTypeParser();
+        Bot.Commands.AddTypeParser(_zonedDateTimeTypeParser);
 
-            _tzdbZoneLocationsTypeParser = new TzdbZoneLocationsTypeParser();
-            Bot.Commands.AddTypeParser(_tzdbZoneLocationsTypeParser);
-            _gmtTimeZoneTypeParser = new GmtTimeZoneTypeParser();
-            Bot.Commands.AddTypeParser(_gmtTimeZoneTypeParser);
-            _zonedDateTimeTypeParser = new ZonedDateTimeTypeParser();
-            Bot.Commands.AddTypeParser(_zonedDateTimeTypeParser);
+        _module = Bot.Commands.AddModule<TimeZoneModule>();
 
-            _module = Bot.Commands.AddModule<TimeZoneModule>();
+        await base.StartAsync(cancellationToken);
+    }
 
-            await base.StartAsync(cancellationToken);
-        }
+    public override Task StopAsync(CancellationToken cancellationToken)
+    {
+        Bot.Commands.RemoveModule(_module);
 
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            Bot.Commands.RemoveModule(_module);
+        Bot.Commands.RemoveTypeParser(_tzdbZoneLocationsTypeParser);
+        Bot.Commands.RemoveTypeParser(_gmtTimeZoneTypeParser);
+        Bot.Commands.RemoveTypeParser(_zonedDateTimeTypeParser);
 
-            Bot.Commands.RemoveTypeParser(_tzdbZoneLocationsTypeParser);
-            Bot.Commands.RemoveTypeParser(_gmtTimeZoneTypeParser);
-            Bot.Commands.RemoveTypeParser(_zonedDateTimeTypeParser);
+        return base.StopAsync(cancellationToken);
+    }
 
-            return base.StopAsync(cancellationToken);
-        }
+    private async Task UpdateDatabaseAsync()
+    {
+        using var serviceScope = Bot.Services.CreateScope();
+        await using var context = serviceScope.ServiceProvider.GetRequiredService<TimeZoneContext>();
 
-        private async Task UpdateDatabaseAsync()
-        {
-            using var serviceScope = Bot.Services.CreateScope();
-            using var context = serviceScope.ServiceProvider.GetRequiredService<TimeZoneContext>();
-
-            await context.Database.MigrateAsync();
-        }
+        await context.Database.MigrateAsync();
     }
 }

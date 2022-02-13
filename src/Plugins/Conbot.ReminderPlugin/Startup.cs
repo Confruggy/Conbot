@@ -4,16 +4,17 @@ using Microsoft.Extensions.Hosting;
 
 using Conbot.Plugins;
 
-namespace Conbot.ReminderPlugin
-{
-    public class Startup : IPluginStartup
-    {
-        public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
-        {
-            services
-                .AddDbContext<ReminderContext>();
-        }
+namespace Conbot.ReminderPlugin;
 
-        public void BuildConfiguration(IConfigurationBuilder builder) { }
+public class Startup : IPluginStartup
+{
+    public void ConfigureServices(HostBuilderContext hostingContext, IServiceCollection services)
+    {
+        services
+            .AddDbContext<ReminderContext>();
+    }
+
+    public void BuildConfiguration(IConfigurationBuilder builder)
+    {
     }
 }

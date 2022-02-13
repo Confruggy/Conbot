@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -8,27 +7,26 @@ using Humanizer;
 
 using Qmmands;
 
-namespace Conbot.Commands
+namespace Conbot.Commands;
+
+public class ChoicesAttribute : ParameterCheckAttribute
 {
-    public class ChoicesAttribute : ParameterCheckAttribute
+    public object[] Choices { get; set; }
+
+    public ChoicesAttribute(params object[] choices) => Choices = choices;
+
+    public override ValueTask<CheckResult> CheckAsync(object argument, CommandContext context)
     {
-        public object[] Choices { get; set; }
+        var commandService = context.Services.GetRequiredService<CommandService>();
 
-        public ChoicesAttribute(params object[] choices) => Choices = choices;
+        bool contains = argument is string argumentString
+            ? Choices.Any(x => x.ToString()?.Equals(argumentString, commandService.StringComparison) == true)
+            : Choices.Contains(argument);
 
-        public override ValueTask<CheckResult> CheckAsync(object argument, CommandContext context)
-        {
-            var commandService = context.Services.GetRequiredService<CommandService>();
+        if (contains)
+            return CheckResult.Successful;
 
-            bool contains = (argument is string argumentString)
-                ? Choices.Any(x => x.ToString()!.Equals(argumentString, commandService.StringComparison))
-                : Choices.Contains(argument);
-
-            if (contains)
-                return CheckResult.Successful;
-
-            return CheckResult.Failed(
-                $"The available choices are {Choices.Select(x => $"**{x}**").Humanize("and")}.");
-        }
+        return CheckResult.Failed(
+            $"The available choices are {Choices.Select(x => $"**{x}**").Humanize("and")}.");
     }
 }

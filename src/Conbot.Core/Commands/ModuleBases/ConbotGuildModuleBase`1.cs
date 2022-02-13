@@ -1,8 +1,7 @@
-namespace Conbot.Commands
+namespace Conbot.Commands;
+
+[RequireGuild]
+public abstract class ConbotGuildModuleBase<TContext> : ConbotModuleBase<TContext>
+    where TContext : ConbotGuildCommandContext
 {
-    [RequireGuild]
-    public abstract class ConbotGuildModuleBase<TContext> : ConbotModuleBase<TContext>
-        where TContext : ConbotGuildCommandContext
-    {
-    }
 }

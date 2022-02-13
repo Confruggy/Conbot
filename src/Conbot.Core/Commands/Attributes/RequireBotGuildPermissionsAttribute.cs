@@ -5,21 +5,20 @@ using Disqord.Bot;
 
 using Qmmands;
 
-namespace Conbot.Commands
+namespace Conbot.Commands;
+
+public class RequireBotGuildPermissionsAttribute : DiscordCheckAttribute
 {
-    public class RequireBotGuildPermissionsAttribute : DiscordCheckAttribute
+    public Permission[] Permissions { get; }
+
+    public RequireBotGuildPermissionsAttribute(params Permission[] permission) => Permissions = permission;
+
+    public override ValueTask<CheckResult> CheckAsync(DiscordCommandContext context)
     {
-        public Permission[] Permissions { get; }
+        if (context is not ConbotGuildCommandContext discordGuildCommandContext)
+            return CheckResult.Failed("This command must be used in a server.");
 
-        public RequireBotGuildPermissionsAttribute(params Permission[] permission) => Permissions = permission;
-
-        public override ValueTask<CheckResult> CheckAsync(DiscordCommandContext context)
-        {
-            if (context is not ConbotGuildCommandContext discordGuildCommandContext)
-                return CheckResult.Failed("This command must be used in a server.");
-
-            return RequirePermissionUtils.CheckGuildPermissionsAsync(discordGuildCommandContext.CurrentMember,
-                Permissions);
-        }
+        return RequirePermissionUtils.CheckGuildPermissionsAsync(discordGuildCommandContext.CurrentMember,
+            Permissions);
     }
 }

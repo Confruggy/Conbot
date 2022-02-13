@@ -5,22 +5,21 @@ using Disqord.Bot.Hosting;
 
 using Qmmands;
 
-namespace Conbot.RpsPlugin
+namespace Conbot.RpsPlugin;
+
+public class RpsPluginService : DiscordBotService
 {
-    public class RpsPluginService : DiscordBotService
+    private Module? _module;
+
+    public override Task StartAsync(CancellationToken cancellationToken)
     {
-        private Module? _module;
+        _module = Bot.Commands.AddModule<RpsModule>();
+        return base.StartAsync(cancellationToken);
+    }
 
-        public override Task StartAsync(CancellationToken cancellationToken)
-        {
-            _module = Bot.Commands.AddModule<RpsModule>();
-            return base.StartAsync(cancellationToken);
-        }
-
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            Bot.Commands.RemoveModule(_module);
-            return base.StopAsync(cancellationToken);
-        }
+    public override Task StopAsync(CancellationToken cancellationToken)
+    {
+        Bot.Commands.RemoveModule(_module);
+        return base.StopAsync(cancellationToken);
     }
 }
