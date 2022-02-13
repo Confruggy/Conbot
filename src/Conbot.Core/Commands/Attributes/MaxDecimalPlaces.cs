@@ -21,7 +21,7 @@ public class MaxDecimalPlacesAttribute : ParameterCheckAttribute
 
         string text = value.ToString(CultureInfo.InvariantCulture);
 
-        int decimalPlaces = text.Contains(".")
+        int decimalPlaces = text.Contains('.')
             ? text[(text.IndexOf(".", StringComparison.Ordinal) + 1)..].Length
             : 0;
 
