@@ -1,5 +1,4 @@
-﻿#pragma warning disable
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Conbot.RankingPlugin.Migrations
@@ -17,7 +16,8 @@ namespace Conbot.RankingPlugin.Migrations
                     ShowLevelUpAnnouncements = table.Column<bool>(type: "INTEGER", nullable: true),
                     LevelUpAnnouncementsChannelId = table.Column<ulong>(type: "INTEGER", nullable: true),
                     LevelUpAnnouncementsMinimumLevel = table.Column<int>(type: "INTEGER", nullable: true),
-                    RoleRewardsType = table.Column<int>(type: "INTEGER", nullable: true)
+                    RoleRewardsType = table.Column<int>(type: "INTEGER", nullable: true),
+                    Multiplier = table.Column<decimal>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {

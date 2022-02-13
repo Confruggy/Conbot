@@ -15,7 +15,7 @@ public class MaxValueAttribute : ParameterCheckAttribute
 
     public override ValueTask<CheckResult> CheckAsync(object argument, CommandContext context)
     {
-        return (argument as IComparable)?.CompareTo(MaxValue) <= 0
+        return (argument as IComparable)?.CompareTo(Convert.ChangeType(MaxValue, argument.GetType())) <= 0
             ? CheckResult.Successful
             : CheckResult.Failed($"{Parameter.Name.Humanize()} must be less than or equal to {MaxValue}.");
     }

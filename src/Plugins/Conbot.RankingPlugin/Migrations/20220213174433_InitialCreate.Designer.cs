@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Conbot.RankingPlugin.Migrations
 {
     [DbContext(typeof(RankingContext))]
-    [Migration("20210114202306_InitialCreate")]
+    [Migration("20220213174433_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -79,6 +79,9 @@ namespace Conbot.RankingPlugin.Migrations
 
                     b.Property<int?>("LevelUpAnnouncementsMinimumLevel")
                         .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Multiplier")
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("RoleRewardsType")
                         .HasColumnType("INTEGER");

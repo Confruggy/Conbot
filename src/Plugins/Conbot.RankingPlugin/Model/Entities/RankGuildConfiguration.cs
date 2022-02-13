@@ -12,6 +12,7 @@ public class RankGuildConfiguration
     public ulong? LevelUpAnnouncementsChannelId { get; set; }
     public int? LevelUpAnnouncementsMinimumLevel { get; set; }
     public RoleRewardsType? RoleRewardsType { get; set; }
+    public decimal Multiplier { get; set; }
 
     public virtual List<RankRoleReward> RoleRewards { get; set; } = null!;
     public virtual List<IgnoredChannel> IgnoredChannels { get; set; } = null!;

@@ -78,6 +78,9 @@ namespace Conbot.RankingPlugin.Migrations
                     b.Property<int?>("LevelUpAnnouncementsMinimumLevel")
                         .HasColumnType("INTEGER");
 
+                    b.Property<decimal>("Multiplier")
+                        .HasColumnType("TEXT");
+
                     b.Property<int?>("RoleRewardsType")
                         .HasColumnType("INTEGER");
 

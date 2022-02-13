@@ -24,12 +24,12 @@ namespace Conbot.RankingPlugin;
 [Group("rank", "level")]
 [Description("Gain experience points by writing messages in a server.")]
 [Remarks(
-    "Each time you write a message, you randomly gain 5-15 experience points. However, to avoid gaining " +
-    "experience points by spamming messages, a one minute cooldown is in effect each time after you gained " +
-    "experience points.\n\n" +
+    "Each time you write a message, you randomly gain 10-20 experience points multiplied by the server's multiplier. " +
+    "However, to avoid gaining experience points by spamming messages, a one-minute cooldown is in effect each time " +
+    "you gain experience points.\n\n" +
     "With gaining experience points, you increase your level. The higher your level is, the more experience " +
     "points you need to achieve a level up. The formula to determine the total amount of experience points " +
-    "needed for a specific level is `(n^2.5) * 10` where n is the level.")]
+    "required for a specific level is `(n^2.5) * 10`, where n is the level.")]
 public class RankingModule : ConbotGuildModuleBase
 {
     private readonly RankingContext _db;
@@ -729,6 +729,31 @@ public class RankingModule : ConbotGuildModuleBase
 
             return Paginate(pages, startIndex: page - 1);
         }
+    }
+
+    [Command("multiplier", "rate")]
+    [Description("Sets the multiplier for this server.")]
+    [Remarks(
+        "The multiplier sets the rate at which members will receive XP. A higher multiplier might be recommended on " +
+        "servers with low activity. In contrast, a lower multiplier might be recommended on servers with high " +
+        "activity so members won't level too fast.")]
+    [Commands.RequireAuthorGuildPermissions(Permission.ManageGuild)]
+    public async Task<DiscordCommandResult> MultiplierAsync(
+        [Description("The multiplier to set.")]
+        [Remarks("If the multiplier is set to 0, levelling will be disabled.")]
+        [MinValue(0), MaxValue(5)]
+        [MaxDecimalPlaces(1)]
+        decimal multiplier = 1m)
+    {
+        var config = await _db.GetOrCreateGuildConfigurationAsync(Context.Guild);
+
+        config.Multiplier = multiplier;
+
+        string reply = multiplier == 0
+            ? "Levelling has been disabled."
+            : $"Multiplier has been set to **{multiplier:0.0}**.";
+
+        return Reply(reply).RunWith(_db.SaveChangesAsync());
     }
 
 #if DEBUG

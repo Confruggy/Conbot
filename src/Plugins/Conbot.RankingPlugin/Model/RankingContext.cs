@@ -12,6 +12,10 @@ public class RankingContext : DbContext
     public DbSet<IgnoredChannel> IgnoredChannels => Set<IgnoredChannel>();
     public DbSet<RankUserConfiguration> UserConfigurations => Set<RankUserConfiguration>();
 
+    public RankingContext()
+    {
+    }
+
     public RankingContext(DbContextOptions<RankingContext> options)
         : base(options)
     {

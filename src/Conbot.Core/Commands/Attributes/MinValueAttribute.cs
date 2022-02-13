@@ -15,7 +15,7 @@ public class MinValueAttribute : ParameterCheckAttribute
 
     public override ValueTask<CheckResult> CheckAsync(object argument, CommandContext context)
     {
-        return (argument as IComparable)?.CompareTo(MinValue) >= 0
+        return (argument as IComparable)?.CompareTo(Convert.ChangeType(MinValue, argument.GetType())) >= 0
             ? CheckResult.Successful
             : CheckResult.Failed($"{Parameter.Name.Humanize()} must be greater than or equal to {MinValue}.");
     }

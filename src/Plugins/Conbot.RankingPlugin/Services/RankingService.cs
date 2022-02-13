@@ -56,7 +56,9 @@ public class RankingService : DiscordBotService
 
         if (rank.LastMessage is null || now >= rank.LastMessage?.AddMinutes(1))
         {
-            rank.ExperiencePoints += rank.ExperiencePoints == 0 ? 10 : _random.Next(5, 15);
+            rank.ExperiencePoints += rank.ExperiencePoints == 0
+                ? 10
+                : _random.Next((int)(10 * config?.Multiplier ?? 1), (int)(20 * config?.Multiplier ?? 1));
             rank.RankedMessages++;
             rank.LastMessage = now;
         }
